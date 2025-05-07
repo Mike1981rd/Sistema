@@ -136,7 +136,12 @@
 
 @section Scripts {
     <script>
+        let originalHtml; // Variable global para el HTML original
+        
         $(document).ready(function() {
+            // Almacenar el HTML original al cargar la página
+            originalHtml = $('#catalogTree').html();
+            
             // Toggle para expandir/colapsar subcuentas
             initializeTreeToggle();
             
@@ -146,7 +151,7 @@
         
         function initializeTreeToggle() {
             // Delegación de eventos para que funcione incluso con contenido dinámico
-            $(document).on('click', '.toggle-children', function() {
+            $(document).off('click', '.toggle-children').on('click', '.toggle-children', function() {
                 var $btn = $(this);
                 var expanded = $btn.data('expanded') === true;
                 var parentId = $btn.data('parent-id');
@@ -193,11 +198,10 @@
             const inputBusqueda = document.getElementById('searchInput');
             const catalogTree = document.getElementById('catalogTree');
             const resultadosFiltrado = document.getElementById('resultadosFiltrado');
+            const catalogoTable = document.getElementById('catalogoTable');
             
-            if (!inputBusqueda || !catalogTree) return;
+            if (!inputBusqueda || !catalogTree || !resultadosFiltrado || !catalogoTable) return;
             
-            // Guardar HTML original
-            const htmlOriginal = catalogTree.innerHTML;
             let estilosAdicionales = false;
             
             function agregarEstilosResaltado() {
@@ -246,8 +250,14 @@
                 const valorBusqueda = e.target.value.toLowerCase().trim();
                 
                 if (!valorBusqueda) {
-                    catalogTree.innerHTML = htmlOriginal;
+                    // Restaurar la vista original
+                    catalogTree.innerHTML = originalHtml;
                     resultadosFiltrado.style.display = 'none';
+                    if (catalogoTable) {
+                        catalogoTable.style.display = 'table';
+                    }
+                    
+                    // Reinicializar los eventos
                     initializeTreeToggle();
                     return;
                 }
@@ -324,8 +334,12 @@
                             );
                         }
                         
-                        // Clonar columna de acciones
-                        const accionesHTML = coincidencia.fila.querySelector('.actions-column').innerHTML;
+                        // Clonar columna de acciones de forma segura
+                        let accionesHTML = '';
+                        const accionesCol = coincidencia.fila.querySelector('.actions-column');
+                        if (accionesCol) {
+                            accionesHTML = accionesCol.innerHTML;
+                        }
                         
                         tablaHTML += `
                             <tr data-id="${coincidencia.id}">
@@ -350,16 +364,25 @@
                     resultadosFiltrado.innerHTML = tablaHTML;
                     resultadosFiltrado.style.display = 'block';
                     
-                    document.getElementById('catalogTable').style.display = 'none';
+                    if (catalogoTable) {
+                        catalogoTable.style.display = 'none';
+                    }
                     
                     // Botón para mostrar árbol completo
-                    document.getElementById('btnVerArbolCompleto').addEventListener('click', function() {
-                        document.getElementById('catalogTable').style.display = 'table';
-                        catalogTree.innerHTML = htmlOriginal;
-                        resultadosFiltrado.style.display = 'none';
-                        nuevoInput.value = '';
-                        initializeTreeToggle();
-                    });
+                    const btnVerArbol = document.getElementById('btnVerArbolCompleto');
+                    if (btnVerArbol) {
+                        btnVerArbol.addEventListener('click', function() {
+                            if (catalogoTable) {
+                                catalogoTable.style.display = 'table';
+                            }
+                            catalogTree.innerHTML = originalHtml;
+                            resultadosFiltrado.style.display = 'none';
+                            nuevoInput.value = '';
+                            
+                            // Reinicializar los eventos
+                            initializeTreeToggle();
+                        });
+                    }
                 } else {
                     resultadosFiltrado.innerHTML = `
                     <div class="resultados-filtrados-container">
@@ -369,7 +392,10 @@
                         <p class="text-muted mb-0">Intenta con otro término de búsqueda.</p>
                     </div>`;
                     resultadosFiltrado.style.display = 'block';
-                    document.getElementById('catalogTable').style.display = 'none';
+                    
+                    if (catalogoTable) {
+                        catalogoTable.style.display = 'none';
+                    }
                 }
             });
         }
