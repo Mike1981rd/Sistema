@@ -56,7 +56,6 @@ namespace SistemaContable.ViewModels
         [Display(Name = "Activo")]
         public bool Activo { get; set; } = true;
         
-        [Required(ErrorMessage = "Debe seleccionar una cuenta contable")]
         [Display(Name = "Cuenta contable asociada")]
         public int CuentaContableId { get; set; }
         
