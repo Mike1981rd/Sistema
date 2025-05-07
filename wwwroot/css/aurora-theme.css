@@ -518,4 +518,101 @@
 .aurora-card:nth-child(4)::after,
 .cobrar-card::after {
   background: linear-gradient(to right, transparent 50%, #e74c3c 50%);
+}
+
+/* Estilos para formulario de empresa */
+.aurora-card h5 {
+    color: var(--aurora-secondary);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--aurora-gray-200);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--aurora-gray-800);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--aurora-accent);
+    box-shadow: 0 0 0 0.25rem rgba(62, 146, 204, 0.25);
+}
+
+.btn-primary {
+    background-color: var(--aurora-accent);
+    border-color: var(--aurora-accent);
+}
+
+.btn-primary:hover {
+    background-color: var(--aurora-secondary);
+    border-color: var(--aurora-secondary);
+}
+
+.alert-success {
+    background-color: rgba(46, 204, 113, 0.1);
+    border-color: var(--aurora-success);
+    color: var(--aurora-success);
+}
+
+/* Mejoras adicionales para el formulario */
+.aurora-card {
+    transition: all 0.3s ease;
+}
+
+.aurora-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-control, .form-select {
+    transition: all 0.2s ease;
+}
+
+.form-control:hover, .form-select:hover {
+    border-color: var(--aurora-accent);
+}
+
+.text-danger {
+    color: var(--aurora-danger) !important;
+}
+
+.required-field::after {
+    content: " *";
+    color: var(--aurora-danger);
+}
+
+/* Estilos para los botones */
+.btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary {
+    background-color: var(--aurora-gray-200);
+    border-color: var(--aurora-gray-300);
+    color: var(--aurora-gray-800);
+}
+
+.btn-secondary:hover {
+    background-color: var(--aurora-gray-300);
+    border-color: var(--aurora-gray-400);
+    color: var(--aurora-gray-900);
+}
+
+/* Estilos para los mensajes de alerta */
+.alert {
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.alert-dismissible .btn-close {
+    padding: 1rem;
+}
+
+/* Estilos para los campos requeridos */
+.form-label.required::after {
+    content: " *";
+    color: var(--aurora-danger);
 } 

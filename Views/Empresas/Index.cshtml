@@ -1,0 +1,59 @@
+@model IEnumerable<SistemaContable.Models.Empresa>
+
+@{
+    ViewData["Title"] = "Empresas";
+}
+
+<div class="aurora-dashboard-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="aurora-dashboard-title">@ViewData["Title"]</h2>
+        <a asp-action="Configurar" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nueva Empresa
+        </a>
+    </div>
+
+    <div class="aurora-card">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+                        <th>@Html.DisplayNameFor(model => model.MonedaPrincipal)</th>
+                        <th>@Html.DisplayNameFor(model => model.PrecisionDecimal)</th>
+                        <th>@Html.DisplayNameFor(model => model.SeparadorDecimal)</th>
+                        <th>@Html.DisplayNameFor(model => model.Activo)</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                            <td>@Html.DisplayFor(modelItem => item.MonedaPrincipal)</td>
+                            <td>@Html.DisplayFor(modelItem => item.PrecisionDecimal)</td>
+                            <td>@Html.DisplayFor(modelItem => item.SeparadorDecimal)</td>
+                            <td>
+                                @if (item.Activo)
+                                {
+                                    <span class="badge bg-success">Activa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactiva</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a asp-action="Configurar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> 
