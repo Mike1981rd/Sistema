@@ -4,101 +4,172 @@
     ViewData["Title"] = "Catálogo de Cuentas";
 }
 
-<h2>Catálogo de Cuentas</h2>
-<p>Contenido básico para confirmar que la ruta funciona.</p>
-
-<div class="aurora-breadcrumb">
-    <a href="/" class="aurora-breadcrumb-item">Inicio</a>
-    <span class="aurora-breadcrumb-item">Catálogo de Cuentas</span>
-</div>
-
-<div class="aurora-dashboard-section">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="aurora-dashboard-title">@ViewData["Title"]</h2>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Catálogo de Cuentas</h2>
         <div>
-            <a asp-controller="CatalogoCuentas" asp-action="SaldosIniciales" class="btn btn-aurora-secondary me-2">
-                <i class="fas fa-balance-scale me-2"></i>Saldos Iniciales
+            <a asp-action="SaldosIniciales" class="btn btn-secondary">
+                <i class="fas fa-money-bill"></i> Saldos Iniciales
             </a>
-            <a asp-controller="CatalogoCuentas" asp-action="ImportarExcel" class="btn btn-aurora-secondary me-2">
-                <i class="fas fa-file-import me-2"></i>Importar
+            <a asp-action="ImportarExcel" class="btn btn-primary">
+                <i class="fas fa-file-import"></i> Importar
             </a>
-            <a asp-controller="CatalogoCuentas" asp-action="Create" class="btn btn-aurora-primary">
-                <i class="fas fa-plus me-2"></i>Nueva Cuenta
+            <a asp-action="Create" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nueva Cuenta
             </a>
         </div>
     </div>
 
-    <div class="aurora-card">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Tipo</th>
-                        <th>Naturaleza</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var cuenta in Model)
-                        {
-                            <tr>
-                                <td>@cuenta.Codigo</td>
-                                <td>@cuenta.Nombre</td>
-                                <td>@cuenta.TipoCuenta</td>
-                                <td>@cuenta.Naturaleza</td>
-                                <td>
-                                    @if (cuenta.Activo)
-                                    {
-                                        <span class="badge bg-success">Activa</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Inactiva</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a asp-controller="CatalogoCuentas" asp-action="Edit" asp-route-id="@cuenta.Id" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a asp-controller="CatalogoCuentas" asp-action="Movimientos" asp-route-id="@cuenta.Id" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-list"></i>
-                                        </a>
-                                        @if (!cuenta.TieneDependencias)
-                                        {
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="confirmarEliminacion(@cuenta.Id, '@(cuenta.Codigo) - @(cuenta.Nombre)')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="catalogoTable">
+                    <thead>
                         <tr>
-                            <td colspan="6" class="text-center">No hay cuentas contables registradas.</td>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Naturaleza</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @{
+                            async Task RenderCuentas(IEnumerable<SistemaContable.Models.CuentaContable>? cuentas, int nivel = 0, bool isVisible = true)
+                            {
+                                if (cuentas == null) return;
+                                
+                                foreach (var cuenta in cuentas.OrderBy(c => c.Codigo).ThenBy(c => c.Orden))
+                                {
+                                    var paddingLeft = nivel * 20; // Indentación según nivel
+                                    var display = isVisible ? "" : "display: none;";
+                                    var hasChildren = cuenta.SubCuentas != null && cuenta.SubCuentas.Any();
+                                    var rowId = $"cuenta-{cuenta.Id}";
+                                    var parentId = cuenta.CuentaPadreId.HasValue ? $"cuenta-{cuenta.CuentaPadreId}" : "";
+                                    
+                                    <tr id="@rowId" class="@(cuenta.CuentaPadreId.HasValue ? $"child-of-{parentId}" : "")" 
+                                        data-nivel="@nivel" data-parent="@cuenta.CuentaPadreId" style="@display">
+                                        <td>
+                                            <div class="d-flex align-items-center" style="padding-left: @paddingLeft px;">
+                                                @if (hasChildren)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-icon toggle-children me-2" 
+                                                            data-expanded="false" data-parent-id="@cuenta.Id">
+                                                        <i class="fas fa-plus-circle"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="ms-4"></span>
+                                                }
+                                                @cuenta.Codigo
+                                            </div>
+                                        </td>
+                                        <td>@cuenta.Nombre</td>
+                                        <td>@cuenta.TipoCuenta</td>
+                                        <td>@cuenta.Naturaleza</td>
+                                        <td>
+                                            <span class="badge bg-@(cuenta.Activo ? "success" : "danger")">
+                                                @(cuenta.Activo ? "Activa" : "Inactiva")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a asp-action="Edit" asp-route-id="@cuenta.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-list"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="@Url.Action("Movimientos", new { id = cuenta.Id })">
+                                                            <i class="fas fa-exchange-alt"></i> Ver movimientos
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="@Url.Action("Create", new { padreId = cuenta.Id })">
+                                                            <i class="fas fa-folder-plus"></i> Agregar subcuenta
+                                                        </a>
+                                                    </li>
+                                                    @if (!cuenta.EsCuentaSistema)
+                                                    {
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="@Url.Action("Delete", new { id = cuenta.Id })">
+                                                                <i class="fas fa-trash"></i> Eliminar
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    if (hasChildren)
+                                    {
+                                        // Renderizar subcuentas (inicialmente ocultas)
+                                        await RenderCuentas(cuenta.SubCuentas, nivel + 1, false);
+                                    }
+                                }
+                            }
+                            
+                            // Renderizar sólo las cuentas principales (sin padre)
+                            await RenderCuentas(Model?.Where(c => c.CuentaPadreId == null));
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function confirmarEliminacion(id, nombre) {
-            if (confirm(`¿Está seguro que desea eliminar la cuenta ${nombre}?`)) {
-                window.location.href = `/CatalogoCuentas/Delete/${id}`;
+        $(document).ready(function() {
+            // Toggle para expandir/colapsar subcuentas
+            $('.toggle-children').on('click', function() {
+                var $btn = $(this);
+                var expanded = $btn.data('expanded') === true;
+                var parentId = $btn.data('parent-id');
+                
+                // Cambiar icono
+                $btn.find('i').toggleClass('fa-plus-circle fa-minus-circle');
+                
+                // Mostrar/ocultar hijos directos
+                $('tr.child-of-cuenta-' + parentId).each(function() {
+                    if (!expanded) {
+                        $(this).show();
+                    } else {
+                        // Ocultar este hijo y todos sus descendientes recursivamente
+                        var childId = $(this).attr('id').replace('cuenta-', '');
+                        $(this).hide();
+                        hideChildren(childId);
+                    }
+                });
+                
+                // Actualizar estado
+                $btn.data('expanded', !expanded);
+            });
+            
+            // Función recursiva para ocultar hijos
+            function hideChildren(parentId) {
+                $('tr.child-of-cuenta-' + parentId).each(function() {
+                    var childId = $(this).attr('id').replace('cuenta-', '');
+                    $(this).hide();
+                    
+                    // Si este hijo tiene un botón de expandir, asegurarse de que esté colapsado
+                    var $btn = $(this).find('.toggle-children');
+                    if ($btn.length > 0) {
+                        $btn.data('expanded', false);
+                        $btn.find('i').removeClass('fa-minus-circle').addClass('fa-plus-circle');
+                    }
+                    
+                    // Ocultar recursivamente sus hijos
+                    hideChildren(childId);
+                });
             }
-        }
+        });
     </script>
 } 

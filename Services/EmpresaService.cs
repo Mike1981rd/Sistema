@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using SistemaContable.Data;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace SistemaContable.Services
 {
@@ -22,7 +24,7 @@ namespace SistemaContable.Services
             _logger = logger;
         }
 
-        public int ObtenerEmpresaActualId()
+        public async Task<int> ObtenerEmpresaActualId()
         {
             try
             {
@@ -45,7 +47,7 @@ namespace SistemaContable.Services
             try
             {
                 // Verifica si existe al menos una empresa
-                var empresaId = _context.Empresas.Select(e => e.Id).FirstOrDefault();
+                var empresaId = await _context.Empresas.Select(e => e.Id).FirstOrDefaultAsync();
                 
                 // Si hay al menos una empresa, devuelve su ID
                 if (empresaId != 0)

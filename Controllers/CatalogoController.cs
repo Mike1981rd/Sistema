@@ -24,7 +24,7 @@ namespace SistemaContable.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             // Obtener cuentas de la empresa actual incluyendo las subcuentas
             var cuentas = await _context.CuentasContables

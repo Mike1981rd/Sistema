@@ -39,19 +39,33 @@ namespace SistemaContable.Controllers
         // GET: CatalogoCuentas
         public async Task<IActionResult> Index()
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
-            // Obtener todas las cuentas de la empresa actual
+            // Cargar árbol completo de cuentas con subcuentas
             var cuentas = await _context.CuentasContables
                 .Where(c => c.EmpresaId == empresaId)
                 .Include(c => c.SubCuentas)
                 .ToListAsync();
             
-            // Construir jerarquía de cuentas comenzando por las cuentas principales (sin padre)
-            var cuentasPrincipales = cuentas.Where(c => c.CuentaPadreId == null)
+            // Construir árbol jerárquico
+            foreach (var cuenta in cuentas)
+            {
+                if (cuenta.SubCuentas == null)
+                {
+                    cuenta.SubCuentas = new List<CuentaContable>();
+                }
+                
+                cuenta.SubCuentas = cuentas
+                    .Where(c => c.CuentaPadreId == cuenta.Id)
+                    .ToList();
+            }
+            
+            // Tomar solo cuentas principales
+            var cuentasPrincipales = cuentas
+                .Where(c => c.CuentaPadreId == null)
                 .OrderBy(c => c.Codigo)
                 .ToList();
-                
+            
             return View(cuentasPrincipales);
         }
 
@@ -63,7 +77,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuenta = await _context.CuentasContables
                 .Include(c => c.SubCuentas)
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
@@ -77,14 +91,14 @@ namespace SistemaContable.Controllers
         }
 
         // GET: CatalogoCuentas/Create
-        public IActionResult Create(int? padreId)
+        public async Task<IActionResult> Create(int? padreId)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             // Si se proporciona un ID de cuenta padre, preconfiguramos algunos valores
             if (padreId.HasValue)
             {
-                var cuentaPadre = _context.CuentasContables.FirstOrDefault(c => c.Id == padreId && c.EmpresaId == empresaId);
+                var cuentaPadre = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Id == padreId && c.EmpresaId == empresaId);
                 if (cuentaPadre != null)
                 {
                     var viewModel = new CuentaContableViewModel
@@ -139,7 +153,7 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CuentaContableViewModel viewModel)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             if (ModelState.IsValid)
             {
@@ -234,7 +248,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuentaContable = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                 
@@ -318,7 +332,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             if (ModelState.IsValid)
             {
@@ -451,7 +465,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuentaContable = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                 
@@ -493,7 +507,7 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, int? cuentaDestinoId)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuentaContable = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                 
@@ -552,7 +566,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuenta = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                 
@@ -588,7 +602,7 @@ namespace SistemaContable.Controllers
         // GET: CatalogoCuentas/SaldosIniciales
         public async Task<IActionResult> SaldosIniciales()
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             // Obtener todas las cuentas de la empresa actual
             var cuentas = await _context.CuentasContables
@@ -621,7 +635,7 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaldosIniciales(SaldosInicialesViewModel viewModel)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             if (ModelState.IsValid)
             {
@@ -682,7 +696,7 @@ namespace SistemaContable.Controllers
         // GET: CatalogoCuentas/ExportarExcel
         public async Task<IActionResult> ExportarExcel()
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
             // Obtener todas las cuentas de la empresa actual
             var cuentas = await _context.CuentasContables
@@ -933,7 +947,7 @@ namespace SistemaContable.Controllers
                 _logger.LogInformation($"Se encontraron {cuentasImportadas.Count} cuentas para importar");
                 
                 // Obtener ID de empresa y VERIFICAR QUE EXISTA
-                var empresaId = _empresaService.ObtenerEmpresaActualId();
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
                 var empresaExiste = await _context.Empresas.AnyAsync(e => e.Id == empresaId);
 
                 // SOLUCIÓN AL PROBLEMA: Si la empresa no existe, crearla
@@ -1233,7 +1247,7 @@ namespace SistemaContable.Controllers
 
         private async Task<List<CuentaContableImport>> ValidarCuentasImportadas(List<CuentaContableImport> cuentasImportadas)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuentasExistentesImport = await _context.CuentasContables
                 .Where(c => c.EmpresaId == empresaId)
                 .ToListAsync();
@@ -1287,7 +1301,7 @@ namespace SistemaContable.Controllers
 
         private async Task<bool> ValidarImportacion(List<CuentaContableImport> cuentasImportadas)
         {
-            var empresaId = _empresaService.ObtenerEmpresaActualId();
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
             var cuentasExistentesDb = await _context.CuentasContables
                 .Where(c => c.EmpresaId == empresaId)
                 .ToListAsync();
