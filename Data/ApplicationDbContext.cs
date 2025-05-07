@@ -18,9 +18,14 @@ namespace SistemaContable.Data
         public DbSet<Contacto> Contactos { get; set; }
         public DbSet<CuentaContable> CuentasContables { get; set; }
         public DbSet<SaldoInicial> SaldosIniciales { get; set; }
-
-        // Aquí irán los DbSets para tus entidades
-        // Ejemplo: public DbSet<Cliente> Clientes { get; set; }
+        
+        // Banking module DbSets
+        public DbSet<Banco> Bancos { get; set; }
+        public DbSet<TransaccionBanco> TransaccionesBanco { get; set; }
+        public DbSet<ConciliacionBancaria> ConciliacionesBancarias { get; set; }
+        public DbSet<AjusteConciliacion> AjustesConciliacion { get; set; }
+        public DbSet<AsientoContable> AsientosContables { get; set; }
+        public DbSet<DetalleAsientoContable> DetallesAsientoContable { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -66,6 +71,84 @@ namespace SistemaContable.Data
                 .WithMany()
                 .HasForeignKey(c => c.EmpresaId)
                 .OnDelete(DeleteBehavior.Cascade);
+                
+            // Configuración de Banco
+            builder.Entity<Banco>()
+                .HasOne(b => b.Empresa)
+                .WithMany()
+                .HasForeignKey(b => b.EmpresaId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.Entity<Banco>()
+                .HasOne(b => b.CuentaContable)
+                .WithMany()
+                .HasForeignKey(b => b.CuentaContableId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            // Configuración de TransaccionBanco
+            builder.Entity<TransaccionBanco>()
+                .HasOne(t => t.Banco)
+                .WithMany(b => b.Transacciones)
+                .HasForeignKey(t => t.BancoId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.Entity<TransaccionBanco>()
+                .HasOne(t => t.BancoDestino)
+                .WithMany()
+                .HasForeignKey(t => t.BancoDestinoId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            builder.Entity<TransaccionBanco>()
+                .HasOne(t => t.Conciliacion)
+                .WithMany(r => r.TransaccionesConciliadas)
+                .HasForeignKey(t => t.ConciliacionId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            builder.Entity<TransaccionBanco>()
+                .HasOne(t => t.AsientoContable)
+                .WithMany()
+                .HasForeignKey(t => t.AsientoContableId)
+                .OnDelete(DeleteBehavior.SetNull);
+                
+            // Configuración de ConciliacionBancaria
+            builder.Entity<ConciliacionBancaria>()
+                .HasOne(r => r.Banco)
+                .WithMany(b => b.Conciliaciones)
+                .HasForeignKey(r => r.BancoId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            // Configuración de AjusteConciliacion
+            builder.Entity<AjusteConciliacion>()
+                .HasOne(a => a.Conciliacion)
+                .WithMany(r => r.Ajustes)
+                .HasForeignKey(a => a.ConciliacionId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.Entity<AjusteConciliacion>()
+                .HasOne(a => a.AsientoContable)
+                .WithMany()
+                .HasForeignKey(a => a.AsientoContableId)
+                .OnDelete(DeleteBehavior.SetNull);
+                
+            // Configuración de AsientoContable
+            builder.Entity<AsientoContable>()
+                .HasOne(a => a.Empresa)
+                .WithMany()
+                .HasForeignKey(a => a.EmpresaId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            // Configuración de DetalleAsientoContable
+            builder.Entity<DetalleAsientoContable>()
+                .HasOne(d => d.AsientoContable)
+                .WithMany(a => a.Detalles)
+                .HasForeignKey(d => d.AsientoContableId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.Entity<DetalleAsientoContable>()
+                .HasOne(d => d.CuentaContable)
+                .WithMany()
+                .HasForeignKey(d => d.CuentaContableId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public override int SaveChanges()

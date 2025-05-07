@@ -70,6 +70,21 @@ app.MapControllerRoute(
     defaults: new { controller = "Empresas" });
 
 app.MapControllerRoute(
+    name: "bancos",
+    pattern: "bancos/cuentas",
+    defaults: new { controller = "Banco", action = "Index" });
+
+app.MapControllerRoute(
+    name: "bancosTransacciones",
+    pattern: "bancos/transacciones",
+    defaults: new { controller = "Banco", action = "TransaccionesBancarias" });
+
+app.MapControllerRoute(
+    name: "bancosConciliacion",
+    pattern: "bancos/conciliacion", 
+    defaults: new { controller = "Banco", action = "Conciliacion" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

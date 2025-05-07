@@ -1,0 +1,530 @@
+@model IEnumerable<SistemaContable.Models.TransaccionBanco>
+
+@{
+    ViewData["Title"] = "Transacciones Bancarias";
+    var bancos = ViewBag.Bancos as List<SistemaContable.Models.Banco>;
+    var fechaInicio = ViewBag.FechaInicio as DateTime?;
+    var fechaFin = ViewBag.FechaFin as DateTime?;
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-gray-800">
+            <i class="fas fa-exchange-alt me-2 text-primary"></i>Transacciones Bancarias
+        </h2>
+        <div class="d-flex">
+            <div class="dropdown me-2">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="newTransactionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-plus me-1"></i> Nueva Transacción
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="newTransactionDropdown">
+                    @if (bancos != null)
+                    {
+                        foreach (var banco in bancos)
+                        {
+                            if (banco != null)
+                            {
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("NuevaTransaccion", "Banco", new { id = banco.Id })">
+                                        <i class="fas fa-university me-2"></i> @banco.Nombre
+                                    </a>
+                                </li>
+                            }
+                        }
+                    }
+                </ul>
+            </div>
+            <a href="#" class="btn btn-primary rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#reporteTransaccionesModal">
+                <i class="fas fa-file-alt me-2"></i> Generar Reporte
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Transacciones</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count()</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Ingresos</div>
+                            <div class="h5 mb-0 font-weight-bold text-success">
+                                @Model.Where(t => 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente)
+                                  .Sum(t => t.Monto).ToString("N2")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Total Egresos</div>
+                            <div class="h5 mb-0 font-weight-bold text-danger">
+                                @Model.Where(t => 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque)
+                                  .Sum(t => t.Monto).ToString("N2")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-down fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Período</div>
+                            <div class="small mb-0 font-weight-bold text-gray-800">
+                                @fechaInicio?.ToString("dd/MM/yyyy") al @fechaFin?.ToString("dd/MM/yyyy")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-white">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Fecha Desde</label>
+                    <input type="date" class="form-control" id="startDate" value="@fechaInicio?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">Fecha Hasta</label>
+                    <input type="date" class="form-control" id="endDate" value="@fechaFin?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="bankAccount" class="form-label">Cuenta</label>
+                    <select class="form-select" id="bankAccount">
+                        <option value="">Todas las cuentas</option>
+                        @if (bancos != null)
+                        {
+                            foreach (var banco in bancos)
+                            {
+                                if (banco != null)
+                                {
+                                    <option value="@banco.Id">@banco.Nombre</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="transactionType" class="form-label">Tipo</label>
+                    <select class="form-select" id="transactionType">
+                        <option value="">Todos</option>
+                        <option value="Ingreso">Ingreso</option>
+                        <option value="Gasto">Gasto</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="GastoBancario">Gasto Bancario</option>
+                        <option value="CobroCliente">Cobro Cliente</option>
+                        <option value="PagoProveedor">Pago Proveedor</option>
+                        <option value="Ajuste">Ajuste</option>
+                    </select>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <label for="keyword" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="keyword" placeholder="Concepto, referencia...">
+                </div>
+                <div class="col-12 text-end mt-3">
+                    <button type="button" class="btn btn-outline-secondary me-2" id="clearFilters">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="applyFilters">
+                        <i class="fas fa-filter me-1"></i> Aplicar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transactions Table Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Transacciones</h6>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-download me-1"></i> Exportar
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i> Excel</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i> PDF</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i> CSV</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped border-bottom" id="transaccionesTable">
+                    <thead class="bg-light text-dark">
+                        <tr>
+                            <th scope="col" class="text-center"><i class="fas fa-calendar-alt me-1 text-primary"></i> Fecha</th>
+                            <th scope="col"><i class="fas fa-university me-1 text-primary"></i> Cuenta</th>
+                            <th scope="col"><i class="fas fa-tag me-1 text-primary"></i> Tipo</th>
+                            <th scope="col"><i class="fas fa-comment me-1 text-primary"></i> Concepto</th>
+                            <th scope="col"><i class="fas fa-key me-1 text-primary"></i> Referencia</th>
+                            <th scope="col"><i class="fas fa-user me-1 text-primary"></i> Contacto</th>
+                            <th scope="col" class="text-end"><i class="fas fa-money-bill-wave me-1 text-primary"></i> Monto</th>
+                            <th scope="col" class="text-center"><i class="fas fa-cogs me-1 text-primary"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-bank-id="@item.BancoId">
+                                <td class="text-center">@item.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a href="@Url.Action("Transacciones", "Banco", new { id = item.BancoId })">
+                                        @item.Banco?.Nombre
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill 
+                                        @(item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente ? "bg-success" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor ? "bg-danger" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Transferencia ? "bg-info" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ? "bg-warning" : "bg-secondary")">
+                                        @item.Tipo
+                                    </span>
+                                </td>
+                                <td>@item.Concepto</td>
+                                <td>@item.Referencia</td>
+                                <td>@(item.Contacto?.Nombre ?? "")</td>
+                                <td class="text-end">
+                                    <span class="fw-bold @(
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente ? "text-success" : 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ? "text-danger" : "")">
+                                        @item.Monto.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="#" class="btn btn-sm btn-outline-info" title="Ver detalles"
+                                           data-bs-toggle="modal" data-bs-target="#detalleTransaccionModal" 
+                                           data-id="@item.Id">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Editar"
+                                           onclick="alert('Funcionalidad en desarrollo')">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-danger" title="Anular"
+                                           onclick="return confirm('¿Está seguro de anular esta transacción?')">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de transacción -->
+<div class="modal fade" id="detalleTransaccionModal" tabindex="-1" aria-labelledby="detalleTransaccionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detalleTransaccionModalLabel">Detalle de Transacción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- The same modal content as in Transacciones.cshtml -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Fecha:</p>
+                        <p class="fw-bold" id="modalFecha"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Tipo:</p>
+                        <p class="fw-bold" id="modalTipo"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Monto:</p>
+                        <p class="fw-bold" id="modalMonto"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Referencia:</p>
+                        <p class="fw-bold" id="modalReferencia"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">Banco:</p>
+                        <p class="fw-bold" id="modalBanco"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">Concepto:</p>
+                        <p class="fw-bold" id="modalConcepto"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">Descripción:</p>
+                        <p class="fw-bold" id="modalDescripcion"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Contacto:</p>
+                        <p class="fw-bold" id="modalContacto"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Banco Destino:</p>
+                        <p class="fw-bold" id="modalBancoDestino"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para generar reporte -->
+<div class="modal fade" id="reporteTransaccionesModal" tabindex="-1" aria-labelledby="reporteTransaccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reporteTransaccionesModalLabel">Generar Reporte de Transacciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <div class="mb-3">
+                        <label for="reportStartDate" class="form-label">Fecha Desde</label>
+                        <input type="date" class="form-control" id="reportStartDate" value="@fechaInicio?.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportEndDate" class="form-label">Fecha Hasta</label>
+                        <input type="date" class="form-control" id="reportEndDate" value="@fechaFin?.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportBankAccount" class="form-label">Cuenta</label>
+                        <select class="form-select" id="reportBankAccount">
+                            <option value="">Todas las cuentas</option>
+                            @if (bancos != null)
+                            {
+                                foreach (var banco in bancos)
+                                {
+                                    if (banco != null)
+                                    {
+                                        <option value="@banco.Id">@banco.Nombre</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportFormat" class="form-label">Formato</label>
+                        <select class="form-select" id="reportFormat">
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeDetails" checked>
+                            <label class="form-check-label" for="includeDetails">
+                                Incluir detalles de transacciones
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="generateReport">Generar Reporte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Filtrado de transacciones
+            $('#applyFilters').click(function() {
+                applyFilters();
+            });
+            
+            $('#clearFilters').click(function() {
+                $('#filterForm')[0].reset();
+                $('#startDate').val('@fechaInicio?.ToString("yyyy-MM-dd")');
+                $('#endDate').val('@fechaFin?.ToString("yyyy-MM-dd")');
+                applyFilters();
+            });
+            
+            function applyFilters() {
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+                const bankId = $('#bankAccount').val();
+                const transactionType = $('#transactionType').val().toLowerCase();
+                const keyword = $('#keyword').val().toLowerCase();
+                
+                $('#transaccionesTable tbody tr').each(function() {
+                    const row = $(this);
+                    const date = new Date(row.find('td:eq(0)').text().split('/').reverse().join('-'));
+                    const bank = row.attr('data-bank-id');
+                    const type = row.find('td:eq(2)').text().trim().toLowerCase();
+                    const concept = row.find('td:eq(3)').text().toLowerCase();
+                    const reference = row.find('td:eq(4)').text().toLowerCase();
+                    const contact = row.find('td:eq(5)').text().toLowerCase();
+                    
+                    let show = true;
+                    
+                    // Filtrar por fecha
+                    if (startDate) {
+                        const startDateObj = new Date(startDate);
+                        if (date < startDateObj) show = false;
+                    }
+                    
+                    if (endDate) {
+                        const endDateObj = new Date(endDate);
+                        if (date > endDateObj) show = false;
+                    }
+                    
+                    // Filtrar por banco
+                    if (bankId && bank !== bankId) show = false;
+                    
+                    // Filtrar por tipo
+                    if (transactionType && !type.includes(transactionType)) show = false;
+                    
+                    // Filtrar por palabra clave
+                    if (keyword && !concept.includes(keyword) && !reference.includes(keyword) && !contact.includes(keyword)) show = false;
+                    
+                    row.toggle(show);
+                });
+            }
+            
+            // Modal de detalles de transacción
+            $('#detalleTransaccionModal').on('show.bs.modal', function (event) {
+                const button = $(event.relatedTarget);
+                const id = button.data('id');
+                
+                // Aquí normalmente harías una llamada AJAX para obtener los detalles
+                // Por ahora, simularemos con datos de la tabla
+                const row = button.closest('tr');
+                const fecha = row.find('td:eq(0)').text();
+                const banco = row.find('td:eq(1)').text().trim();
+                const tipo = row.find('td:eq(2)').text().trim();
+                const concepto = row.find('td:eq(3)').text();
+                const referencia = row.find('td:eq(4)').text();
+                const contacto = row.find('td:eq(5)').text();
+                const monto = row.find('td:eq(6)').text();
+                
+                // Llenar el modal con los datos
+                $('#modalFecha').text(fecha);
+                $('#modalBanco').text(banco);
+                $('#modalTipo').text(tipo);
+                $('#modalMonto').text(monto);
+                $('#modalReferencia').text(referencia || 'N/A');
+                $('#modalConcepto').text(concepto);
+                $('#modalDescripcion').text('Descripción detallada de la transacción...');
+                $('#modalContacto').text(contacto || 'N/A');
+                $('#modalBancoDestino').text('N/A');
+            });
+            
+            // Generación de reportes (simulado)
+            $('#generateReport').click(function() {
+                const startDate = $('#reportStartDate').val();
+                const endDate = $('#reportEndDate').val();
+                const bankId = $('#reportBankAccount').val();
+                const format = $('#reportFormat').val();
+                const includeDetails = $('#includeDetails').prop('checked');
+                
+                // Aquí normalmente harías una petición al servidor para generar el reporte
+                alert(`Generando reporte en formato ${format}...\nFechas: ${startDate} al ${endDate}\nCuenta: ${bankId || 'Todas'}\nDetalles: ${includeDetails ? 'Sí' : 'No'}`);
+                
+                $('#reporteTransaccionesModal').modal('hide');
+            });
+        });
+    </script>
+}
+
+<style>
+    .card.border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    
+    .card.border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    
+    .card.border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+    
+    .card.border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    
+    .card.border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+</style> 

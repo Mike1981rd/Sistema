@@ -1,0 +1,180 @@
+@model IEnumerable<SistemaContable.Models.Banco>
+
+@{
+    ViewData["Title"] = "Conciliación Bancaria";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-gray-800"><i class="fas fa-balance-scale me-2" style="color: #848482;"></i>Conciliación Bancaria</h2>
+        <div>
+            <a href="#" class="btn btn-primary rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#nuevaConciliacionModal">
+                <i class="fas fa-plus me-2"></i> Nueva Conciliación
+            </a>
+        </div>
+    </div>
+
+    <!-- Accounts for Reconciliation -->
+    <div class="row">
+        @foreach (var banco in Model)
+        {
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 text-primary">
+                            @banco.Nombre
+                        </h6>
+                        <span class="badge bg-light text-dark border">@banco.Moneda</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="text-xs text-uppercase mb-1 text-muted">Saldo Actual</div>
+                                <div class="h5 mb-0 @(banco.SaldoActual < 0 ? "text-danger" : "text-success")">
+                                    @banco.SaldoActual.ToString("N2")
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-xs text-uppercase mb-1 text-muted">Saldo Conciliado</div>
+                                <div class="h5 mb-0 text-gray-800">
+                                    @banco.SaldoConciliado.ToString("N2")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="text-xs text-uppercase mb-1 text-muted">Pendiente por Conciliar</div>
+                                <div class="h5 mb-0 @(banco.SaldoPendienteReconciliacion < 0 ? "text-danger" : "text-success")">
+                                    @banco.SaldoPendienteReconciliacion.ToString("N2")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted mb-1">
+                            <i class="fas fa-calendar-alt me-1" style="color: #848482;"></i> Última Conciliación: 
+                            @if (banco.UltimaConciliacion.HasValue)
+                            {
+                                @banco.UltimaConciliacion.Value.ToString("dd/MM/yyyy")
+                            }
+                            else
+                            {
+                                <span>No hay conciliaciones</span>
+                            }
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-primary"
+                               onclick="iniciarConciliacion(@banco.Id, '@banco.Nombre')">
+                                <i class="fas fa-sync-alt me-2"></i> Iniciar Conciliación
+                            </a>
+                            <a asp-action="Transacciones" asp-route-id="@banco.Id" class="btn btn-outline-secondary">
+                                <i class="fas fa-receipt me-2"></i> Ver Transacciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal para crear nueva conciliación -->
+<div class="modal fade" id="nuevaConciliacionModal" tabindex="-1" aria-labelledby="nuevaConciliacionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevaConciliacionModalLabel">Nueva Conciliación Bancaria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaConciliacion">
+                    <div class="mb-3">
+                        <label for="cuentaBancariaSelect" class="form-label">Cuenta Bancaria</label>
+                        <select class="form-select" id="cuentaBancariaSelect" required>
+                            <option value="" selected disabled>Seleccionar cuenta...</option>
+                            @foreach (var banco in Model)
+                            {
+                                <option value="@banco.Id">@banco.Nombre (@banco.EntidadBancaria)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaConciliacion" class="form-label">Fecha de Conciliación</label>
+                        <input type="date" class="form-control" id="fechaConciliacion" required
+                               value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="mb-3">
+                        <label for="saldoBanco" class="form-label">Saldo según Banco</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" class="form-control" id="saldoBanco" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="saldoLibros" class="form-label">Saldo según Libros</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" class="form-control" id="saldoLibros" required disabled>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnIniciarConciliacion">Iniciar Conciliación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Actualizar saldo según libros cuando se selecciona una cuenta
+            $('#cuentaBancariaSelect').change(function() {
+                const bancoId = $(this).val();
+                if (bancoId) {
+                    // Aquí normalmente harías una llamada AJAX para obtener el saldo actual
+                    // Por ahora simplemente vamos a buscar el saldo entre los bancos que tenemos en el modelo
+                    @foreach (var banco in Model)
+                    {
+                        <text>
+                        if (bancoId == '@banco.Id') {
+                            $('#saldoLibros').val('@banco.SaldoActual.ToString("0.00")');
+                        }
+                        </text>
+                    }
+                } else {
+                    $('#saldoLibros').val('');
+                }
+            });
+            
+            // Iniciar conciliación desde el botón del modal
+            $('#btnIniciarConciliacion').click(function() {
+                const bancoId = $('#cuentaBancariaSelect').val();
+                if (!bancoId) {
+                    alert('Debe seleccionar una cuenta bancaria');
+                    return;
+                }
+                
+                if (!$('#formNuevaConciliacion')[0].checkValidity()) {
+                    $('#formNuevaConciliacion')[0].reportValidity();
+                    return;
+                }
+                
+                // Aquí normalmente harías el submit del formulario o una llamada AJAX
+                // Por ahora solo redireccionamos a una URL simulada
+                window.location.href = `/banco/iniciarconciliacion/${bancoId}?fecha=${$('#fechaConciliacion').val()}&saldoBanco=${$('#saldoBanco').val()}`;
+            });
+        });
+        
+        // Función para iniciar conciliación desde la tarjeta de la cuenta
+        function iniciarConciliacion(bancoId, bancoNombre) {
+            $('#cuentaBancariaSelect').val(bancoId).trigger('change');
+            $('#nuevaConciliacionModalLabel').text(`Nueva Conciliación - ${bancoNombre}`);
+            $('#nuevaConciliacionModal').modal('show');
+        }
+    </script>
+} 

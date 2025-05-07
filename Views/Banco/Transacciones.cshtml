@@ -1,0 +1,466 @@
+@model IEnumerable<SistemaContable.Models.TransaccionBanco>
+
+@{
+    ViewData["Title"] = "Transacciones Bancarias";
+    var banco = ViewBag.Banco as SistemaContable.Models.Banco;
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary mb-2">
+                <i class="fas fa-arrow-left me-1"></i> Volver a Cuentas
+            </a>
+            <h2 class="mb-0 text-gray-800">
+                <i class="fas fa-receipt me-2 text-primary"></i>Transacciones - @(banco?.Nombre ?? "")
+            </h2>
+        </div>
+        <div>
+            <a asp-action="NuevaTransaccion" asp-route-id="@(banco?.Id ?? 0)" class="btn btn-primary rounded-pill shadow-sm px-4">
+                <i class="fas fa-plus me-2"></i> Nueva Transacción
+            </a>
+        </div>
+    </div>
+
+    @if (banco != null)
+    {
+        <!-- Bank Information Card -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Saldo Actual</div>
+                                <div class="h5 mb-0 font-weight-bold @(banco.SaldoActual < 0 ? "text-danger" : "text-success")">
+                                    @banco.SaldoActual.ToString("N2")
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Entidad</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@banco.EntidadBancaria</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-university fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Cuenta #</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@banco.NumeroCuenta</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-hashtag fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Moneda</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@banco.Moneda</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-coins fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i> No se encontró información de la cuenta bancaria
+        </div>
+    }
+
+    <!-- Transaction Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-white">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Fecha Desde</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">Fecha Hasta</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="transactionType" class="form-label">Tipo</label>
+                    <select class="form-select" id="transactionType">
+                        <option value="">Todos</option>
+                        <option value="Ingreso">Ingreso</option>
+                        <option value="Gasto">Gasto</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="GastoBancario">Gasto Bancario</option>
+                        <option value="CobroCliente">Cobro Cliente</option>
+                        <option value="PagoProveedor">Pago Proveedor</option>
+                        <option value="Ajuste">Ajuste</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="keyword" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="keyword" placeholder="Concepto, referencia...">
+                </div>
+                <div class="col-12 text-end">
+                    <button type="button" class="btn btn-outline-secondary me-2" id="clearFilters">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="applyFilters">
+                        <i class="fas fa-filter me-1"></i> Aplicar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transactions Table Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Transacciones</h6>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-download me-1"></i> Exportar
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i> Excel</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i> PDF</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i> CSV</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped border-bottom" id="transaccionesTable">
+                    <thead class="bg-light text-dark">
+                        <tr>
+                            <th scope="col" class="text-center"><i class="fas fa-calendar-alt me-1 text-primary"></i> Fecha</th>
+                            <th scope="col"><i class="fas fa-tag me-1 text-primary"></i> Tipo</th>
+                            <th scope="col"><i class="fas fa-comment me-1 text-primary"></i> Concepto</th>
+                            <th scope="col"><i class="fas fa-key me-1 text-primary"></i> Referencia</th>
+                            <th scope="col"><i class="fas fa-user me-1 text-primary"></i> Contacto</th>
+                            <th scope="col"><i class="fas fa-exchange-alt me-1 text-primary"></i> Destino</th>
+                            <th scope="col" class="text-end"><i class="fas fa-money-bill-wave me-1 text-primary"></i> Monto</th>
+                            <th scope="col" class="text-center"><i class="fas fa-cogs me-1 text-primary"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center">@item.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge rounded-pill 
+                                        @(item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente ? "bg-success" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                           item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor ? "bg-danger" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Transferencia ? "bg-info" : 
+                                          item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ? "bg-warning" : "bg-secondary")">
+                                        @item.Tipo
+                                    </span>
+                                </td>
+                                <td>@item.Concepto</td>
+                                <td>@item.Referencia</td>
+                                <td>@(item.Contacto?.Nombre ?? "")</td>
+                                <td>@(item.BancoDestino?.Nombre ?? "")</td>
+                                <td class="text-end">
+                                    <span class="fw-bold @(
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente ? "text-success" : 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                        item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ? "text-danger" : "")">
+                                        @item.Monto.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="#" class="btn btn-sm btn-outline-info" title="Ver detalles"
+                                           data-bs-toggle="modal" data-bs-target="#detalleTransaccionModal" 
+                                           data-id="@item.Id">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Editar"
+                                           onclick="alert('Funcionalidad en desarrollo')">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-danger" title="Anular"
+                                           onclick="return confirm('¿Está seguro de anular esta transacción?')">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light fw-bold">
+                            <td colspan="6" class="text-end">Total Ingresos:</td>
+                            <td class="text-end text-success">
+                                @Model.Where(t => 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente)
+                                  .Sum(t => t.Monto).ToString("N2")
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr class="bg-light fw-bold">
+                            <td colspan="6" class="text-end">Total Egresos:</td>
+                            <td class="text-end text-danger">
+                                @Model.Where(t => 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque)
+                                  .Sum(t => t.Monto).ToString("N2")
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de transacción -->
+<div class="modal fade" id="detalleTransaccionModal" tabindex="-1" aria-labelledby="detalleTransaccionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detalleTransaccionModalLabel">Detalle de Transacción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Fecha:</p>
+                        <p class="fw-bold" id="modalFecha"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Tipo:</p>
+                        <p class="fw-bold" id="modalTipo"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Monto:</p>
+                        <p class="fw-bold" id="modalMonto"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Referencia:</p>
+                        <p class="fw-bold" id="modalReferencia"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">Concepto:</p>
+                        <p class="fw-bold" id="modalConcepto"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">Descripción:</p>
+                        <p class="fw-bold" id="modalDescripcion"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Contacto:</p>
+                        <p class="fw-bold" id="modalContacto"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Banco Destino:</p>
+                        <p class="fw-bold" id="modalBancoDestino"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Creado por:</p>
+                        <p class="fw-bold" id="modalUsuarioCreacion"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">Fecha creación:</p>
+                        <p class="fw-bold" id="modalFechaCreacion"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Inicializar fechas por defecto (último mes)
+            const today = new Date();
+            const lastMonth = new Date();
+            lastMonth.setMonth(today.getMonth() - 1);
+            
+            $('#startDate').val(lastMonth.toISOString().split('T')[0]);
+            $('#endDate').val(today.toISOString().split('T')[0]);
+            
+            // Filtrado de transacciones
+            $('#applyFilters').click(function() {
+                applyFilters();
+            });
+            
+            $('#clearFilters').click(function() {
+                $('#filterForm')[0].reset();
+                $('#startDate').val(lastMonth.toISOString().split('T')[0]);
+                $('#endDate').val(today.toISOString().split('T')[0]);
+                applyFilters();
+            });
+            
+            function applyFilters() {
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+                const transactionType = $('#transactionType').val().toLowerCase();
+                const keyword = $('#keyword').val().toLowerCase();
+                
+                $('#transaccionesTable tbody tr').each(function() {
+                    const row = $(this);
+                    const date = new Date(row.find('td:eq(0)').text().split('/').reverse().join('-'));
+                    const type = row.find('td:eq(1)').text().trim().toLowerCase();
+                    const concept = row.find('td:eq(2)').text().toLowerCase();
+                    const reference = row.find('td:eq(3)').text().toLowerCase();
+                    const contact = row.find('td:eq(4)').text().toLowerCase();
+                    
+                    let show = true;
+                    
+                    // Filtrar por fecha
+                    if (startDate) {
+                        const startDateObj = new Date(startDate);
+                        if (date < startDateObj) show = false;
+                    }
+                    
+                    if (endDate) {
+                        const endDateObj = new Date(endDate);
+                        if (date > endDateObj) show = false;
+                    }
+                    
+                    // Filtrar por tipo
+                    if (transactionType && !type.includes(transactionType)) show = false;
+                    
+                    // Filtrar por palabra clave
+                    if (keyword && !concept.includes(keyword) && !reference.includes(keyword) && !contact.includes(keyword)) show = false;
+                    
+                    row.toggle(show);
+                });
+                
+                // Actualizar totales después de filtrar
+                updateTotals();
+            }
+            
+            function updateTotals() {
+                let totalIngresos = 0;
+                let totalEgresos = 0;
+                
+                $('#transaccionesTable tbody tr:visible').each(function() {
+                    const row = $(this);
+                    const type = row.find('td:eq(1)').text().trim();
+                    const monto = parseFloat(row.find('td:eq(6)').text().replace(/\./g, '').replace(',', '.'));
+                    
+                    if (type.includes('Ingreso') || type.includes('CobroCliente')) {
+                        totalIngresos += monto;
+                    } else if (type.includes('Gasto') || type.includes('PagoProveedor') || type.includes('Cheque')) {
+                        totalEgresos += monto;
+                    }
+                });
+                
+                // Actualizar los totales en el footer
+                $('#transaccionesTable tfoot tr:eq(0) td:eq(1)').text(totalIngresos.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+                $('#transaccionesTable tfoot tr:eq(1) td:eq(1)').text(totalEgresos.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+            }
+            
+            // Modal de detalles de transacción
+            $('#detalleTransaccionModal').on('show.bs.modal', function (event) {
+                const button = $(event.relatedTarget);
+                const id = button.data('id');
+                
+                // Aquí normalmente harías una llamada AJAX para obtener los detalles
+                // Por ahora, simularemos con datos de la tabla
+                const row = button.closest('tr');
+                const fecha = row.find('td:eq(0)').text();
+                const tipo = row.find('td:eq(1)').text().trim();
+                const concepto = row.find('td:eq(2)').text();
+                const referencia = row.find('td:eq(3)').text();
+                const contacto = row.find('td:eq(4)').text();
+                const bancoDestino = row.find('td:eq(5)').text();
+                const monto = row.find('td:eq(6)').text();
+                
+                // Llenar el modal con los datos
+                $('#modalFecha').text(fecha);
+                $('#modalTipo').text(tipo);
+                $('#modalMonto').text(monto);
+                $('#modalReferencia').text(referencia || 'N/A');
+                $('#modalConcepto').text(concepto);
+                $('#modalDescripcion').text('Descripción detallada de la transacción...');
+                $('#modalContacto').text(contacto || 'N/A');
+                $('#modalBancoDestino').text(bancoDestino || 'N/A');
+                $('#modalUsuarioCreacion').text('Usuario del sistema');
+                $('#modalFechaCreacion').text(fecha);
+            });
+        });
+    </script>
+}
+
+<style>
+    .card.border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    
+    .card.border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    
+    .card.border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    
+    .card.border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+</style> 

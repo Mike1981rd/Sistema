@@ -23,6 +23,8 @@ namespace SistemaContable.Models
         public bool EsCliente { get; set; }
 
         public bool EsProveedor { get; set; }
+        
+        public bool Activo { get; set; } = true;
 
         [Required]
         public int EmpresaId { get; set; }
