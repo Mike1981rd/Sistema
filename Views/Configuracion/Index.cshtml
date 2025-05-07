@@ -1,0 +1,144 @@
+@model SistemaContable.Models.Empresa
+
+@{
+    ViewData["Title"] = "Configuración de Empresa";
+}
+
+<div class="aurora-breadcrumb">
+    <a href="/" class="aurora-breadcrumb-item">Inicio</a>
+    <span class="aurora-breadcrumb-item">Configuración</span>
+</div>
+
+<div class="aurora-dashboard-section">
+    <h2 class="aurora-dashboard-title">Configuración de la Empresa</h2>
+    
+    <div class="aurora-card">
+        <form asp-action="GuardarEmpresa" method="post">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Información General</h5>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nombre" class="form-label">Nombre de la Empresa</label>
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="NumeroIdentificacion" class="form-label">Número de Identificación</label>
+                    <input asp-for="NumeroIdentificacion" class="form-control" />
+                    <span asp-validation-for="NumeroIdentificacion" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="TipoIdentificacion" class="form-label">Tipo de Identificación</label>
+                    <select asp-for="TipoIdentificacion" class="form-select">
+                        <option value="RNC">RNC</option>
+                        <option value="Cédula">Cédula</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Direccion" class="form-label">Dirección</label>
+                    <input asp-for="Direccion" class="form-control" />
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Ciudad" class="form-label">Ciudad</label>
+                    <input asp-for="Ciudad" class="form-control" />
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Provincia" class="form-label">Provincia</label>
+                    <input asp-for="Provincia" class="form-control" />
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Información de Contacto</h5>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Telefono" class="form-label">Teléfono</label>
+                    <input asp-for="Telefono" class="form-control" />
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label asp-for="SitioWeb" class="form-label">Sitio Web</label>
+                    <input asp-for="SitioWeb" class="form-control" />
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Configuración Financiera</h5>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="MonedaPrincipal" class="form-label">Moneda Principal</label>
+                    <select asp-for="MonedaPrincipal" class="form-select">
+                        <option value="DOP">Peso Dominicano (DOP)</option>
+                        <option value="USD">Dólar Estadounidense (USD)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="PrecisionDecimal" class="form-label">Precisión Decimal</label>
+                    <select asp-for="PrecisionDecimal" class="form-select">
+                        <option value="0">0 decimales</option>
+                        <option value="1">1 decimal</option>
+                        <option value="2">2 decimales</option>
+                        <option value="3">3 decimales</option>
+                        <option value="4">4 decimales</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="SeparadorDecimal" class="form-label">Separador Decimal</label>
+                    <select asp-for="SeparadorDecimal" class="form-select">
+                        <option value=",">Coma (,)</option>
+                        <option value=".">Punto (.)</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label asp-for="NumeroEmpleados" class="form-label">Número de Empleados</label>
+                    <input asp-for="NumeroEmpleados" class="form-control" type="number" min="0" />
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Logo de la Empresa</h5>
+                </div>
+                
+                <div class="col-md-12 mb-3">
+                    <label asp-for="LogoUrl" class="form-label">URL del Logo</label>
+                    <input asp-for="LogoUrl" class="form-control" />
+                    <small class="form-text text-muted">Ingresa la URL de tu logo o sube una imagen.</small>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end">
+                <a href="/" class="btn btn-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

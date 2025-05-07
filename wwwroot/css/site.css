@@ -1,0 +1,44 @@
+/* Import the Aurora theme */
+@import url('aurora-theme.css');
+
+/* Global styles */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--aurora-gray-900);
+}
+
+/* Utility classes */
+.text-primary { color: var(--aurora-primary) !important; }
+.text-secondary { color: var(--aurora-secondary) !important; }
+.text-accent { color: var(--aurora-accent) !important; }
+.text-success { color: var(--aurora-success) !important; }
+.text-warning { color: var(--aurora-warning) !important; }
+.text-danger { color: var(--aurora-danger) !important; }
+
+.bg-primary { background-color: var(--aurora-primary) !important; }
+.bg-secondary { background-color: var(--aurora-secondary) !important; }
+.bg-accent { background-color: var(--aurora-accent) !important; }
+.bg-success { background-color: var(--aurora-success) !important; }
+.bg-warning { background-color: var(--aurora-warning) !important; }
+.bg-danger { background-color: var(--aurora-danger) !important; }

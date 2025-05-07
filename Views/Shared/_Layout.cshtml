@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Aurora</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/aurora-theme.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="aurora-wrapper">
+        <!-- Sidebar -->
+        <aside class="aurora-sidebar">
+            <div class="aurora-logo-container">
+                <img src="~/images/logo.png" alt="Aurora" class="aurora-logo aurora-logo-large" style="height: 75px !important; width: auto !important;" />
+            </div>
+            <nav class="aurora-nav">
+                <a href="/" class="aurora-nav-item active" data-title="Dashboard">
+                    <span class="aurora-nav-icon"><i class="fas fa-home"></i></span>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Ventas">
+                    <span class="aurora-nav-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <span>Ventas</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/ventas/facturas" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
+                    <a href="/ventas/clientes" class="aurora-submenu-item" data-title="Clientes">Clientes</a>
+                    <a href="/ventas/cotizaciones" class="aurora-submenu-item" data-title="Cotizaciones">Cotizaciones</a>
+                    <a href="/ventas/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Compras">
+                    <span class="aurora-nav-icon"><i class="fas fa-shopping-cart"></i></span>
+                    <span>Compras</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/compras/facturas" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
+                    <a href="/compras/proveedores" class="aurora-submenu-item" data-title="Proveedores">Proveedores</a>
+                    <a href="/compras/gastos" class="aurora-submenu-item" data-title="Gastos">Gastos</a>
+                    <a href="/compras/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Inventario">
+                    <span class="aurora-nav-icon"><i class="fas fa-boxes"></i></span>
+                    <span>Inventario</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/inventario/productos" class="aurora-submenu-item" data-title="Productos">Productos</a>
+                    <a href="/inventario/servicios" class="aurora-submenu-item" data-title="Servicios">Servicios</a>
+                    <a href="/inventario/categorias" class="aurora-submenu-item" data-title="Categorías">Categorías</a>
+                    <a href="/inventario/ajustes" class="aurora-submenu-item" data-title="Ajustes">Ajustes</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Bancos">
+                    <span class="aurora-nav-icon"><i class="fas fa-university"></i></span>
+                    <span>Bancos</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/bancos/cuentas" class="aurora-submenu-item" data-title="Cuentas">Cuentas</a>
+                    <a href="/bancos/transacciones" class="aurora-submenu-item" data-title="Transacciones">Transacciones</a>
+                    <a href="/bancos/conciliacion" class="aurora-submenu-item" data-title="Conciliación">Conciliación</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Contabilidad">
+                    <span class="aurora-nav-icon"><i class="fas fa-calculator"></i></span>
+                    <span>Contabilidad</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/contabilidad/catalogo" class="aurora-submenu-item" data-title="Catálogo de cuentas">Catálogo de cuentas</a>
+                    <a href="/contabilidad/comprobantes" class="aurora-submenu-item" data-title="Comprobantes">Comprobantes</a>
+                    <a href="/contabilidad/libro-diario" class="aurora-submenu-item" data-title="Libro diario">Libro diario</a>
+                    <a href="/contabilidad/libro-mayor" class="aurora-submenu-item" data-title="Libro mayor">Libro mayor</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Reportes">
+                    <span class="aurora-nav-icon"><i class="fas fa-chart-bar"></i></span>
+                    <span>Reportes</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/reportes/estado-resultados" class="aurora-submenu-item" data-title="Estado de resultados">Estado de resultados</a>
+                    <a href="/reportes/balance-general" class="aurora-submenu-item" data-title="Balance general">Balance general</a>
+                    <a href="/reportes/impuestos" class="aurora-submenu-item" data-title="Impuestos">Impuestos</a>
+                    <a href="/reportes/ventas" class="aurora-submenu-item" data-title="Reportes de ventas">Reportes de ventas</a>
+                </div>
+                
+                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Configuración">
+                    <span class="aurora-nav-icon"><i class="fas fa-cog"></i></span>
+                    <span>Configuración</span>
+                </a>
+                <div class="aurora-submenu">
+                    <a href="/configuracion/empresas" class="aurora-submenu-item" data-title="Empresas">Empresas</a>
+                    <a href="/configuracion/usuarios" class="aurora-submenu-item" data-title="Usuarios">Usuarios</a>
+                    <a href="/configuracion/sistema" class="aurora-submenu-item" data-title="Sistema">Sistema</a>
+                </div>
+            </nav>
+            <div class="aurora-sidebar-toggler" id="sidebarCollapseToggler">
+                <i class="fas fa-angle-left"></i>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <div class="aurora-content">
+            <!-- Header -->
+            <header class="aurora-header">
+                <button class="btn btn-sm d-lg-none" id="sidebarToggler">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="aurora-header-search">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Buscar..." />
+                    </div>
+                </div>
+                <div class="aurora-header-actions">
+                    <div class="aurora-header-icon">
+                        <i class="fas fa-bell"></i>
+                        <span class="aurora-notification-badge"></span>
+                    </div>
+                    <div class="aurora-header-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="dropdown">
+                        <div class="aurora-header-icon" data-bs-toggle="dropdown">
+                            <div class="aurora-user-avatar">
+                                A
+                            </div>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/perfil"><i class="fas fa-user me-2"></i> Perfil</a></li>
+                            <li><a class="dropdown-item" href="/configuracion"><i class="fas fa-cog me-2"></i> Configuración</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="aurora-main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggler para colapsar/expandir el sidebar
+            document.getElementById('sidebarCollapseToggler')?.addEventListener('click', function() {
+                const wrapper = document.querySelector('.aurora-wrapper');
+                wrapper.classList.toggle('sidebar-collapsed');
+                
+                // Cambiar el ícono del toggler
+                const icon = this.querySelector('i');
+                if (wrapper.classList.contains('sidebar-collapsed')) {
+                    icon.classList.remove('fa-angle-left');
+                    icon.classList.add('fa-angle-right');
+                } else {
+                    icon.classList.remove('fa-angle-right');
+                    icon.classList.add('fa-angle-left');
+                }
+            });
+
+            // Re-aplicar los manejadores de eventos para submenús
+            document.querySelectorAll('.aurora-nav-item.has-submenu').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Toggle expanded class on the clicked item
+                    this.classList.toggle('expanded');
+                    
+                    // Find the next submenu element
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('aurora-submenu')) {
+                        submenu.classList.toggle('show');
+                    }
+                });
+            });
+
+            // Set active state based on current URL
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.aurora-nav-item');
+            const submenuItems = document.querySelectorAll('.aurora-submenu-item');
+            
+            // Check main menu items
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href && href !== 'javascript:void(0)' && currentPath.startsWith(href)) {
+                    item.classList.add('active');
+                    // If it's a submenu item, expand the parent
+                    const parent = item.closest('.aurora-submenu');
+                    if (parent) {
+                        const parentItem = parent.previousElementSibling;
+                        parentItem.classList.add('expanded');
+                        parent.classList.add('show');
+                    }
+                }
+            });
+            
+            // Check submenu items
+            submenuItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href && currentPath.startsWith(href)) {
+                    item.classList.add('active');
+                    // Expand parent submenu
+                    const parent = item.closest('.aurora-submenu');
+                    if (parent) {
+                        const parentItem = parent.previousElementSibling;
+                        parentItem.classList.add('expanded');
+                        parent.classList.add('show');
+                    }
+                }
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,521 @@
+:root {
+  --aurora-primary: #020710;
+  --aurora-secondary: #0a2463;
+  --aurora-accent: #3e92cc;
+  --aurora-light: #d8e1e9;
+  --aurora-success: #2ecc71;
+  --aurora-warning: #f39c12;
+  --aurora-danger: #e74c3c;
+  --aurora-gray-100: #f8f9fa;
+  --aurora-gray-200: #e9ecef;
+  --aurora-gray-300: #dee2e6;
+  --aurora-gray-800: #343a40;
+  --aurora-gray-900: #212529;
+  --sidebar-width: 260px;
+  --header-height: 60px;
+}
+
+/* Estructura principal */
+.aurora-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar */
+.aurora-sidebar {
+  width: var(--sidebar-width);
+  height: 100%;
+  background-color: var(--aurora-primary);
+  color: white;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: all 0.3s;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.aurora-sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Logo Container */
+.aurora-logo-container {
+  padding: 15px 10px !important;
+  height: auto !important;
+}
+
+/* Estilo para el logo */
+.aurora-logo {
+  height: 80px !important;
+  width: auto !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Asegúrate de que cuando el sidebar esté colapsado, el logo se ajuste correctamente */
+.aurora-wrapper.sidebar-collapsed .aurora-logo {
+  height: 40px !important;
+  margin-top: 30px !important;
+}
+
+/* Estilos específicos para el logo con mayor prioridad */
+.aurora-logo-large {
+    height: 75px !important;
+    width: auto !important;
+    max-height: 75px !important;
+}
+
+/* Asegúrate de que cuando el sidebar esté colapsado, el logo también se ajuste con un tamaño adecuado */
+.aurora-wrapper.sidebar-collapsed .aurora-logo-large {
+    height: 45px !important;
+    max-height: 45px !important;
+}
+
+/* Sidebar Navigation */
+.aurora-nav {
+  padding: 10px 0;
+}
+
+.aurora-nav-item {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  color: var(--aurora-light);
+  text-decoration: none;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.aurora-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left-color: var(--aurora-accent);
+}
+
+.aurora-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-left-color: var(--aurora-accent);
+}
+
+.aurora-nav-icon {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+/* Content Area */
+.aurora-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  transition: all 0.3s;
+}
+
+/* Header */
+.aurora-header {
+  height: var(--header-height);
+  background-color: white;
+  border-bottom: 1px solid var(--aurora-gray-300);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.aurora-header-search {
+  flex: 1;
+  margin: 0 20px;
+}
+
+.aurora-header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.aurora-header-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-left: 10px;
+  cursor: pointer;
+  position: relative;
+  color: var(--aurora-gray-800);
+}
+
+.aurora-header-icon:hover {
+  background-color: var(--aurora-gray-200);
+}
+
+.aurora-notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--aurora-danger);
+}
+
+.aurora-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--aurora-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Main Content Area */
+.aurora-main {
+  padding: 20px;
+  background-color: var(--aurora-gray-100);
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* Breadcrumbs */
+.aurora-breadcrumb {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.aurora-breadcrumb-item {
+  color: var(--aurora-gray-800);
+  text-decoration: none;
+}
+
+.aurora-breadcrumb-item:not(:last-child)::after {
+  content: "/";
+  margin: 0 10px;
+  color: var(--aurora-gray-500);
+}
+
+.aurora-breadcrumb-item:last-child {
+  color: var(--aurora-accent);
+  font-weight: 500;
+}
+
+/* Dashboard Cards */
+.aurora-dashboard-section {
+  margin-bottom: 30px;
+}
+
+.aurora-dashboard-title {
+  margin-bottom: 20px;
+  font-weight: normal !important;
+  color: var(--aurora-gray-900);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aurora-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 4px solid transparent;
+}
+
+.aurora-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.aurora-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.aurora-card-title {
+  font-weight: normal !important;
+  color: var(--aurora-gray-900);
+}
+
+.aurora-card-value {
+  font-size: 1.8rem;
+  font-weight: normal !important;
+  color: var(--aurora-primary);
+  margin-top: 5px;
+}
+
+.aurora-card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.aurora-card-icon.sales {
+  background-color: var(--aurora-accent);
+}
+
+.aurora-card-icon.expenses {
+  background-color: var(--aurora-danger);
+}
+
+.aurora-card-icon.profits {
+  background-color: var(--aurora-success);
+}
+
+.aurora-card-icon.pending {
+  background-color: var(--aurora-warning);
+}
+
+.aurora-card-trend {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.aurora-card-trend.positive {
+  color: var(--aurora-success);
+}
+
+.aurora-card-trend.negative {
+  color: var(--aurora-danger);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .aurora-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .aurora-content {
+    margin-left: 0;
+  }
+  
+  .aurora-sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .aurora-content.sidebar-show {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* Estilos para menú con subcategorías */
+.aurora-nav-item.has-submenu {
+  position: relative;
+}
+
+.aurora-nav-item.has-submenu::after {
+  content: '\f105';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s;
+}
+
+.aurora-nav-item.has-submenu.expanded::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.aurora-submenu {
+  display: block !important;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.aurora-submenu.show {
+  max-height: 500px;
+}
+
+.aurora-submenu-item {
+  padding: 8px 20px 8px 30px;
+  display: flex;
+  align-items: center;
+  color: var(--aurora-light);
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.aurora-submenu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.aurora-submenu-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Panel lateral colapsable */
+.aurora-wrapper.sidebar-collapsed .aurora-sidebar {
+  width: 70px;
+  transition: width 0.3s;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-content {
+  margin-left: 70px;
+  transition: margin-left 0.3s;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-logo-container span,
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item span:not(.aurora-nav-icon) {
+  display: none;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-submenu {
+  position: absolute;
+  left: 70px;
+  top: 0;
+  width: 200px;
+  background-color: var(--aurora-primary);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item.has-submenu:hover + .aurora-submenu,
+.aurora-wrapper.sidebar-collapsed .aurora-submenu:hover {
+  max-height: 500px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item.has-submenu::after {
+  display: none;
+}
+
+/* Tooltip para menú colapsado */
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item {
+  position: relative;
+  justify-content: center;
+  padding: 15px 0;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item::before {
+  content: attr(data-title);
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--aurora-primary);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+  z-index: 100;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Botón para colapsar/expandir */
+.aurora-sidebar-toggler {
+  position: absolute;
+  top: 20px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 101;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-sidebar-toggler {
+  right: 25px;
+}
+
+.aurora-sidebar-toggler:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Remover negritas de los títulos del dashboard */
+.aurora-dashboard-title,
+.aurora-card-title {
+  font-weight: normal !important;
+}
+
+.aurora-dashboard-section h2,
+.aurora-dashboard-section h3,
+.aurora-dashboard-section h4,
+.aurora-dashboard-section h5,
+.aurora-dashboard-section h6 {
+  font-weight: normal !important;
+}
+
+.aurora-card-value {
+  font-weight: normal !important;
+}
+
+/* Agregar barras de colores a las tarjetas */
+.aurora-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  display: flex;
+}
+
+/* Colores para cada tipo de tarjeta */
+.aurora-card:nth-child(1)::after,
+.ventas-card::after {
+  background: linear-gradient(to right, #2ecc71 50%, transparent 50%);
+}
+
+.aurora-card:nth-child(2)::after,
+.gastos-card::after {
+  background: linear-gradient(to right, transparent 50%, #e74c3c 50%);
+}
+
+.aurora-card:nth-child(3)::after,
+.ganancias-card::after {
+  background: linear-gradient(to right, #2ecc71 50%, transparent 50%);
+}
+
+.aurora-card:nth-child(4)::after,
+.cobrar-card::after {
+  background: linear-gradient(to right, transparent 50%, #e74c3c 50%);
+} 
