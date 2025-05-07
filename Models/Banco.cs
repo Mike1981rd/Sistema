@@ -58,7 +58,6 @@ namespace SistemaContable.Models
         public int EmpresaId { get; set; }
         public virtual Empresa? Empresa { get; set; }
 
-        [Required]
         public int CuentaContableId { get; set; }
         public virtual CuentaContable? CuentaContable { get; set; }
 
