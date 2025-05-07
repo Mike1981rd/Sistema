@@ -16,6 +16,38 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="FechaCreacion" />
+                        <input type="hidden" asp-for="LogoUrl" id="logoUrlInput" />
+
+                        <!-- Logo Upload Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Logo de la Empresa</label>
+                                    <div class="logo-upload-container">
+                                        <div class="logo-preview">
+                                            @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                                            {
+                                                <img src="@Model.LogoUrl" alt="Logo" class="img-fluid" style="max-height: 150px;" id="logoPreview" />
+                                            }
+                                            else
+                                            {
+                                                <div class="no-logo" id="logoPreview">
+                                                    <i class="fas fa-building"></i>
+                                                    <span>Sin logo</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="logo-upload mt-2">
+                                            <input type="file" id="logoFile" class="d-none" accept="image/*" />
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="selectLogoBtn">
+                                                <i class="fas fa-upload me-1"></i> Seleccionar Logo
+                                            </button>
+                                        </div>
+                                        <div class="logo-status mt-2" id="logoStatus"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <!-- Datos Generales -->
@@ -82,12 +114,6 @@
                                     <input asp-for="SitioWeb" class="form-control" />
                                     <span asp-validation-for="SitioWeb" class="text-danger"></span>
                                 </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="LogoUrl" class="form-label">Logo</label>
-                                    <input type="file" name="LogoFile" class="form-control" accept="image/*" />
-                                    <span asp-validation-for="LogoUrl" class="text-danger"></span>
-                                </div>
                             </div>
                         </div>
 
@@ -122,7 +148,12 @@
 
                                 <div class="mb-3">
                                     <label asp-for="Pais" class="form-label">País <span class="text-danger">*</span></label>
-                                    <input asp-for="Pais" class="form-control" required />
+                                    <select asp-for="Pais" class="form-select select2-flags" required>
+                                        @foreach (var country in ViewBag.Countries)
+                                        {
+                                            <option value="@country.Name" data-flag="@country.Code.ToLower()">@country.Name</option>
+                                        }
+                                    </select>
                                     <span asp-validation-for="Pais" class="text-danger"></span>
                                 </div>
                             </div>
@@ -133,10 +164,11 @@
                                 
                                 <div class="mb-3">
                                     <label asp-for="MonedaPrincipal" class="form-label">Moneda Principal <span class="text-danger">*</span></label>
-                                    <select asp-for="MonedaPrincipal" class="form-select" required>
-                                        <option value="DOP">Peso Dominicano (DOP)</option>
-                                        <option value="USD">Dólar Americano (USD)</option>
-                                        <option value="EUR">Euro (EUR)</option>
+                                    <select asp-for="MonedaPrincipal" class="form-select select2-flags" required>
+                                        @foreach (var currency in ViewBag.Currencies)
+                                        {
+                                            <option value="@currency.Currency" data-flag="@currency.Code.ToLower()">@currency.Currency - @currency.CurrencyName</option>
+                                        }
                                     </select>
                                     <span asp-validation-for="MonedaPrincipal" class="text-danger"></span>
                                 </div>
@@ -175,10 +207,10 @@
 
                         <div class="row mt-4">
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-aurora-primary">
                                     <i class="fas fa-save me-1"></i> Guardar Cambios
                                 </button>
-                                <a asp-action="Index" class="btn btn-secondary">
+                                <a asp-action="Index" class="btn btn-aurora-secondary">
                                     <i class="fas fa-arrow-left me-1"></i> Volver
                                 </a>
                             </div>
@@ -192,4 +224,101 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Subida de logo
+            const selectLogoBtn = document.getElementById('selectLogoBtn');
+            const logoFile = document.getElementById('logoFile');
+            const logoPreview = document.getElementById('logoPreview');
+            const logoStatus = document.getElementById('logoStatus');
+            const logoUrlInput = document.getElementById('logoUrlInput');
+            
+            // Abrir selector de archivos al hacer clic en el botón
+            selectLogoBtn.addEventListener('click', function() {
+                logoFile.click();
+            });
+            
+            // Manejar cambio en input file
+            logoFile.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    
+                    // Previsualizar imagen
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (logoPreview.tagName === 'IMG') {
+                            logoPreview.src = e.target.result;
+                        } else {
+                            // Reemplazar el div placeholder por una imagen
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = "Logo";
+                            img.className = "img-fluid";
+                            img.style.maxHeight = "150px";
+                            img.id = "logoPreview";
+                            logoPreview.parentNode.replaceChild(img, logoPreview);
+                            logoPreview = img;
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                    
+                    // Subir archivo
+                    uploadLogo(file);
+                }
+            });
+            
+            // Función para subir logo al servidor
+            function uploadLogo(file) {
+                const formData = new FormData();
+                formData.append('archivo', file);
+                
+                // Mostrar mensaje de carga
+                logoStatus.innerHTML = '<div class="alert alert-info">Subiendo logo...</div>';
+                
+                fetch('/Empresas/SubirLogo', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Mostrar mensaje de éxito
+                        logoStatus.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+                        // Actualizar campo oculto con la URL
+                        logoUrlInput.value = data.logoUrl;
+                    } else {
+                        // Mostrar mensaje de error
+                        logoStatus.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+                    }
+                    
+                    // Ocultar mensaje después de 5 segundos
+                    setTimeout(function() {
+                        logoStatus.innerHTML = '';
+                    }, 5000);
+                })
+                .catch(error => {
+                    logoStatus.innerHTML = '<div class="alert alert-danger">Error al subir el logo</div>';
+                });
+            }
+
+            // Manejar cambio de país
+            const paisSelect = document.querySelector('select[name="Pais"]');
+            const monedaSelect = document.querySelector('select[name="MonedaPrincipal"]');
+
+            paisSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const currency = selectedOption.dataset.currency;
+                const currencyName = selectedOption.dataset.currencyName;
+
+                // Actualizar moneda automáticamente
+                for (let option of monedaSelect.options) {
+                    if (option.value === currency) {
+                        monedaSelect.value = currency;
+                        break;
+                    }
+                }
+            });
+        });
+    </script>
 } 

@@ -615,4 +615,173 @@
 .form-label.required::after {
     content: " *";
     color: var(--aurora-danger);
+}
+
+/* Estilos personalizados para botones */
+.btn-aurora-primary {
+    background-color: #007848;
+    border-color: #007848;
+    color: #FFFFFF;
+}
+
+.btn-aurora-primary:hover, 
+.btn-aurora-primary:focus, 
+.btn-aurora-primary:active {
+    background-color: #005834;
+    border-color: #005834;
+    color: #FFFFFF;
+}
+
+.btn-aurora-secondary {
+    background-color: #787276;
+    border-color: #787276;
+    color: #FFFFFF;
+}
+
+.btn-aurora-secondary:hover, 
+.btn-aurora-secondary:focus, 
+.btn-aurora-secondary:active {
+    background-color: #5e5a5d;
+    border-color: #5e5a5d;
+    color: #FFFFFF;
+}
+
+/* Logo Upload Styles */
+.logo-upload-container {
+    border: 1px dashed var(--aurora-gray-300);
+    padding: 15px;
+    border-radius: 8px;
+    background: var(--aurora-gray-100);
+    transition: all 0.3s ease;
+}
+
+.logo-upload-container:hover {
+    border-color: var(--aurora-accent);
+    background-color: var(--aurora-gray-200);
+}
+
+.logo-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+    background: white;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.logo-preview img {
+    max-height: 150px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.no-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--aurora-gray-500);
+    padding: 20px;
+}
+
+.no-logo i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: var(--aurora-gray-400);
+}
+
+.no-logo span {
+    font-size: 1rem;
+    color: var(--aurora-gray-600);
+}
+
+.logo-upload {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.logo-upload .btn {
+    background-color: var(--aurora-gray-200);
+    border-color: var(--aurora-gray-300);
+    color: var(--aurora-gray-700);
+    transition: all 0.2s ease;
+}
+
+.logo-upload .btn:hover {
+    background-color: var(--aurora-gray-300);
+    border-color: var(--aurora-gray-400);
+    color: var(--aurora-gray-800);
+}
+
+.logo-status {
+    margin-top: 10px;
+}
+
+.logo-status .alert {
+    margin-bottom: 0;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+}
+
+.logo-status .alert-info {
+    background-color: rgba(62, 146, 204, 0.1);
+    border-color: var(--aurora-accent);
+    color: var(--aurora-accent);
+}
+
+.logo-status .alert-success {
+    background-color: rgba(46, 204, 113, 0.1);
+    border-color: var(--aurora-success);
+    color: var(--aurora-success);
+}
+
+.logo-status .alert-danger {
+    background-color: rgba(231, 76, 60, 0.1);
+    border-color: var(--aurora-danger);
+    color: var(--aurora-danger);
+}
+
+/* Flag Icon Styles */
+.flag-icon {
+    width: 20px;
+    height: 15px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 1px solid var(--aurora-gray-300);
+    border-radius: 2px;
+}
+
+.form-select option {
+    padding: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.form-select option img {
+    margin-right: 8px;
+}
+
+/* Custom Select Styles */
+.form-select {
+    padding-left: 35px;
+    background-position: 8px center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+}
+
+.form-select[data-flag] {
+    background-image: url('/images/flags/do.png');
+}
+
+/* Hover and Focus States */
+.form-select:hover {
+    border-color: var(--aurora-accent);
+}
+
+.form-select:focus {
+    border-color: var(--aurora-accent);
+    box-shadow: 0 0 0 0.25rem rgba(62, 146, 204, 0.25);
 } 
