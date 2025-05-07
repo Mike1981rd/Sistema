@@ -65,16 +65,6 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group mb-3">
-                            <label asp-for="CuentaContableId" class="form-label"></label>
-                            <select asp-for="CuentaContableId" class="form-select" asp-items="ViewBag.CuentasContables">
-                                <option value="">-- Seleccione --</option>
-                            </select>
-                            <span asp-validation-for="CuentaContableId" class="text-danger"></span>
-                            <small class="form-text text-muted">Cuenta contable asociada a esta cuenta bancaria</small>
-                        </div>
-                    </div>
                     <div class="col-md-3">
                         <div class="form-group mb-3">
                             <label asp-for="SaldoInicial" class="form-label"></label>
@@ -91,6 +81,10 @@
                             <input asp-for="FechaApertura" class="form-control" type="date" />
                             <span asp-validation-for="FechaApertura" class="text-danger"></span>
                         </div>
+                    </div>
+                    <div class="col-md-5">
+                        <!-- Campo de cuenta contable completamente oculto -->
+                        <!-- No mostramos ningún elemento visible relacionado con CuentaContableId -->
                     </div>
                 </div>
                 
