@@ -7,16 +7,19 @@ using Microsoft.EntityFrameworkCore;
 using SistemaContable.Data;
 using SistemaContable.Models;
 using SistemaContable.ViewModels;
+using SistemaContable.Services;
 
 namespace SistemaContable.Controllers
 {
     public class BancoController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmpresaService _empresaService;
 
-        public BancoController(ApplicationDbContext context)
+        public BancoController(ApplicationDbContext context, IEmpresaService empresaService)
         {
             _context = context;
+            _empresaService = empresaService;
         }
 
         // GET: Banco
@@ -60,15 +63,10 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Banco/Create
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            // Obtener cuentas contables de tipo Bancos
-            var cuentasBancarias = await _context.CuentasContables
-                .Where(c => c.UsoCuenta == "Bancos" && c.TipoCuenta == "Movimiento")
-                .OrderBy(c => c.Codigo)
-                .ToListAsync();
-                
-            ViewBag.CuentasContables = new SelectList(cuentasBancarias, "Id", "Nombre");
+            // Ya no buscamos o creamos la cuenta contable automáticamente
+            // El campo se ocultará en la vista
             
             // Obtener lista de monedas de los países para el dropdown
             var monedas = DataLists.LatinAmericanCountries
@@ -79,7 +77,8 @@ namespace SistemaContable.Controllers
                 
             ViewBag.Monedas = new SelectList(monedas, "Value", "Text");
             
-            return View();
+            // Inicializar el viewmodel sin preestablacer la cuenta contable
+            return View(new BancoViewModel());
         }
 
         // POST: Banco/Create
@@ -87,50 +86,278 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BancoViewModel viewModel)
         {
-            // Hardcodear la empresa por ahora, luego se obtendrá de la sesión
-            const int EmpresaId = 1;
+            // Obtener el ID de empresa usando el servicio
+            var EmpresaId = await _empresaService.ObtenerEmpresaActualId();
             
-            if (ModelState.IsValid)
-            {
-                var banco = new Banco
-                {
-                    Nombre = viewModel.Nombre,
-                    NumeroCuenta = viewModel.NumeroCuenta,
-                    TipoCuenta = viewModel.TipoCuenta,
-                    EntidadBancaria = viewModel.EntidadBancaria,
-                    Moneda = viewModel.Moneda,
-                    Descripcion = viewModel.Descripcion,
-                    SaldoInicial = viewModel.SaldoInicial,
-                    SaldoActual = viewModel.SaldoInicial, // Al crear, el saldo actual es igual al inicial
-                    FechaApertura = viewModel.FechaApertura,
-                    Activo = viewModel.Activo,
-                    CuentaContableId = viewModel.CuentaContableId,
-                    EmpresaId = EmpresaId,
-                    FechaCreacion = DateTime.UtcNow,
-                    UsuarioCreacion = User.Identity?.Name
-                };
-                
-                _context.Add(banco);
-                await _context.SaveChangesAsync();
-                
-                return RedirectToAction(nameof(Index));
-            }
-            
-            // Si el modelo no es válido, recargar los dropdown lists
-            var cuentasBancarias = await _context.CuentasContables
-                .Where(c => c.UsoCuenta == "Bancos" && c.TipoCuenta == "Movimiento")
-                .OrderBy(c => c.Codigo)
-                .ToListAsync();
-                
-            ViewBag.CuentasContables = new SelectList(cuentasBancarias, "Id", "Nombre", viewModel.CuentaContableId);
-            
-            var monedas = DataLists.LatinAmericanCountries
+            // Preparar monedas para la vista (se usará en caso de error)
+            var monedasList = DataLists.LatinAmericanCountries
                 .Select(c => new { Value = c.Currency, Text = $"{c.Currency} - {c.CurrencyName}" })
                 .Distinct()
                 .OrderBy(c => c.Text)
                 .ToList();
                 
-            ViewBag.Monedas = new SelectList(monedas, "Value", "Text", viewModel.Moneda);
+            ViewBag.Monedas = new SelectList(monedasList, "Value", "Text", viewModel.Moneda);
+            
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    // Verificar que la empresa existe
+                    var empresaExiste = await _context.Empresas.AnyAsync(e => e.Id == EmpresaId);
+                    if (!empresaExiste)
+                    {
+                        // Si la empresa no existe, la creamos automáticamente
+                        var empresa = new Empresa
+                        {
+                            Id = EmpresaId,
+                            Nombre = "Empresa Default",
+                            NumeroIdentificacion = "00000000001",
+                            TipoIdentificacion = "RNC",
+                            Direccion = "Dirección por defecto",
+                            Ciudad = "Ciudad",
+                            Provincia = "Provincia",
+                            CodigoPostal = "00000",
+                            Pais = "República Dominicana",
+                            Telefono = "000-000-0000",
+                            Email = "contacto@ejemplo.com",
+                            SitioWeb = "www.ejemplo.com",
+                            NombreComercial = "Empresa Default",
+                            MonedaPrincipal = "DOP",
+                            PrecisionDecimal = 2,
+                            SeparadorDecimal = ".",
+                            LogoUrl = "/img/default-logo.png",
+                            ResponsabilidadTributaria = "Normal",
+                            Activo = true,
+                            FechaCreacion = DateTime.UtcNow
+                        };
+
+                        _context.Empresas.Add(empresa);
+                        await _context.SaveChangesAsync();
+                    }
+                    
+                    // Usar una transacción para garantizar la integridad de los datos
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    
+                    try
+                    {
+                        // 1. Buscar o crear la estructura de categorías contables para bancos
+                        CuentaContable? categoriaActivo;
+                        CuentaContable? categoriaActivosCorrientes;
+                        CuentaContable? categoriaBancos;
+                        CuentaContable cuentaContableBanco;
+                        
+                        // Buscar/Crear categoría Activo
+                        categoriaActivo = await _context.CuentasContables
+                            .FirstOrDefaultAsync(c => c.Categoria == "Activo" && c.Nombre == "Activo" && c.CuentaPadreId == null);
+                            
+                        if (categoriaActivo == null)
+                        {
+                            categoriaActivo = new CuentaContable
+                            {
+                                Codigo = "1",
+                                Nombre = "Activo",
+                                Descripcion = "Activos de la empresa",
+                                Categoria = "Activo",
+                                Naturaleza = "Deudora",
+                                TipoCuenta = "Mayor",
+                                Nivel = 1,
+                                Orden = 1,
+                                Activo = true,
+                                EmpresaId = EmpresaId,
+                                FechaCreacion = DateTime.UtcNow
+                            };
+                            _context.CuentasContables.Add(categoriaActivo);
+                            await _context.SaveChangesAsync();
+                            
+                            // Verificar que se guardó correctamente
+                            if (categoriaActivo.Id <= 0)
+                            {
+                                throw new Exception("No se pudo crear la categoría contable 'Activo'.");
+                            }
+                        }
+                        
+                        // Buscar/Crear categoría Activos Corrientes
+                        categoriaActivosCorrientes = await _context.CuentasContables
+                            .FirstOrDefaultAsync(c => c.Categoria == "Activo" && 
+                                                     c.Nombre.Contains("Corriente") && 
+                                                     c.CuentaPadreId == categoriaActivo.Id);
+                            
+                        if (categoriaActivosCorrientes == null)
+                        {
+                            categoriaActivosCorrientes = new CuentaContable
+                            {
+                                Codigo = "1.1",
+                                Nombre = "Activos Corrientes",
+                                Descripcion = "Activos de corto plazo",
+                                Categoria = "Activo",
+                                Naturaleza = "Deudora",
+                                TipoCuenta = "Mayor",
+                                CuentaPadreId = categoriaActivo.Id,
+                                Nivel = 2,
+                                Orden = 1,
+                                Activo = true,
+                                EmpresaId = EmpresaId,
+                                FechaCreacion = DateTime.UtcNow
+                            };
+                            _context.CuentasContables.Add(categoriaActivosCorrientes);
+                            await _context.SaveChangesAsync();
+                            
+                            // Verificar que se guardó correctamente
+                            if (categoriaActivosCorrientes.Id <= 0)
+                            {
+                                throw new Exception("No se pudo crear la categoría contable 'Activos Corrientes'.");
+                            }
+                        }
+                        
+                        // Buscar/Crear categoría Bancos
+                        categoriaBancos = await _context.CuentasContables
+                            .FirstOrDefaultAsync(c => c.Categoria == "Activo" && 
+                                                     c.Nombre == "Bancos" && 
+                                                     c.CuentaPadreId == categoriaActivosCorrientes.Id);
+                            
+                        if (categoriaBancos == null)
+                        {
+                            categoriaBancos = new CuentaContable
+                            {
+                                Codigo = "1.1.01",
+                                Nombre = "Bancos",
+                                Descripcion = "Cuentas bancarias de la empresa",
+                                Categoria = "Activo",
+                                Naturaleza = "Deudora",
+                                TipoCuenta = "Mayor",
+                                UsoCuenta = "Bancos",
+                                CuentaPadreId = categoriaActivosCorrientes.Id,
+                                Nivel = 3,
+                                Orden = 1,
+                                Activo = true,
+                                EmpresaId = EmpresaId,
+                                FechaCreacion = DateTime.UtcNow
+                            };
+                            _context.CuentasContables.Add(categoriaBancos);
+                            await _context.SaveChangesAsync();
+                            
+                            // Verificar que se guardó correctamente
+                            if (categoriaBancos.Id <= 0)
+                            {
+                                throw new Exception("No se pudo crear la categoría contable 'Bancos'.");
+                            }
+                        }
+                        
+                        // 2. Crear una cuenta contable específica para este banco
+                        string codigoBase = categoriaBancos.Codigo ?? "1.1.01";
+                        int ultimoDigito = 1;
+                        
+                        // Buscar el último código utilizado para generar uno secuencial
+                        var ultimaCuentaBanco = await _context.CuentasContables
+                            .Where(c => c.CuentaPadreId == categoriaBancos.Id)
+                            .OrderByDescending(c => c.Codigo)
+                            .FirstOrDefaultAsync();
+                            
+                        if (ultimaCuentaBanco != null && ultimaCuentaBanco.Codigo != null && ultimaCuentaBanco.Codigo.StartsWith(codigoBase))
+                        {
+                            try
+                            {
+                                // Tratar de obtener el último número secuencial
+                                string ultimaParteCodigo = ultimaCuentaBanco.Codigo?.Substring(codigoBase.Length) ?? string.Empty;
+                                if (!string.IsNullOrEmpty(ultimaParteCodigo) && ultimaParteCodigo.StartsWith("."))
+                                {
+                                    string ultimoNumero = ultimaParteCodigo.Substring(1);
+                                    if (int.TryParse(ultimoNumero, out int numero))
+                                    {
+                                        ultimoDigito = numero + 1;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Si hay algún error al procesar el código, simplemente usamos el valor predeterminado
+                                ultimoDigito = 1;
+                            }
+                        }
+                        
+                        // Generar un nombre único para la cuenta contable
+                        string nombreCuentaContable = $"Banco - {viewModel.EntidadBancaria} - {viewModel.Nombre}";
+                        // Truncar si es necesario para cumplir con restricciones de longitud
+                        if (nombreCuentaContable.Length > 100)
+                        {
+                            nombreCuentaContable = nombreCuentaContable.Substring(0, 97) + "...";
+                        }
+                        
+                        // Crear la cuenta contable específica para este banco
+                        cuentaContableBanco = new CuentaContable
+                        {
+                            Codigo = $"{codigoBase}.{ultimoDigito:D2}",
+                            Nombre = nombreCuentaContable,
+                            Descripcion = $"Cuenta bancaria {viewModel.NumeroCuenta} en {viewModel.EntidadBancaria}",
+                            Categoria = "Activo",
+                            Naturaleza = "Deudora",
+                            TipoCuenta = "Movimiento",
+                            UsoCuenta = "Bancos",
+                            CuentaPadreId = categoriaBancos.Id,
+                            Nivel = 4,
+                            Orden = ultimoDigito,
+                            Activo = true,
+                            EmpresaId = EmpresaId,
+                            FechaCreacion = DateTime.UtcNow
+                        };
+                        
+                        _context.CuentasContables.Add(cuentaContableBanco);
+                        await _context.SaveChangesAsync();
+                        
+                        // Verificar que la cuenta contable esté creada correctamente
+                        if (cuentaContableBanco.Id <= 0)
+                        {
+                            throw new Exception("No se pudo crear la cuenta contable para el banco.");
+                        }
+                        
+                        // 3. Crear el banco con su cuenta contable asociada
+                        var banco = new Banco
+                        {
+                            Nombre = viewModel.Nombre,
+                            NumeroCuenta = viewModel.NumeroCuenta,
+                            TipoCuenta = viewModel.TipoCuenta,
+                            EntidadBancaria = viewModel.EntidadBancaria,
+                            Moneda = viewModel.Moneda,
+                            Descripcion = viewModel.Descripcion,
+                            SaldoInicial = viewModel.SaldoInicial,
+                            SaldoActual = viewModel.SaldoInicial, // Al crear, el saldo actual es igual al inicial
+                            SaldoConciliado = 0, // Inicializamos el saldo conciliado en 0
+                            FechaApertura = viewModel.FechaApertura,
+                            Activo = viewModel.Activo,
+                            CuentaContableId = cuentaContableBanco.Id, // Asignar la cuenta contable específica
+                            EmpresaId = EmpresaId,
+                            FechaCreacion = DateTime.UtcNow,
+                            UsuarioCreacion = User.Identity?.Name ?? string.Empty
+                        };
+                        
+                        _context.Bancos.Add(banco);
+                        await _context.SaveChangesAsync();
+                        
+                        // Confirmar la transacción
+                        await transaction.CommitAsync();
+                        
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (Exception ex)
+                    {
+                        // Revertir la transacción en caso de error
+                        await transaction.RollbackAsync();
+                        
+                        // Log error y mostrar mensaje al usuario
+                        ModelState.AddModelError(string.Empty, $"Error al guardar: {ex.Message}");
+                        
+                        // Para depuración
+                        System.Diagnostics.Debug.WriteLine($"Error detallado: {ex}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejo de excepciones generales
+                ModelState.AddModelError(string.Empty, $"Error general: {ex.Message}");
+                // Para depuración
+                System.Diagnostics.Debug.WriteLine($"Error general detallado: {ex}");
+            }
             
             return View(viewModel);
         }
@@ -226,7 +453,7 @@ namespace SistemaContable.Controllers
                     banco.Activo = viewModel.Activo;
                     banco.CuentaContableId = viewModel.CuentaContableId;
                     banco.FechaModificacion = DateTime.UtcNow;
-                    banco.UsuarioModificacion = User.Identity?.Name;
+                    banco.UsuarioModificacion = User.Identity?.Name ?? string.Empty;
                     
                     _context.Update(banco);
                     await _context.SaveChangesAsync();
@@ -402,8 +629,8 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> NuevaTransaccion(TransaccionBancariaViewModel viewModel)
         {
-            // Hardcodear la empresa por ahora, luego se obtendrá de la sesión
-            const int EmpresaId = 1;
+            // Obtener el ID de empresa usando el servicio
+            var EmpresaId = await _empresaService.ObtenerEmpresaActualId();
             
             if (ModelState.IsValid)
             {
@@ -427,7 +654,7 @@ namespace SistemaContable.Controllers
                     BancoDestinoId = viewModel.BancoDestinoId,
                     EmpresaId = EmpresaId,
                     FechaCreacion = DateTime.UtcNow,
-                    UsuarioCreacion = User.Identity?.Name
+                    UsuarioCreacion = User.Identity?.Name ?? string.Empty
                 };
                 
                 _context.Add(transaccion);
@@ -471,7 +698,7 @@ namespace SistemaContable.Controllers
                                     BancoDestinoId = viewModel.BancoId, // Referencia a la cuenta de origen
                                     EmpresaId = EmpresaId,
                                     FechaCreacion = DateTime.UtcNow,
-                                    UsuarioCreacion = User.Identity?.Name
+                                    UsuarioCreacion = User.Identity?.Name ?? string.Empty
                                 };
                                 
                                 _context.Add(transaccionDestino);
