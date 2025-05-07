@@ -16,17 +16,17 @@ namespace SistemaContable.Models
 
     public class PendingInvoice
     {
-        public string InvoiceNumber { get; set; }
-        public string ClientName { get; set; }
+        public required string InvoiceNumber { get; set; }
+        public required string ClientName { get; set; }
         public decimal Amount { get; set; }
         public DateTime DueDate { get; set; }
-        public string Status { get; set; }
+        public required string Status { get; set; }
     }
 
     public class DashboardViewModel
     {
-        public FinancialSummary FinancialSummary { get; set; }
-        public List<PendingInvoice> PendingInvoices { get; set; }
+        public required FinancialSummary FinancialSummary { get; set; }
+        public List<PendingInvoice> PendingInvoices { get; set; } = new();
         public DateTime CurrentDate { get; set; }
     }
 } 

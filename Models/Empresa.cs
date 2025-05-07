@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaContable.Models
@@ -7,72 +8,81 @@ namespace SistemaContable.Models
     {
         public int Id { get; set; }
         
-        [Required(ErrorMessage = "El nombre de la empresa es requerido")]
-        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres")]
-        public string Nombre { get; set; } = "Empresa por defecto";
+        [Required]
+        [StringLength(100)]
+        public string Nombre { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "El número de identificación es requerido")]
-        [StringLength(20, ErrorMessage = "El número de identificación no puede exceder los 20 caracteres")]
-        public string NumeroIdentificacion { get; set; } = "000000000";
-        
-        [Required(ErrorMessage = "El tipo de identificación es requerido")]
+        [Required]
         [StringLength(20)]
-        public string TipoIdentificacion { get; set; } = "RNC";
+        public string NumeroIdentificacion { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "La dirección es requerida")]
+        [Required]
+        [StringLength(20)]
+        public string TipoIdentificacion { get; set; } = string.Empty;
+        
+        [Required]
         [StringLength(200)]
-        public string Direccion { get; set; } = "Dirección por defecto";
+        public string Direccion { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "La ciudad es requerida")]
+        [Required]
         [StringLength(100)]
-        public string Ciudad { get; set; } = "Ciudad por defecto";
+        public string Ciudad { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "La provincia es requerida")]
+        [Required]
         [StringLength(100)]
-        public string Provincia { get; set; } = "Provincia por defecto";
+        public string Provincia { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(20)]
-        public string CodigoPostal { get; set; } = "";
+        public string CodigoPostal { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "El país es requerido")]
+        [Required]
         [StringLength(50)]
-        public string Pais { get; set; } = "República Dominicana";
+        public string Pais { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(20)]
-        public string Telefono { get; set; } = "";
+        public string Telefono { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(50)]
-        [EmailAddress(ErrorMessage = "Email no válido")]
-        public string Email { get; set; } = "";
+        public string Email { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(100)]
-        public string SitioWeb { get; set; } = "";
+        public string SitioWeb { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "La moneda principal es requerida")]
+        [Required]
+        [StringLength(100)]
+        public string NombreComercial { get; set; } = string.Empty;
+        
+        [Required]
         [StringLength(20)]
-        public string MonedaPrincipal { get; set; } = "DOP";
+        public string MonedaPrincipal { get; set; } = string.Empty;
         
-        public int NumeroEmpleados { get; set; } = 0;
+        public int NumeroEmpleados { get; set; }
         
-        public int PrecisionDecimal { get; set; } = 2;
+        public int PrecisionDecimal { get; set; }
         
-        [Required(ErrorMessage = "El separador decimal es requerido")]
+        [Required]
         [StringLength(5)]
-        public string SeparadorDecimal { get; set; } = ".";
+        public string SeparadorDecimal { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(255)]
-        public string LogoUrl { get; set; } = "";
+        public string LogoUrl { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(50)]
-        public string ResponsabilidadTributaria { get; set; } = "Régimen General";
-        
-        [StringLength(100)]
-        public string NombreComercial { get; set; } = "";
+        public string ResponsabilidadTributaria { get; set; } = string.Empty;
         
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
         
         public DateTime? FechaActualizacion { get; set; }
         
-        public bool Activo { get; set; } = true;
+        public bool Activo { get; set; }
+        
+        // Navigation Properties
+        public virtual ICollection<CuentaContable>? CuentasContables { get; set; }
     }
 } 

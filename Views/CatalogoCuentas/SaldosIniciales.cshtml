@@ -1,0 +1,156 @@
+@model SistemaContable.ViewModels.SaldosInicialesViewModel
+
+@{
+    ViewData["Title"] = "Saldos Iniciales";
+}
+
+<div class="aurora-breadcrumb">
+    <a href="/" class="aurora-breadcrumb-item">Inicio</a>
+    <a asp-action="Index" class="aurora-breadcrumb-item">Catálogo de Cuentas</a>
+    <span class="aurora-breadcrumb-item">Saldos Iniciales</span>
+</div>
+
+<div class="aurora-dashboard-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="aurora-dashboard-title">@ViewData["Title"]</h2>
+    </div>
+
+    <div class="aurora-card">
+        <form asp-action="GuardarSaldosIniciales" method="post">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="FechaInicial" class="form-label">Fecha de Inicio</label>
+                        <input asp-for="FechaInicial" class="form-control" type="date" />
+                        <span asp-validation-for="FechaInicial" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Activos -->
+                <div class="col-md-4">
+                    <h4>Activos</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cuenta in Model.CuentasActivo)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>@cuenta.Codigo - @cuenta.Nombre</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="SaldosIngresados.Index" value="@cuenta.Id" />
+                                            <input type="hidden" name="SaldosIngresados[@cuenta.Id].CuentaContableId" value="@cuenta.Id" />
+                                            <input type="number" 
+                                                   name="SaldosIngresados[@cuenta.Id].Valor" 
+                                                   value="@(Model.SaldosIniciales.ContainsKey(cuenta.Id) ? Model.SaldosIniciales[cuenta.Id].Valor : 0)" 
+                                                   class="form-control form-control-sm" 
+                                                   step="0.01" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pasivos -->
+                <div class="col-md-4">
+                    <h4>Pasivos</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cuenta in Model.CuentasPasivo)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>@cuenta.Codigo - @cuenta.Nombre</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="SaldosIngresados.Index" value="@cuenta.Id" />
+                                            <input type="hidden" name="SaldosIngresados[@cuenta.Id].CuentaContableId" value="@cuenta.Id" />
+                                            <input type="number" 
+                                                   name="SaldosIngresados[@cuenta.Id].Valor" 
+                                                   value="@(Model.SaldosIniciales.ContainsKey(cuenta.Id) ? Model.SaldosIniciales[cuenta.Id].Valor : 0)" 
+                                                   class="form-control form-control-sm" 
+                                                   step="0.01" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Patrimonio -->
+                <div class="col-md-4">
+                    <h4>Patrimonio</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cuenta in Model.CuentasPatrimonio)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>@cuenta.Codigo - @cuenta.Nombre</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="SaldosIngresados.Index" value="@cuenta.Id" />
+                                            <input type="hidden" name="SaldosIngresados[@cuenta.Id].CuentaContableId" value="@cuenta.Id" />
+                                            <input type="number" 
+                                                   name="SaldosIngresados[@cuenta.Id].Valor" 
+                                                   value="@(Model.SaldosIniciales.ContainsKey(cuenta.Id) ? Model.SaldosIniciales[cuenta.Id].Valor : 0)" 
+                                                   class="form-control form-control-sm" 
+                                                   step="0.01" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-aurora-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Saldos
+                    </button>
+                    <a asp-action="Index" class="btn btn-aurora-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

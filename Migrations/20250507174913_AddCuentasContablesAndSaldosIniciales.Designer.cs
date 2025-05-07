@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SistemaContable.Data;
@@ -11,13 +12,15 @@ using SistemaContable.Data;
 namespace SistemaContable.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250507174913_AddCuentasContablesAndSaldosIniciales")]
+    partial class AddCuentasContablesAndSaldosIniciales
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -31,19 +34,15 @@ namespace SistemaContable.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Direccion")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("EmpresaId")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("EsCliente")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("EsProveedor")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
@@ -61,7 +60,8 @@ namespace SistemaContable.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Telefono")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -78,9 +78,6 @@ namespace SistemaContable.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Activo")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Categoria")
                         .IsRequired()
                         .HasColumnType("text");
@@ -94,13 +91,9 @@ namespace SistemaContable.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.Property<int>("EmpresaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("EmpresaId1")
                         .HasColumnType("integer");
 
                     b.Property<bool>("EsCuentaSistema")
@@ -142,8 +135,6 @@ namespace SistemaContable.Migrations
                     b.HasIndex("CuentaPadreId");
 
                     b.HasIndex("EmpresaId");
-
-                    b.HasIndex("EmpresaId1");
 
                     b.ToTable("CuentasContables");
                 });
@@ -314,10 +305,6 @@ namespace SistemaContable.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SistemaContable.Models.Empresa", null)
-                        .WithMany("CuentasContables")
-                        .HasForeignKey("EmpresaId1");
-
                     b.Navigation("CuentaPadre");
 
                     b.Navigation("Empresa");
@@ -352,11 +339,6 @@ namespace SistemaContable.Migrations
             modelBuilder.Entity("SistemaContable.Models.CuentaContable", b =>
                 {
                     b.Navigation("SubCuentas");
-                });
-
-            modelBuilder.Entity("SistemaContable.Models.Empresa", b =>
-                {
-                    b.Navigation("CuentasContables");
                 });
 #pragma warning restore 612, 618
         }

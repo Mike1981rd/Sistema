@@ -784,4 +784,118 @@
 .form-select:focus {
     border-color: var(--aurora-accent);
     box-shadow: 0 0 0 0.25rem rgba(62, 146, 204, 0.25);
+}
+
+/* Estilos para el catálogo de cuentas */
+.catalogo-cuentas {
+    font-size: 0.9rem;
+}
+
+.catalogo-cuentas thead th {
+    background-color: var(--aurora-bg-light);
+    border-bottom: 2px solid var(--aurora-border-color);
+    font-weight: 600;
+}
+
+.catalogo-cuentas .cuenta-row {
+    transition: background-color 0.2s ease;
+}
+
+.catalogo-cuentas .cuenta-row:hover {
+    background-color: var(--aurora-hover-bg);
+}
+
+.catalogo-cuentas .cuenta-principal {
+    font-weight: 500;
+}
+
+.catalogo-cuentas .subcuenta {
+    background-color: var(--aurora-bg-light);
+}
+
+.catalogo-cuentas .btn-icon {
+    padding: 0.25rem;
+    line-height: 1;
+    border: none;
+    background: transparent;
+}
+
+.catalogo-cuentas .btn-icon:hover {
+    background-color: var(--aurora-hover-bg);
+    border-radius: 0.25rem;
+}
+
+.catalogo-cuentas .toggle-subcuentas {
+    color: var(--aurora-primary);
+    transition: transform 0.2s ease;
+}
+
+.catalogo-cuentas .toggle-subcuentas i {
+    font-size: 1rem;
+}
+
+.catalogo-cuentas .toggle-subcuentas:hover {
+    transform: scale(1.1);
+}
+
+/* Estilos para el modal de cuenta */
+#modalCuenta .form-text {
+    font-size: 0.8rem;
+    color: var(--aurora-text-muted);
+}
+
+#modalCuenta .form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+#modalCuenta .form-control:focus,
+#modalCuenta .form-select:focus {
+    border-color: var(--aurora-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--aurora-primary-rgb), 0.25);
+}
+
+/* Estilos para los botones de acción */
+.btn-outline-secondary {
+    border-color: var(--aurora-border-color);
+    color: var(--aurora-text);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--aurora-hover-bg);
+    border-color: var(--aurora-border-color);
+    color: var(--aurora-text);
+}
+
+/* Estilos para la búsqueda */
+#txtBuscarCuenta {
+    border-right: none;
+}
+
+#btnBuscar {
+    border-left: none;
+}
+
+#btnBuscar:hover {
+    background-color: transparent;
+}
+
+/* Estilos para el dropdown de acciones */
+.dropdown-menu {
+    border-color: var(--aurora-border-color);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background-color: var(--aurora-hover-bg);
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
 } 

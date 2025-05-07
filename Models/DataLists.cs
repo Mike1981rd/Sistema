@@ -31,9 +31,9 @@ namespace SistemaContable.Models
 
     public class Country
     {
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public string Currency { get; set; }
-        public string CurrencyName { get; set; }
+        public required string Code { get; set; }
+        public required string Name { get; set; }
+        public required string Currency { get; set; }
+        public required string CurrencyName { get; set; }
     }
 } 

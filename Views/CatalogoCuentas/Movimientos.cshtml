@@ -1,0 +1,114 @@
+@model SistemaContable.ViewModels.MovimientosCuentaViewModel
+@{
+    ViewData["Title"] = "Movimientos de Cuenta";
+}
+
+<div class="aurora-breadcrumb">
+    <a href="/" class="aurora-breadcrumb-item">Inicio</a>
+    <a asp-action="Index" class="aurora-breadcrumb-item">Catálogo de Cuentas</a>
+    <span class="aurora-breadcrumb-item">Movimientos</span>
+</div>
+
+<div class="aurora-dashboard-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="aurora-dashboard-title">
+            Movimientos de la Cuenta: @Model.Cuenta?.Codigo - @Model.Cuenta?.Nombre
+        </h2>
+    </div>
+
+    <div class="aurora-card">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h5>Resumen</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Saldo Inicial</th>
+                            <th>Total Débitos</th>
+                            <th>Total Créditos</th>
+                            <th>Saldo Final</th>
+                        </tr>
+                        <tr>
+                            <td>@Model.SaldoInicial.ToString("N2")</td>
+                            <td>@Model.TotalDebitos.ToString("N2")</td>
+                            <td>@Model.TotalCreditos.ToString("N2")</td>
+                            <td>@Model.SaldoFinal.ToString("N2")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <form asp-action="Movimientos" method="get" class="row g-3">
+                    <input type="hidden" name="id" value="@Model.Cuenta?.Id" />
+                    
+                    <div class="col-md-5">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="date" name="fechaInicio" value="@Model.FechaInicio.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="date" name="fechaFin" value="@Model.FechaFin.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-aurora-primary w-100">Filtrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Documento</th>
+                        <th>Número</th>
+                        <th>Detalle</th>
+                        <th>Tercero</th>
+                        <th>Débito</th>
+                        <th>Crédito</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Movimientos != null && Model.Movimientos.Any())
+                    {
+                        foreach (var movimiento in Model.Movimientos)
+                        {
+                            <tr>
+                                <td>@movimiento.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td>@movimiento.Documento</td>
+                                <td>@movimiento.NumeroDocumento</td>
+                                <td>@movimiento.Detalle</td>
+                                <td>@movimiento.Tercero</td>
+                                <td class="text-end">@movimiento.Debito.ToString("N2")</td>
+                                <td class="text-end">@movimiento.Credito.ToString("N2")</td>
+                                <td class="text-end">@movimiento.SaldoAcumulado.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center">No hay movimientos para mostrar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Aquí iría el código JavaScript para la funcionalidad de la página
+        });
+    </script>
+} 
