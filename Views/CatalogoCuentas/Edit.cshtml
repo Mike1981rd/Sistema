@@ -1,0 +1,159 @@
+@model SistemaContable.ViewModels.CuentaContableViewModel
+@{
+    ViewData["Title"] = "Editar Cuenta Contable";
+}
+
+<div class="container-fluid">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0">Datos de la cuenta</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CuentaPadreId" />
+                        <input type="hidden" asp-for="EsCuentaSistema" />
+                        
+                        @if (Model.CuentaPadreId.HasValue)
+                        {
+                            <div class="form-group row mb-3">
+                                <label class="col-sm-3 col-form-label">Cuenta Padre:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" value="@Model.CuentaPadreNombre" readonly />
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="Codigo" class="col-sm-3 col-form-label">Código:</label>
+                            <div class="col-sm-9">
+                                <input asp-for="Codigo" class="form-control" />
+                                <span asp-validation-for="Codigo" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="Nombre" class="col-sm-3 col-form-label">Nombre: *</label>
+                            <div class="col-sm-9">
+                                <input asp-for="Nombre" class="form-control" required readonly="@Model.EsCuentaSistema" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                                @if (Model.EsCuentaSistema)
+                                {
+                                    <small class="text-muted">Esta es una cuenta del sistema y no se puede modificar su nombre.</small>
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="Categoria" class="col-sm-3 col-form-label">Categoría: *</label>
+                            <div class="col-sm-9">
+                                <select asp-for="Categoria" class="form-select" required disabled="@Model.EsCuentaSistema">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Pasivo">Pasivo</option>
+                                    <option value="Patrimonio">Patrimonio</option>
+                                    <option value="Ingreso">Ingreso</option>
+                                    <option value="Gasto">Gasto</option>
+                                    <option value="Costo">Costo</option>
+                                    <option value="CuentaOrden">Cuenta de Orden</option>
+                                </select>
+                                <span asp-validation-for="Categoria" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="TipoCuenta" class="col-sm-3 col-form-label">Tipo de cuenta: *</label>
+                            <div class="col-sm-9">
+                                <select asp-for="TipoCuenta" class="form-select" required disabled="@Model.EsCuentaSistema">
+                                    <option value="Cuenta mayor">Cuenta mayor</option>
+                                    <option value="Cuenta de movimiento">Cuenta de movimiento</option>
+                                </select>
+                                <small class="form-text text-muted">Cuenta mayor solo acumula saldos de subcuentas. Cuenta de movimiento permite registros directos.</small>
+                                <span asp-validation-for="TipoCuenta" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="Naturaleza" class="col-sm-3 col-form-label">Naturaleza: *</label>
+                            <div class="col-sm-9">
+                                <select asp-for="Naturaleza" class="form-select" required 
+                                        disabled="@(Model.EsCuentaSistema || !(Model.Categoria == "Activo" || Model.Categoria == "Patrimonio"))">
+                                    <option value="Deudora">Deudora</option>
+                                    <option value="Acreedora">Acreedora</option>
+                                </select>
+                                <span asp-validation-for="Naturaleza" class="text-danger"></span>
+                                @if (!(Model.Categoria == "Activo" || Model.Categoria == "Patrimonio") && !Model.EsCuentaSistema)
+                                {
+                                    <small class="text-muted">Solo se puede modificar la naturaleza en cuentas de Activo o Patrimonio.</small>
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="UsoCuenta" class="col-sm-3 col-form-label">Uso de cuenta:</label>
+                            <div class="col-sm-9">
+                                <select asp-for="UsoCuenta" class="form-select" disabled="@Model.EsCuentaSistema">
+                                    <option value="">Ninguno</option>
+                                    <option value="Bancos">Bancos</option>
+                                    <option value="CuentasPorCobrar">Cuentas por cobrar</option>
+                                    <option value="CuentasPorPagar">Cuentas por pagar</option>
+                                    <option value="Inventario">Inventario</option>
+                                    <option value="CostosInventario">Costos de inventario</option>
+                                    <option value="Ventas">Ventas</option>
+                                    <option value="DevolucionesClientes">Devoluciones de clientes</option>
+                                    <option value="DevolucionesProveedores">Devoluciones de proveedores</option>
+                                    <option value="AnticiposEntregados">Anticipos entregados</option>
+                                    <option value="AnticiposRecibidos">Anticipos recibidos</option>
+                                </select>
+                                <small class="form-text text-muted">Define comportamientos automáticos para la cuenta.</small>
+                                <span asp-validation-for="UsoCuenta" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <label asp-for="Descripcion" class="col-sm-3 col-form-label">Descripción:</label>
+                            <div class="col-sm-9">
+                                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Descripcion" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mb-3">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9">
+                                <div class="form-check">
+                                    <input class="form-check-input" asp-for="VerSaldoPorTercero" type="checkbox" />
+                                    <label class="form-check-label" asp-for="VerSaldoPorTercero">
+                                        Ver saldo de cuenta por terceros
+                                    </label>
+                                    <small class="d-block text-muted">Permite ver el saldo detallado por cada contacto</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row mt-4">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

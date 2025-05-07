@@ -41,29 +41,57 @@ namespace SistemaContable.Controllers
         {
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
-            // Cargar árbol completo de cuentas con subcuentas
-            var cuentas = await _context.CuentasContables
+            // Cargar todas las cuentas de la empresa actual con un orden claro
+            var todasLasCuentas = await _context.CuentasContables
                 .Where(c => c.EmpresaId == empresaId)
-                .Include(c => c.SubCuentas)
+                .OrderBy(c => c.Codigo)
+                .ThenBy(c => c.Orden)
                 .ToListAsync();
             
-            // Construir árbol jerárquico
-            foreach (var cuenta in cuentas)
+            // Construir el árbol jerárquico de manera más eficiente
+            // Primero crear un diccionario para acceso rápido por ID
+            var cuentasPorId = todasLasCuentas.ToDictionary(c => c.Id);
+            
+            // Crear la estructura jerárquica
+            var cuentasPrincipales = new List<CuentaContable>();
+            
+            foreach (var cuenta in todasLasCuentas)
             {
+                // Inicializar la colección de subcuentas si es null
                 if (cuenta.SubCuentas == null)
                 {
                     cuenta.SubCuentas = new List<CuentaContable>();
                 }
                 
-                cuenta.SubCuentas = cuentas
-                    .Where(c => c.CuentaPadreId == cuenta.Id)
-                    .ToList();
+                if (cuenta.CuentaPadreId.HasValue)
+                {
+                    // Esta cuenta tiene un padre, agregarla como subcuenta
+                    if (cuentasPorId.TryGetValue(cuenta.CuentaPadreId.Value, out var cuentaPadre))
+                    {
+                        if (cuentaPadre.SubCuentas == null)
+                        {
+                            cuentaPadre.SubCuentas = new List<CuentaContable>();
+                        }
+                        
+                        cuentaPadre.SubCuentas.Add(cuenta);
+                    }
+                    else
+                    {
+                        // El padre no existe, tratar como cuenta principal
+                        cuentasPrincipales.Add(cuenta);
+                    }
+                }
+                else
+                {
+                    // Cuenta sin padre, es una cuenta principal
+                    cuentasPrincipales.Add(cuenta);
+                }
             }
             
-            // Tomar solo cuentas principales
-            var cuentasPrincipales = cuentas
-                .Where(c => c.CuentaPadreId == null)
+            // Ordenar las cuentas principales por código y luego por orden
+            cuentasPrincipales = cuentasPrincipales
                 .OrderBy(c => c.Codigo)
+                .ThenBy(c => c.Orden)
                 .ToList();
             
             return View(cuentasPrincipales);
@@ -91,14 +119,16 @@ namespace SistemaContable.Controllers
         }
 
         // GET: CatalogoCuentas/Create
-        public async Task<IActionResult> Create(int? padreId)
+        public async Task<IActionResult> Create(int? padreId = null)
         {
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
             
-            // Si se proporciona un ID de cuenta padre, preconfiguramos algunos valores
+            // Si hay un ID de cuenta padre, lo preconfiguramos
             if (padreId.HasValue)
             {
-                var cuentaPadre = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Id == padreId && c.EmpresaId == empresaId);
+                var cuentaPadre = await _context.CuentasContables
+                    .FirstOrDefaultAsync(c => c.Id == padreId && c.EmpresaId == empresaId);
+                    
                 if (cuentaPadre != null)
                 {
                     var viewModel = new CuentaContableViewModel
@@ -114,38 +144,13 @@ namespace SistemaContable.Controllers
                 }
             }
             
-            // Si no hay padre o no se encontró, mostramos formulario vacío
-            var categorias = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "Activo", Text = "Activo" },
-                new SelectListItem { Value = "Pasivo", Text = "Pasivo" },
-                new SelectListItem { Value = "Patrimonio", Text = "Patrimonio" },
-                new SelectListItem { Value = "Ingreso", Text = "Ingreso" },
-                new SelectListItem { Value = "Gasto", Text = "Gasto" },
-                new SelectListItem { Value = "Costo", Text = "Costo" },
-                new SelectListItem { Value = "CuentaOrden", Text = "Cuenta de Orden" }
-            };
-            
-            ViewBag.Categorias = categorias;
-            
-            var usosCuenta = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "Ninguno" },
-                new SelectListItem { Value = "CuentasPorCobrar", Text = "Cuentas por cobrar" },
-                new SelectListItem { Value = "CuentasPorPagar", Text = "Cuentas por pagar" },
-                new SelectListItem { Value = "Bancos", Text = "Bancos" },
-                new SelectListItem { Value = "Inventario", Text = "Inventario" },
-                new SelectListItem { Value = "Ventas", Text = "Ventas" },
-                new SelectListItem { Value = "CostosInventario", Text = "Costos de inventario" },
-                new SelectListItem { Value = "DevolucionesClientes", Text = "Devoluciones de clientes" },
-                new SelectListItem { Value = "DevolucionesProveedores", Text = "Devoluciones de proveedores" },
-                new SelectListItem { Value = "AnticiposEntregados", Text = "Anticipos entregados" },
-                new SelectListItem { Value = "AnticiposRecibidos", Text = "Anticipos recibidos" }
-            };
-            
-            ViewBag.UsosCuenta = usosCuenta;
-            
-            return View(new CuentaContableViewModel { Nivel = 1 });
+            // Modelo por defecto para una nueva cuenta
+            return View(new CuentaContableViewModel { 
+                Nivel = 1,
+                Categoria = "Activo",
+                Naturaleza = "Deudora",
+                TipoCuenta = "Cuenta de movimiento"
+            });
         }
 
         // POST: CatalogoCuentas/Create
@@ -153,10 +158,10 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CuentaContableViewModel viewModel)
         {
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            
             if (ModelState.IsValid)
             {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                
                 // Verificar que no exista otra cuenta con el mismo nombre
                 bool existeNombre = await _context.CuentasContables
                     .AnyAsync(c => c.Nombre == viewModel.Nombre && c.EmpresaId == empresaId);
@@ -167,7 +172,7 @@ namespace SistemaContable.Controllers
                     return View(viewModel);
                 }
                 
-                // Si se proporciona un código, verificar que sea único
+                // Verificar unicidad del código (si se proporciona)
                 if (!string.IsNullOrEmpty(viewModel.Codigo))
                 {
                     bool existeCodigo = await _context.CuentasContables
@@ -180,8 +185,46 @@ namespace SistemaContable.Controllers
                     }
                 }
                 
-                // Crear la nueva cuenta
-                var cuentaContable = new CuentaContable
+                // Determinar el nivel correcto basado en el padre
+                int nivel = 1; // Por defecto, nivel 1 (cuenta principal)
+                
+                if (viewModel.CuentaPadreId.HasValue)
+                {
+                    // Buscar el padre para obtener su nivel
+                    var cuentaPadre = await _context.CuentasContables
+                        .FirstOrDefaultAsync(c => c.Id == viewModel.CuentaPadreId && c.EmpresaId == empresaId);
+                        
+                    if (cuentaPadre != null)
+                    {
+                        nivel = cuentaPadre.Nivel + 1;
+                        
+                        // Verificar que el padre no sea una cuenta de movimiento
+                        if (cuentaPadre.TipoCuenta == "Cuenta de movimiento")
+                        {
+                            ModelState.AddModelError("CuentaPadreId", "No se pueden crear subcuentas bajo una cuenta de movimiento.");
+                            return View(viewModel);
+                        }
+                        
+                        // Verificar que la cuenta heredé categoría y naturaleza del padre
+                        if (string.IsNullOrEmpty(viewModel.Categoria))
+                        {
+                            viewModel.Categoria = cuentaPadre.Categoria;
+                        }
+                        else if (viewModel.Categoria != cuentaPadre.Categoria)
+                        {
+                            ModelState.AddModelError("Categoria", "La categoría de la subcuenta debe coincidir con la categoría de la cuenta padre.");
+                            return View(viewModel);
+                        }
+                        
+                        if (string.IsNullOrEmpty(viewModel.Naturaleza))
+                        {
+                            viewModel.Naturaleza = cuentaPadre.Naturaleza;
+                        }
+                    }
+                }
+                
+                // Crear nueva cuenta
+                var cuenta = new CuentaContable
                 {
                     Nombre = viewModel.Nombre,
                     Codigo = viewModel.Codigo,
@@ -192,50 +235,22 @@ namespace SistemaContable.Controllers
                     Descripcion = viewModel.Descripcion,
                     VerSaldoPorTercero = viewModel.VerSaldoPorTercero,
                     CuentaPadreId = viewModel.CuentaPadreId,
-                    Nivel = viewModel.Nivel,
-                    Orden = await ObtenerSiguienteOrden(viewModel.CuentaPadreId, empresaId),
+                    Nivel = nivel, // Usar el nivel calculado
                     EmpresaId = empresaId,
+                    Activo = true,
+                    EsCuentaSistema = false,
                     FechaCreacion = DateTime.UtcNow
                 };
                 
-                _context.Add(cuentaContable);
+                // Ordenar la cuenta
+                cuenta.Orden = await ObtenerSiguienteOrden(viewModel.CuentaPadreId, empresaId);
+                
+                _context.Add(cuenta);
                 await _context.SaveChangesAsync();
                 
                 TempData["SuccessMessage"] = "Cuenta creada exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
-            
-            // Si llegamos aquí, hubo un error de validación
-            // Volvemos a cargar las listas desplegables
-            var categorias = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "Activo", Text = "Activo" },
-                new SelectListItem { Value = "Pasivo", Text = "Pasivo" },
-                new SelectListItem { Value = "Patrimonio", Text = "Patrimonio" },
-                new SelectListItem { Value = "Ingreso", Text = "Ingreso" },
-                new SelectListItem { Value = "Gasto", Text = "Gasto" },
-                new SelectListItem { Value = "Costo", Text = "Costo" },
-                new SelectListItem { Value = "CuentaOrden", Text = "Cuenta de Orden" }
-            };
-            
-            ViewBag.Categorias = categorias;
-            
-            var usosCuenta = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "Ninguno" },
-                new SelectListItem { Value = "CuentasPorCobrar", Text = "Cuentas por cobrar" },
-                new SelectListItem { Value = "CuentasPorPagar", Text = "Cuentas por pagar" },
-                new SelectListItem { Value = "Bancos", Text = "Bancos" },
-                new SelectListItem { Value = "Inventario", Text = "Inventario" },
-                new SelectListItem { Value = "Ventas", Text = "Ventas" },
-                new SelectListItem { Value = "CostosInventario", Text = "Costos de inventario" },
-                new SelectListItem { Value = "DevolucionesClientes", Text = "Devoluciones de clientes" },
-                new SelectListItem { Value = "DevolucionesProveedores", Text = "Devoluciones de proveedores" },
-                new SelectListItem { Value = "AnticiposEntregados", Text = "Anticipos entregados" },
-                new SelectListItem { Value = "AnticiposRecibidos", Text = "Anticipos recibidos" }
-            };
-            
-            ViewBag.UsosCuenta = usosCuenta;
             
             return View(viewModel);
         }
@@ -249,75 +264,42 @@ namespace SistemaContable.Controllers
             }
 
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            var cuentaContable = await _context.CuentasContables
+            var cuenta = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                 
-            if (cuentaContable == null)
+            if (cuenta == null)
             {
                 return NotFound();
             }
             
-            // Verificar si es una cuenta del sistema
-            if (cuentaContable.EsCuentaSistema)
-            {
-                TempData["WarningMessage"] = "Esta es una cuenta del sistema. Algunos campos no pueden ser modificados.";
-            }
-            
+            // Crear ViewModel
             var viewModel = new CuentaContableViewModel
             {
-                Id = cuentaContable.Id,
-                Nombre = cuentaContable.Nombre,
-                Codigo = cuentaContable.Codigo,
-                Categoria = cuentaContable.Categoria,
-                TipoCuenta = cuentaContable.TipoCuenta,
-                UsoCuenta = cuentaContable.UsoCuenta,
-                Naturaleza = cuentaContable.Naturaleza,
-                Descripcion = cuentaContable.Descripcion,
-                VerSaldoPorTercero = cuentaContable.VerSaldoPorTercero,
-                CuentaPadreId = cuentaContable.CuentaPadreId,
-                Nivel = cuentaContable.Nivel,
-                EsCuentaSistema = cuentaContable.EsCuentaSistema
+                Id = cuenta.Id,
+                Nombre = cuenta.Nombre,
+                Codigo = cuenta.Codigo,
+                Categoria = cuenta.Categoria,
+                TipoCuenta = cuenta.TipoCuenta,
+                UsoCuenta = cuenta.UsoCuenta,
+                Naturaleza = cuenta.Naturaleza,
+                Descripcion = cuenta.Descripcion,
+                VerSaldoPorTercero = cuenta.VerSaldoPorTercero,
+                CuentaPadreId = cuenta.CuentaPadreId,
+                Nivel = cuenta.Nivel,
+                EsCuentaSistema = cuenta.EsCuentaSistema
             };
             
-            // Si tiene padre, obtener su nombre
-            if (cuentaContable.CuentaPadreId.HasValue)
+            // Si tiene padre, obtener nombre
+            if (cuenta.CuentaPadreId.HasValue)
             {
                 var cuentaPadre = await _context.CuentasContables
-                    .FirstOrDefaultAsync(c => c.Id == cuentaContable.CuentaPadreId);
+                    .FirstOrDefaultAsync(c => c.Id == cuenta.CuentaPadreId);
                     
-                viewModel.CuentaPadreNombre = cuentaPadre?.Nombre ?? "";
+                if (cuentaPadre != null)
+                {
+                    viewModel.CuentaPadreNombre = cuentaPadre.Nombre;
+                }
             }
-            
-            // Cargar listas desplegables
-            var categorias = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "Activo", Text = "Activo" },
-                new SelectListItem { Value = "Pasivo", Text = "Pasivo" },
-                new SelectListItem { Value = "Patrimonio", Text = "Patrimonio" },
-                new SelectListItem { Value = "Ingreso", Text = "Ingreso" },
-                new SelectListItem { Value = "Gasto", Text = "Gasto" },
-                new SelectListItem { Value = "Costo", Text = "Costo" },
-                new SelectListItem { Value = "CuentaOrden", Text = "Cuenta de Orden" }
-            };
-            
-            ViewBag.Categorias = categorias;
-            
-            var usosCuenta = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "Ninguno" },
-                new SelectListItem { Value = "CuentasPorCobrar", Text = "Cuentas por cobrar" },
-                new SelectListItem { Value = "CuentasPorPagar", Text = "Cuentas por pagar" },
-                new SelectListItem { Value = "Bancos", Text = "Bancos" },
-                new SelectListItem { Value = "Inventario", Text = "Inventario" },
-                new SelectListItem { Value = "Ventas", Text = "Ventas" },
-                new SelectListItem { Value = "CostosInventario", Text = "Costos de inventario" },
-                new SelectListItem { Value = "DevolucionesClientes", Text = "Devoluciones de clientes" },
-                new SelectListItem { Value = "DevolucionesProveedores", Text = "Devoluciones de proveedores" },
-                new SelectListItem { Value = "AnticiposEntregados", Text = "Anticipos entregados" },
-                new SelectListItem { Value = "AnticiposRecibidos", Text = "Anticipos recibidos" }
-            };
-            
-            ViewBag.UsosCuenta = usosCuenta;
             
             return View(viewModel);
         }
@@ -332,21 +314,20 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var cuentaContable = await _context.CuentasContables
+                    var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                    var cuenta = await _context.CuentasContables
                         .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
                         
-                    if (cuentaContable == null)
+                    if (cuenta == null)
                     {
                         return NotFound();
                     }
                     
-                    // Verificar unicidad de nombre (excluyendo la cuenta actual)
+                    // Verificar unicidad del nombre
                     bool existeNombre = await _context.CuentasContables
                         .AnyAsync(c => c.Nombre == viewModel.Nombre && c.Id != id && c.EmpresaId == empresaId);
                         
@@ -356,7 +337,7 @@ namespace SistemaContable.Controllers
                         return View(viewModel);
                     }
                     
-                    // Verificar unicidad de código si se proporciona (excluyendo la cuenta actual)
+                    // Verificar unicidad del código
                     if (!string.IsNullOrEmpty(viewModel.Codigo))
                     {
                         bool existeCodigo = await _context.CuentasContables
@@ -369,45 +350,32 @@ namespace SistemaContable.Controllers
                         }
                     }
                     
-                    // Si es una cuenta del sistema, solo permitir modificar ciertos campos
-                    if (cuentaContable.EsCuentaSistema)
+                    // Actualizar propiedades
+                    if (!cuenta.EsCuentaSistema)
                     {
-                        cuentaContable.Descripcion = viewModel.Descripcion;
-                        cuentaContable.VerSaldoPorTercero = viewModel.VerSaldoPorTercero;
+                        cuenta.Nombre = viewModel.Nombre;
+                        cuenta.Categoria = viewModel.Categoria;
+                        cuenta.TipoCuenta = viewModel.TipoCuenta;
+                        cuenta.UsoCuenta = viewModel.UsoCuenta;
                         
-                        // Si se permite cambiar el código en cuentas del sistema
-                        cuentaContable.Codigo = viewModel.Codigo;
-                    }
-                    else
-                    {
-                        // Si no es cuenta del sistema, permitir modificar todos los campos
-                        cuentaContable.Nombre = viewModel.Nombre;
-                        cuentaContable.Codigo = viewModel.Codigo;
-                        cuentaContable.TipoCuenta = viewModel.TipoCuenta;
-                        cuentaContable.UsoCuenta = viewModel.UsoCuenta;
-                        cuentaContable.Descripcion = viewModel.Descripcion;
-                        cuentaContable.VerSaldoPorTercero = viewModel.VerSaldoPorTercero;
-                        
-                        // Naturaleza solo se puede cambiar en cuentas de Activo (excepto Efectivo) y Patrimonio
-                        if (cuentaContable.Categoria == "Activo" || cuentaContable.Categoria == "Patrimonio")
+                        // Solo permitir cambiar naturaleza en cuentas de Activo o Patrimonio
+                        if (cuenta.Categoria == "Activo" || cuenta.Categoria == "Patrimonio")
                         {
-                            if (cuentaContable.Categoria == "Activo" && !cuentaContable.Nombre.Contains("Efectivo"))
-                            {
-                                cuentaContable.Naturaleza = viewModel.Naturaleza;
-                            }
-                            else if (cuentaContable.Categoria == "Patrimonio")
-                            {
-                                cuentaContable.Naturaleza = viewModel.Naturaleza;
-                            }
+                            cuenta.Naturaleza = viewModel.Naturaleza;
                         }
                     }
                     
-                    cuentaContable.FechaModificacion = DateTime.UtcNow;
+                    // Campos que siempre se pueden editar
+                    cuenta.Codigo = viewModel.Codigo;
+                    cuenta.Descripcion = viewModel.Descripcion;
+                    cuenta.VerSaldoPorTercero = viewModel.VerSaldoPorTercero;
+                    cuenta.FechaModificacion = DateTime.UtcNow;
                     
-                    _context.Update(cuentaContable);
+                    _context.Update(cuenta);
                     await _context.SaveChangesAsync();
                     
                     TempData["SuccessMessage"] = "Cuenta actualizada exitosamente.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -420,39 +388,7 @@ namespace SistemaContable.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            
-            // Cargar listas desplegables en caso de error
-            var categorias = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "Activo", Text = "Activo" },
-                new SelectListItem { Value = "Pasivo", Text = "Pasivo" },
-                new SelectListItem { Value = "Patrimonio", Text = "Patrimonio" },
-                new SelectListItem { Value = "Ingreso", Text = "Ingreso" },
-                new SelectListItem { Value = "Gasto", Text = "Gasto" },
-                new SelectListItem { Value = "Costo", Text = "Costo" },
-                new SelectListItem { Value = "CuentaOrden", Text = "Cuenta de Orden" }
-            };
-            
-            ViewBag.Categorias = categorias;
-            
-            var usosCuenta = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "Ninguno" },
-                new SelectListItem { Value = "CuentasPorCobrar", Text = "Cuentas por cobrar" },
-                new SelectListItem { Value = "CuentasPorPagar", Text = "Cuentas por pagar" },
-                new SelectListItem { Value = "Bancos", Text = "Bancos" },
-                new SelectListItem { Value = "Inventario", Text = "Inventario" },
-                new SelectListItem { Value = "Ventas", Text = "Ventas" },
-                new SelectListItem { Value = "CostosInventario", Text = "Costos de inventario" },
-                new SelectListItem { Value = "DevolucionesClientes", Text = "Devoluciones de clientes" },
-                new SelectListItem { Value = "DevolucionesProveedores", Text = "Devoluciones de proveedores" },
-                new SelectListItem { Value = "AnticiposEntregados", Text = "Anticipos entregados" },
-                new SelectListItem { Value = "AnticiposRecibidos", Text = "Anticipos recibidos" }
-            };
-            
-            ViewBag.UsosCuenta = usosCuenta;
             
             return View(viewModel);
         }
@@ -485,18 +421,28 @@ namespace SistemaContable.Controllers
             var tieneSubcuentas = await _context.CuentasContables
                 .AnyAsync(c => c.CuentaPadreId == id);
                 
-            if (tieneSubcuentas)
-            {
-                TempData["WarningMessage"] = "Esta cuenta tiene subcuentas. Al eliminarla, todas sus subcuentas también serán eliminadas.";
-            }
+            ViewBag.TieneSubcuentas = tieneSubcuentas;
             
-            // Verificar si tiene saldos o movimientos
+            // Verificar si tiene saldos iniciales
             var tieneSaldos = await _context.SaldosIniciales
                 .AnyAsync(s => s.CuentaContableId == id);
                 
+            ViewBag.TieneSaldos = tieneSaldos;
+            
             if (tieneSaldos)
             {
-                TempData["WarningMessage"] = "Esta cuenta tiene saldos iniciales. Al eliminarla, tendrás que transferir estos saldos a otra cuenta.";
+                // Obtener cuentas disponibles para transferir saldos
+                // Solo cuentas de la misma naturaleza y categoría
+                var cuentasDisponibles = await _context.CuentasContables
+                    .Where(c => c.Id != id 
+                           && c.EmpresaId == empresaId
+                           && c.Naturaleza == cuentaContable.Naturaleza
+                           && c.Categoria == cuentaContable.Categoria
+                           && c.TipoCuenta == "Cuenta de movimiento")
+                    .OrderBy(c => c.Codigo)
+                    .ToListAsync();
+                    
+                ViewBag.CuentasDisponibles = cuentasDisponibles;
             }
             
             return View(cuentaContable);
@@ -523,39 +469,55 @@ namespace SistemaContable.Controllers
                 return RedirectToAction(nameof(Index));
             }
             
-            // Verificar si tiene saldos o movimientos
+            // Verificar si tiene saldos iniciales
             var tieneSaldos = await _context.SaldosIniciales
                 .AnyAsync(s => s.CuentaContableId == id);
                 
-            if (tieneSaldos && cuentaDestinoId.HasValue)
+            if (tieneSaldos && !cuentaDestinoId.HasValue)
             {
-                // Transferir saldos a la cuenta destino
-                var saldos = await _context.SaldosIniciales
-                    .Where(s => s.CuentaContableId == id)
-                    .ToListAsync();
-                    
-                foreach (var saldo in saldos)
-                {
-                    saldo.CuentaContableId = cuentaDestinoId.Value;
-                }
-                
-                await _context.SaveChangesAsync();
-            }
-            else if (tieneSaldos && !cuentaDestinoId.HasValue)
-            {
-                TempData["ErrorMessage"] = "No se puede eliminar esta cuenta porque tiene saldos. Debes transferir estos saldos a otra cuenta.";
+                TempData["ErrorMessage"] = "No se puede eliminar esta cuenta porque tiene saldos iniciales. Debe transferir estos saldos a otra cuenta.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
             
-            // Eliminar subcuentas recursivamente
-            await EliminarSubcuentasRecursivamente(id);
+            using var transaction = await _context.Database.BeginTransactionAsync();
             
-            // Eliminar la cuenta
-            _context.CuentasContables.Remove(cuentaContable);
-            await _context.SaveChangesAsync();
-            
-            TempData["SuccessMessage"] = "Cuenta eliminada exitosamente.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                // Si tiene saldos y se proporcionó una cuenta destino, transferir saldos
+                if (tieneSaldos && cuentaDestinoId.HasValue)
+                {
+                    // Transferir saldos a la cuenta destino
+                    var saldos = await _context.SaldosIniciales
+                        .Where(s => s.CuentaContableId == id)
+                        .ToListAsync();
+                        
+                    foreach (var saldo in saldos)
+                    {
+                        saldo.CuentaContableId = cuentaDestinoId.Value;
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Eliminar subcuentas recursivamente
+                await EliminarSubcuentasRecursivamente(id);
+                
+                // Eliminar la cuenta
+                _context.CuentasContables.Remove(cuentaContable);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+                
+                TempData["SuccessMessage"] = "Cuenta eliminada exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al eliminar cuenta {Id}", id);
+                TempData["ErrorMessage"] = $"Error al eliminar la cuenta: {ex.Message}";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
         }
 
         // GET: CatalogoCuentas/Movimientos/5
@@ -1232,17 +1194,19 @@ namespace SistemaContable.Controllers
 
         private async Task EliminarSubcuentasRecursivamente(int cuentaId)
         {
+            // Encontrar todas las subcuentas directas
             var subcuentas = await _context.CuentasContables
                 .Where(c => c.CuentaPadreId == cuentaId)
                 .ToListAsync();
                 
             foreach (var subcuenta in subcuentas)
             {
+                // Primero buscar y eliminar las subcuentas de este nivel
                 await EliminarSubcuentasRecursivamente(subcuenta.Id);
+                
+                // Luego eliminar la subcuenta actual
                 _context.CuentasContables.Remove(subcuenta);
             }
-            
-            await _context.SaveChangesAsync();
         }
 
         private async Task<List<CuentaContableImport>> ValidarCuentasImportadas(List<CuentaContableImport> cuentasImportadas)

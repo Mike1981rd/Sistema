@@ -1,0 +1,103 @@
+@model SistemaContable.Models.CuentaContable
+@{
+    ViewData["Title"] = "Eliminar Cuenta Contable";
+}
+
+<div class="container-fluid">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="m-0">¿Está seguro que desea eliminar esta cuenta?</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.EsCuentaSistema)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Esta es una cuenta del sistema y no puede ser eliminada.</strong>
+                        </div>
+                    }
+                    else if (ViewBag.TieneSubcuentas == true)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Esta cuenta tiene subcuentas. Al eliminarla, todas sus subcuentas también serán eliminadas.</strong>
+                        </div>
+                    }
+                    
+                    @if (ViewBag.TieneSaldos == true)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Esta cuenta tiene saldos iniciales. Debe transferir estos saldos a otra cuenta.</strong>
+                        </div>
+                    }
+                    
+                    <dl class="row">
+                        <dt class="col-sm-3">Código:</dt>
+                        <dd class="col-sm-9">@Model.Codigo</dd>
+                        
+                        <dt class="col-sm-3">Nombre:</dt>
+                        <dd class="col-sm-9">@Model.Nombre</dd>
+                        
+                        <dt class="col-sm-3">Tipo:</dt>
+                        <dd class="col-sm-9">@Model.TipoCuenta</dd>
+                        
+                        <dt class="col-sm-3">Naturaleza:</dt>
+                        <dd class="col-sm-9">@Model.Naturaleza</dd>
+                        
+                        <dt class="col-sm-3">Categoría:</dt>
+                        <dd class="col-sm-9">@Model.Categoria</dd>
+                    </dl>
+                    
+                    @if (ViewBag.TieneSaldos == true)
+                    {
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            
+                            <div class="form-group">
+                                <label for="cuentaDestinoId" class="form-label">Transferir saldos a:</label>
+                                <select id="cuentaDestinoId" name="cuentaDestinoId" class="form-select" required>
+                                    <option value="">-- Seleccione una cuenta --</option>
+                                    @foreach (var cuenta in ViewBag.CuentasDisponibles)
+                                    {
+                                        <option value="@cuenta.Id">@cuenta.Codigo - @cuenta.Nombre</option>
+                                    }
+                                </select>
+                                <small class="form-text text-muted">Seleccione la cuenta a la que se transferirán los saldos.</small>
+                            </div>
+                            
+                            <div class="form-group mt-4">
+                                <button type="submit" class="btn btn-danger" disabled="@Model.EsCuentaSistema">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            
+                            <div class="form-group mt-4">
+                                <button type="submit" class="btn btn-danger" disabled="@Model.EsCuentaSistema">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
