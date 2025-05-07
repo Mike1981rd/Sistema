@@ -22,6 +22,14 @@
 
     <div class="card">
         <div class="card-body">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por código o nombre de cuenta...">
+            </div>
+            
+            <div id="resultadosFiltrado" class="mb-3" style="display: none;"></div>
             <div class="table-responsive">
                 <table class="table table-hover" id="catalogoTable">
                     <thead>
@@ -34,7 +42,7 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="catalogTree">
                         @{
                             async Task RenderCuentas(IEnumerable<SistemaContable.Models.CuentaContable>? cuentas, int nivel = 0, bool isVisible = true)
                             {
@@ -48,8 +56,9 @@
                                     var rowId = $"cuenta-{cuenta.Id}";
                                     var parentId = cuenta.CuentaPadreId.HasValue ? $"cuenta-{cuenta.CuentaPadreId}" : "";
                                     
-                                    <tr id="@rowId" class="@(cuenta.CuentaPadreId.HasValue ? $"child-of-{parentId}" : "")" 
-                                        data-nivel="@nivel" data-parent="@cuenta.CuentaPadreId" style="@display">
+                                    <tr id="@rowId" class="@(cuenta.CuentaPadreId.HasValue ? $"child-of-{parentId}" : "") node" 
+                                        data-nivel="@nivel" data-parent="@cuenta.CuentaPadreId" data-id="@cuenta.Id"
+                                        data-codigo="@cuenta.Codigo" style="@display">
                                         <td>
                                             <div class="d-flex align-items-center" style="padding-left: @paddingLeft px;">
                                                 @if (hasChildren)
@@ -63,7 +72,7 @@
                                                 {
                                                     <span class="ms-4"></span>
                                                 }
-                                                @cuenta.Codigo
+                                                <span class="node-label">@cuenta.Codigo - @cuenta.Nombre</span>
                                             </div>
                                         </td>
                                         <td>@cuenta.Nombre</td>
@@ -74,7 +83,7 @@
                                                 @(cuenta.Activo ? "Activa" : "Inactiva")
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="actions-column">
                                             <div class="btn-group">
                                                 <a asp-action="Edit" asp-route-id="@cuenta.Id" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-edit"></i>
@@ -129,7 +138,15 @@
     <script>
         $(document).ready(function() {
             // Toggle para expandir/colapsar subcuentas
-            $('.toggle-children').on('click', function() {
+            initializeTreeToggle();
+            
+            // Inicializar el filtro avanzado
+            initializeAdvancedFilter();
+        });
+        
+        function initializeTreeToggle() {
+            // Delegación de eventos para que funcione incluso con contenido dinámico
+            $(document).on('click', '.toggle-children', function() {
                 var $btn = $(this);
                 var expanded = $btn.data('expanded') === true;
                 var parentId = $btn.data('parent-id');
@@ -152,24 +169,209 @@
                 // Actualizar estado
                 $btn.data('expanded', !expanded);
             });
+        }
+        
+        // Función recursiva para ocultar hijos
+        function hideChildren(parentId) {
+            $('tr.child-of-cuenta-' + parentId).each(function() {
+                var childId = $(this).attr('id').replace('cuenta-', '');
+                $(this).hide();
+                
+                // Si este hijo tiene un botón de expandir, asegurarse de que esté colapsado
+                var $btn = $(this).find('.toggle-children');
+                if ($btn.length > 0) {
+                    $btn.data('expanded', false);
+                    $btn.find('i').removeClass('fa-minus-circle').addClass('fa-plus-circle');
+                }
+                
+                // Ocultar recursivamente sus hijos
+                hideChildren(childId);
+            });
+        }
+        
+        function initializeAdvancedFilter() {
+            const inputBusqueda = document.getElementById('searchInput');
+            const catalogTree = document.getElementById('catalogTree');
+            const resultadosFiltrado = document.getElementById('resultadosFiltrado');
             
-            // Función recursiva para ocultar hijos
-            function hideChildren(parentId) {
-                $('tr.child-of-cuenta-' + parentId).each(function() {
-                    var childId = $(this).attr('id').replace('cuenta-', '');
-                    $(this).hide();
-                    
-                    // Si este hijo tiene un botón de expandir, asegurarse de que esté colapsado
-                    var $btn = $(this).find('.toggle-children');
-                    if ($btn.length > 0) {
-                        $btn.data('expanded', false);
-                        $btn.find('i').removeClass('fa-minus-circle').addClass('fa-plus-circle');
+            if (!inputBusqueda || !catalogTree) return;
+            
+            // Guardar HTML original
+            const htmlOriginal = catalogTree.innerHTML;
+            let estilosAdicionales = false;
+            
+            function agregarEstilosResaltado() {
+                if (estilosAdicionales) return;
+                const estilos = document.createElement('style');
+                estilos.id = 'estilos-filtro-cuentas';
+                estilos.textContent = `
+                    .coincidencia-exacta {
+                        background-color: #e8f5e9 !important;
+                        font-weight: bold !important;
+                        color: #2e7d32 !important;
+                        border-radius: 4px;
+                        padding: 2px 5px;
+                        animation: destello 1.5s ease-in-out;
                     }
-                    
-                    // Ocultar recursivamente sus hijos
-                    hideChildren(childId);
-                });
+                    .resultados-filtrados-container {
+                        margin-bottom: 20px;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 8px;
+                        padding: 15px;
+                        background-color: #f8f9fa;
+                    }
+                    .resultados-filtrados-titulo {
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        color: #333;
+                        border-bottom: 1px solid #ddd;
+                        padding-bottom: 5px;
+                    }
+                    @@keyframes destello {
+                        0% { background-color: #b9f6ca !important; }
+                        50% { background-color: #e8f5e9 !important; }
+                        100% { background-color: #e8f5e9 !important; }
+                    }
+                `;
+                document.head.appendChild(estilos);
+                estilosAdicionales = true;
             }
-        });
+            
+            // Eliminar listeners previos (por si recarga parcial)
+            const nuevoInput = inputBusqueda.cloneNode(true);
+            inputBusqueda.parentNode.replaceChild(nuevoInput, inputBusqueda);
+            
+            // Listener de filtrado
+            nuevoInput.addEventListener('input', function(e) {
+                const valorBusqueda = e.target.value.toLowerCase().trim();
+                
+                if (!valorBusqueda) {
+                    catalogTree.innerHTML = htmlOriginal;
+                    resultadosFiltrado.style.display = 'none';
+                    initializeTreeToggle();
+                    return;
+                }
+                
+                agregarEstilosResaltado();
+                
+                // Buscar coincidencias en los nodos
+                const filas = Array.from(document.querySelectorAll('#catalogTree tr.node'));
+                const coincidencias = [];
+                const idsIncluidos = new Set(); // Para evitar duplicados
+                
+                filas.forEach(fila => {
+                    const labelElem = fila.querySelector('.node-label');
+                    if (!labelElem) return;
+                    
+                    const texto = labelElem.textContent.toLowerCase();
+                    const id = fila.getAttribute('data-id');
+                    const codigo = fila.getAttribute('data-codigo')?.toLowerCase() || '';
+                    const nombre = fila.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                    
+                    if ((nombre.includes(valorBusqueda) || codigo.includes(valorBusqueda) || texto.includes(valorBusqueda)) 
+                        && !idsIncluidos.has(id)) {
+                        const tipo = fila.querySelector('td:nth-child(3)')?.textContent || '';
+                        const naturaleza = fila.querySelector('td:nth-child(4)')?.textContent || '';
+                        
+                        coincidencias.push({
+                            id: id,
+                            fila: fila,
+                            codigo: codigo,
+                            nombre: nombre,
+                            tipo: tipo,
+                            naturaleza: naturaleza,
+                            texto: texto
+                        });
+                        idsIncluidos.add(id);
+                    }
+                });
+                
+                // Mostrar resultados filtrados
+                if (coincidencias.length > 0) {
+                    let tablaHTML = `
+                    <div class="resultados-filtrados-container">
+                        <div class="resultados-filtrados-titulo">
+                            <i class="fas fa-filter"></i> ${coincidencias.length} resultados para "${valorBusqueda}"
+                        </div>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Naturaleza</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    
+                    coincidencias.forEach(coincidencia => {
+                        // Obtener el código y nombre para resaltarlos
+                        let codigoHTML = coincidencia.codigo;
+                        let nombreHTML = coincidencia.nombre;
+                        
+                        if (coincidencia.codigo.includes(valorBusqueda)) {
+                            codigoHTML = coincidencia.codigo.replace(
+                                new RegExp(valorBusqueda, 'gi'),
+                                match => `<span class="coincidencia-exacta">${match}</span>`
+                            );
+                        }
+                        
+                        if (coincidencia.nombre.includes(valorBusqueda)) {
+                            nombreHTML = coincidencia.nombre.replace(
+                                new RegExp(valorBusqueda, 'gi'),
+                                match => `<span class="coincidencia-exacta">${match}</span>`
+                            );
+                        }
+                        
+                        // Clonar columna de acciones
+                        const accionesHTML = coincidencia.fila.querySelector('.actions-column').innerHTML;
+                        
+                        tablaHTML += `
+                            <tr data-id="${coincidencia.id}">
+                                <td>${codigoHTML}</td>
+                                <td>${nombreHTML}</td>
+                                <td>${coincidencia.tipo}</td>
+                                <td>${coincidencia.naturaleza}</td>
+                                <td>${accionesHTML}</td>
+                            </tr>`;
+                    });
+                    
+                    tablaHTML += `
+                            </tbody>
+                        </table>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button id="btnVerArbolCompleto" class="btn btn-outline-secondary rounded-pill">
+                                <i class="fas fa-tree me-1"></i> Ver árbol completo
+                            </button>
+                        </div>
+                    </div>`;
+                    
+                    resultadosFiltrado.innerHTML = tablaHTML;
+                    resultadosFiltrado.style.display = 'block';
+                    
+                    document.getElementById('catalogTable').style.display = 'none';
+                    
+                    // Botón para mostrar árbol completo
+                    document.getElementById('btnVerArbolCompleto').addEventListener('click', function() {
+                        document.getElementById('catalogTable').style.display = 'table';
+                        catalogTree.innerHTML = htmlOriginal;
+                        resultadosFiltrado.style.display = 'none';
+                        nuevoInput.value = '';
+                        initializeTreeToggle();
+                    });
+                } else {
+                    resultadosFiltrado.innerHTML = `
+                    <div class="resultados-filtrados-container">
+                        <div class="resultados-filtrados-titulo">
+                            <i class="fas fa-info-circle"></i> No se encontraron resultados para "${valorBusqueda}"
+                        </div>
+                        <p class="text-muted mb-0">Intenta con otro término de búsqueda.</p>
+                    </div>`;
+                    resultadosFiltrado.style.display = 'block';
+                    document.getElementById('catalogTable').style.display = 'none';
+                }
+            });
+        }
     </script>
 } 
