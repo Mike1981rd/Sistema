@@ -33,12 +33,25 @@ namespace SistemaContable.Data
         
         // Plazos de Pago
         public DbSet<PlazoPago> PlazosPago { get; set; }
+        
+        // Retenciones
+        public DbSet<Retencion> Retenciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
+            // NOTA: La siguiente configuración es para evitar la advertencia de EmpresaId1
+            // que ocurre debido a una relación inversa no deseada entre Empresa y CuentaContable
             builder.Entity<Empresa>().ToTable("Empresas");
+            builder.Entity<Empresa>().Ignore(e => e.CuentasContables);
+            
+            // Entity type configuration para CuentaContable-Empresa
+            builder.Entity<CuentaContable>()
+                .HasOne(c => c.Empresa)
+                .WithMany()
+                .HasForeignKey(c => c.EmpresaId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configuración de CuentaContable
             builder.Entity<CuentaContable>()
@@ -47,13 +60,6 @@ namespace SistemaContable.Data
                 .HasForeignKey(c => c.CuentaPadreId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<CuentaContable>()
-                .HasOne(c => c.Empresa)
-                .WithMany()
-                .HasForeignKey(c => c.EmpresaId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configuración de SaldoInicial
             builder.Entity<SaldoInicial>()
                 .HasOne(s => s.CuentaContable)
                 .WithMany()
@@ -204,12 +210,54 @@ namespace SistemaContable.Data
                     new PlazoPago { Id = 6, Nombre = "Vencimiento manual", Dias = null, EsVencimientoManual = true, FechaCreacion = DateTime.UtcNow }
                 );
             });
+            
+            // Configuración para Retencion
+            builder.Entity<Retencion>(entity =>
+            {
+                entity.ToTable("Retenciones");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Porcentaje).HasPrecision(5, 2);
+                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Descripcion).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CuentaContableVentas).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.CuentaContableCompras).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.CuentaContableRetencionesAsumidas).HasMaxLength(50).IsRequired(false);
+                
+                // Datos semilla para retenciones predeterminadas
+                entity.HasData(
+                    new Retencion 
+                    { 
+                        Id = 1, 
+                        Nombre = "ISR 10%", 
+                        Porcentaje = 10.00m, 
+                        Tipo = "ISR", 
+                        Descripcion = "Impuesto Sobre la Renta al 10%",
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        FechaModificacion = DateTime.UtcNow
+                    },
+                    new Retencion 
+                    { 
+                        Id = 2, 
+                        Nombre = "IVA Retenido 15%", 
+                        Porcentaje = 15.00m, 
+                        Tipo = "IVA", 
+                        Descripcion = "Retención del IVA al 15%",
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        FechaModificacion = DateTime.UtcNow
+                    }
+                );
+            });
         }
 
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || e.Entity is PlazoPago) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
+                            e.Entity is PlazoPago || e.Entity is Retencion) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -262,7 +310,28 @@ namespace SistemaContable.Data
                     }
                     plazoPago.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Retencion retencion)
+                {
+                    // Manejo de fechas para Retenciones
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        // Solo establecer fecha de creación para entidades nuevas
+                        if (!entityEntry.Property("FechaCreacion").IsModified)
+                        {
+                            retencion.FechaCreacion = DateTime.UtcNow;
+                        }
+                    }
+                    else
+                    {
+                        // No modificar la fecha de creación para entidades existentes
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    retencion.FechaModificacion = DateTime.UtcNow;
+                }
             }
+
+            // Convertir las fechas a UTC
+            ConvertDatesToUtc();
 
             return base.SaveChanges();
         }

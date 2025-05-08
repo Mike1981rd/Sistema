@@ -1,0 +1,78 @@
+@model SistemaContable.Models.Retencion
+
+@{
+    ViewData["Title"] = "Eliminar Retención";
+}
+
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Eliminar Retención</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Retenciones" asp-action="Index">Retenciones</a>
+                    </li>
+                    <li class="breadcrumb-item active">Eliminar Retención</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>¿Está seguro que desea eliminar esta retención?</h5>
+                <p>Esta acción no se puede deshacer.</p>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Detalles de la retención</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-3">Nombre:</dt>
+                                <dd class="col-sm-9">@Model.Nombre</dd>
+                                
+                                <dt class="col-sm-3">Porcentaje:</dt>
+                                <dd class="col-sm-9">@Model.Porcentaje.ToString("0.##")%</dd>
+                                
+                                <dt class="col-sm-3">Tipo:</dt>
+                                <dd class="col-sm-9">@Model.Tipo</dd>
+                                
+                                <dt class="col-sm-3">Descripción:</dt>
+                                <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Descripcion) ? "N/A" : Model.Descripcion)</dd>
+                                
+                                <dt class="col-sm-3">Estado:</dt>
+                                <dd class="col-sm-9">
+                                    @if(Model.Activo) {
+                                        <span class="badge bg-success">Activo</span>
+                                    } else {
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    }
+                                </dd>
+                                
+                                <dt class="col-sm-3">Fecha de creación:</dt>
+                                <dd class="col-sm-9">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex justify-content-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Confirmar eliminación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 
