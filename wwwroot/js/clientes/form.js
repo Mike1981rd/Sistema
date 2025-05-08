@@ -216,7 +216,7 @@ function initSelect2() {
         width: '100%',
         dropdownParent: $('body'),
         ajax: {
-            url: '/Clientes/BuscarVendedores',
+            url: window.location.origin + '/Clientes/BuscarVendedores',
             dataType: 'json',
             delay: 250,
             data: function(params) {
@@ -256,7 +256,7 @@ function initSelect2() {
             if (confirm('¿Desea crear el vendedor "' + data.term + '"?')) {
                 // Crear el vendedor mediante AJAX
                 $.ajax({
-                    url: '/Clientes/CrearVendedor',
+                    url: window.location.origin + '/Clientes/CrearVendedor',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ nombre: data.term }),
@@ -562,7 +562,7 @@ function editVendedor(id, currentName) {
     
     if (newName && newName.trim() !== '' && newName !== currentName) {
         $.ajax({
-            url: '/Clientes/EditarVendedor',
+            url: window.location.origin + '/Clientes/EditarVendedor',
             method: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({ 
@@ -602,7 +602,7 @@ function editVendedor(id, currentName) {
 function deleteVendedor(id, name) {
     if (confirm('¿Está seguro de que desea eliminar al vendedor "' + name + '"?')) {
         $.ajax({
-            url: '/Clientes/EliminarVendedor',
+            url: window.location.origin + '/Clientes/EliminarVendedor',
             method: 'DELETE',
             contentType: 'application/json',
             data: JSON.stringify({ id: id }),
