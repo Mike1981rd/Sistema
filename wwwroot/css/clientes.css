@@ -290,10 +290,10 @@ dt {
 }
 
 .profile-image {
-    width: 100px;
-    height: 100px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
-    border: 1px solid #dee2e6;
+    border: 3px solid #dee2e6;
     object-fit: cover;
     margin-bottom: 1rem;
     background-color: #f8f9fa;
@@ -301,11 +301,18 @@ dt {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.profile-image:hover {
+    border-color: #007bff;
+    transform: scale(1.03);
 }
 
 .profile-image-placeholder {
     color: #adb5bd;
-    font-size: 2.5rem;
+    font-size: 4rem;
 }
 
 .profile-image img {
@@ -391,4 +398,39 @@ dt {
 
 .country-name {
     flex-grow: 1;
+}
+
+/* Corregir problemas de DataTables */
+.dataTables_length {
+    position: relative;
+    z-index: 1;
+}
+
+.dataTables_length select {
+    z-index: 100;
+    position: relative;
+}
+
+.custom-datatable-container {
+    position: relative;
+}
+
+.custom-datatable-container .dropdown-menu {
+    z-index: 1050;
+}
+
+/* Fix para el menú de registros por página */
+select.form-select-sm {
+    padding-right: 2rem;
+    background-position: right 0.5rem center;
+}
+
+/* Ocultar el dropdown arrow nativo en WebKit */
+select.form-select-sm::-ms-expand {
+    display: none;
+}
+
+/* Mejorar la visualización del select con un z-index alto */
+.dataTables_wrapper .row {
+    position: relative;
 } 

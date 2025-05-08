@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
+using SistemaContable.Services;
 
 namespace SistemaContable.Controllers
 {
@@ -22,11 +23,16 @@ namespace SistemaContable.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IEmpresaService _empresaService;
 
-        public ClientesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ClientesController(
+            ApplicationDbContext context, 
+            IWebHostEnvironment webHostEnvironment,
+            IEmpresaService empresaService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _empresaService = empresaService;
         }
 
         // GET: Clientes
@@ -89,16 +95,25 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Clientes/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             CargarViewBags();
+            
+            // Obtener la empresa actual para sus configuraciones
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var empresa = await _context.Empresas.FindAsync(empresaId);
+            
+            // Configuración de formato decimal
+            ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
+            ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
+            
             return View();
         }
 
         // POST: Clientes/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen)
+        public async Task<IActionResult> Create(Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
         {
             if (ModelState.IsValid)
             {
@@ -106,6 +121,34 @@ namespace SistemaContable.Controllers
                 if (imagen != null && imagen.Length > 0)
                 {
                     cliente.ImagenUrl = await GuardarImagen(imagen);
+                }
+
+                // Procesar el país seleccionado
+                if (!string.IsNullOrEmpty(Pais))
+                {
+                    // Buscar el ID del país en la base de datos o crearlo si no existe
+                    var paisEntity = await _context.Paises.FirstOrDefaultAsync(p => p.Nombre == Pais);
+                    if (paisEntity == null)
+                    {
+                        // Obtener el código del país desde DataLists
+                        var paisData = DataLists.LatinAmericanCountries.FirstOrDefault(c => c.Name == Pais);
+                        if (paisData != null)
+                        {
+                            paisEntity = new Pais
+                            {
+                                Nombre = Pais,
+                                Codigo = paisData.Code
+                            };
+                            _context.Paises.Add(paisEntity);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    
+                    // Asignar el ID del país al cliente
+                    if (paisEntity != null)
+                    {
+                        cliente.PaisId = paisEntity.Id;
+                    }
                 }
 
                 // Asegurar que al menos uno de los dos se seleccione
@@ -168,6 +211,14 @@ namespace SistemaContable.Controllers
             ViewBag.PorPagar = 0;
             ViewBag.NotasCredito = 0;
             ViewBag.NotasDebito = 0;
+            
+            // Obtener la empresa actual para sus configuraciones
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var empresa = await _context.Empresas.FindAsync(empresaId);
+            
+            // Configuración de formato decimal
+            ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
+            ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
 
             return View(cliente);
         }
@@ -175,7 +226,7 @@ namespace SistemaContable.Controllers
         // POST: Clientes/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen)
+        public async Task<IActionResult> Edit(int id, Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
         {
             if (id != cliente.Id)
             {
@@ -208,6 +259,34 @@ namespace SistemaContable.Controllers
                     {
                         // Mantener la imagen actual
                         cliente.ImagenUrl = clienteActual.ImagenUrl;
+                    }
+                    
+                    // Procesar el país seleccionado
+                    if (!string.IsNullOrEmpty(Pais))
+                    {
+                        // Buscar el ID del país en la base de datos o crearlo si no existe
+                        var paisEntity = await _context.Paises.FirstOrDefaultAsync(p => p.Nombre == Pais);
+                        if (paisEntity == null)
+                        {
+                            // Obtener el código del país desde DataLists
+                            var paisData = DataLists.LatinAmericanCountries.FirstOrDefault(c => c.Name == Pais);
+                            if (paisData != null)
+                            {
+                                paisEntity = new Pais
+                                {
+                                    Nombre = Pais,
+                                    Codigo = paisData.Code
+                                };
+                                _context.Paises.Add(paisEntity);
+                                await _context.SaveChangesAsync();
+                            }
+                        }
+                        
+                        // Asignar el ID del país al cliente
+                        if (paisEntity != null)
+                        {
+                            cliente.PaisId = paisEntity.Id;
+                        }
                     }
 
                     // Asegurar que al menos uno de los dos se seleccione
@@ -316,7 +395,10 @@ namespace SistemaContable.Controllers
         {
             ViewBag.TipoIdentificacionId = new SelectList(_context.TiposIdentificacion, "Id", "Nombre");
             ViewBag.MunicipioId = new SelectList(_context.Municipios, "Id", "Nombre");
-            ViewBag.PaisId = new SelectList(_context.Paises, "Id", "Nombre");
+            
+            // Usar el mismo enfoque que el módulo de empresas (DataLists.LatinAmericanCountries)
+            ViewBag.Countries = DataLists.LatinAmericanCountries;
+            
             ViewBag.PlazoPagoId = new SelectList(_context.PlazosPago, "Id", "Nombre");
             ViewBag.TipoNcfId = new SelectList(_context.ComprobantesFiscales, "Id", "Nombre");
             ViewBag.ListaPrecioId = new SelectList(_context.ListasPrecios, "Id", "Nombre");

@@ -4,6 +4,9 @@
  */
 
 $(document).ready(function() {
+    // Agregar un contenedor personalizado para mejorar el diseño y solucionar problemas de estilo
+    $('#clientes-table').wrap('<div class="custom-datatable-container"></div>');
+    
     // Handle "check all" checkbox
     $('#check-all').on('change', function() {
         const isChecked = $(this).prop('checked');
@@ -18,11 +21,6 @@ $(document).ready(function() {
         
         $('#check-all').prop('checked', totalCheckboxes === checkedCheckboxes);
         updateBulkActions();
-    });
-    
-    // Connect search input to DataTable search
-    $('#searchInput').on('keyup', function() {
-        table.search(this.value).draw();
     });
     
     // Handle export buttons
@@ -41,7 +39,7 @@ $(document).ready(function() {
     // Initialize DataTable for better filtering, sorting, and pagination
     const table = $('#clientes-table').DataTable({
         language: {
-            lengthMenu: '_MENU_',
+            lengthMenu: 'Mostrar _MENU_ registros',
             zeroRecords: 'No se encontraron resultados',
             info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
             infoEmpty: 'Mostrando 0 a 0 de 0 registros',
@@ -55,7 +53,11 @@ $(document).ready(function() {
             }
         },
         responsive: true,
-        dom: '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
+        // Simplificamos la estructura DOM para evitar problemas de diseño
+        dom: 
+            "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         ordering: true,
         columnDefs: [
             { orderable: false, targets: [0, 6] }, // Disable sorting for checkbox and actions columns
@@ -68,31 +70,48 @@ $(document).ready(function() {
             // Hide the default search box since we have our custom one
             $('.dataTables_filter').hide();
             
-            // Fix para "Mostrar X registros"
-            fixLengthMenuDisplay();
+            // Conectar el buscador personalizado
+            $('#searchInput').on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
+            
+            // Aplicar estilos a los elementos de DataTables
+            $('.dataTables_length select').addClass('form-select form-select-sm');
+            $('.dataTables_info').addClass('text-muted small');
+            
+            // Fix para la longitud de menú
+            fixDatatablesUI();
         },
         drawCallback: function() {
-            // Fix cada vez que se redibuja la tabla
-            fixLengthMenuDisplay();
+            // Aplicar arreglos visuales cada vez que se redibuja la tabla
+            fixDatatablesUI();
         }
     });
     
-    // Función para arreglar el texto "Mostrar X registros"
-    function fixLengthMenuDisplay() {
-        // Reemplazar el texto del menú de longitud
+    // Nueva función para corregir problemas de UI en DataTables
+    function fixDatatablesUI() {
+        // Corregir la etiqueta "Mostrar X registros"
         $('.dataTables_length label').each(function() {
             const html = $(this).html();
-            if (html.indexOf('_MENU_') >= 0) {
+            // Solo reemplazar si no se ha modificado ya
+            if (html.indexOf('_MENU_') >= 0 || html.indexOf('select') >= 0) {
                 const select = $(this).find('select').detach();
-                $(this).html('').append('Mostrar ').append(select).append(' registros');
+                select.addClass('form-select form-select-sm mx-2');
+                // Mover el select fuera del label para evitar problemas de z-index
+                $(this).html('Mostrar ');
+                $(this).after(select);
+                select.after(' registros');
             }
         });
         
-        // Estilizar el select
-        $('.dataTables_length select').addClass('form-select form-select-sm ms-1 me-1');
+        // Asegurar que los controles de paginación tengan los estilos correctos
+        $('.paginate_button').addClass('page-link');
         
-        // Fix para el texto de información
-        $('.dataTables_info').addClass('text-muted');
+        // Asegurar que la información tenga el estilo correcto
+        $('.dataTables_info').addClass('text-muted small');
+        
+        // Corregir z-index para evitar problemas de superposición
+        $('.dataTables_length select').css('z-index', '999');
     }
     
     // Función para actualizar las acciones en masa

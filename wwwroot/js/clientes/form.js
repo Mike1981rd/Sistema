@@ -205,14 +205,16 @@ function initSelect2() {
 function formatCountryOption(country) {
     if (!country.id) return country.text;
     
-    // En un entorno real, aquí obtendrías la bandera del país
-    // Para este ejemplo, usaremos banderas de ejemplo
-    const countryCode = country.id.toString().padStart(2, '0');
-    const flagUrl = `/images/flags/${countryCode}.png`;
+    // Usar código ISO del país para las banderas (en minúsculas)
+    const countryCode = $(country.element).attr('data-code')?.toLowerCase();
+    if (!countryCode) return country.text;
+    
+    // Usar la ruta de imágenes local para las banderas en vez de un servicio externo
+    const flagUrl = `/images/flags/${countryCode.toUpperCase()}.png`;
     
     return $(`
-        <div class="country-option">
-            <img src="${flagUrl}" class="country-flag" onerror="this.src='/images/flags/placeholder.png'" />
+        <div class="country-option d-flex align-items-center">
+            <img src="${flagUrl}" class="country-flag" onerror="this.style.display='none'" />
             <span class="country-name">${country.text}</span>
         </div>
     `);
@@ -224,11 +226,15 @@ function formatCountryOption(country) {
 function formatCountrySelection(country) {
     if (!country.id) return country.text;
     
-    const countryCode = country.id.toString().padStart(2, '0');
-    const flagUrl = `/images/flags/${countryCode}.png`;
+    // Usar código ISO del país para las banderas (en minúsculas)
+    const countryCode = $(country.element).attr('data-code')?.toLowerCase();
+    if (!countryCode) return country.text;
+    
+    // Usar la ruta de imágenes local para las banderas en vez de un servicio externo
+    const flagUrl = `/images/flags/${countryCode.toUpperCase()}.png`;
     
     return $(`
-        <div class="country-option">
+        <div class="country-option d-flex align-items-center">
             <img src="${flagUrl}" class="country-flag" onerror="this.style.display='none'" />
             <span class="country-name">${country.text}</span>
         </div>
@@ -257,48 +263,20 @@ function initTabs() {
  * Inicializa formateadores para campos específicos
  */
 function initFormatters() {
-    // Formatear el límite de crédito como moneda
-    $('#LimiteCredito').on('input', function() {
-        formatCurrency(this);
-    });
-    
-    // Formatear inicialmente
-    formatCurrency(document.getElementById('LimiteCredito'));
-}
-
-/**
- * Formatea un valor como moneda según las preferencias de la empresa
- */
-function formatCurrency(input) {
-    // Quitar todo excepto números y punto/coma
-    let value = input.value.replace(/[^\d.,]/g, '');
-    
-    // Si está vacío, no hacemos nada
-    if (!value) return;
-    
-    // Convertir a un número (asumiendo que el separador decimal es punto)
-    // En un entorno real, esto debería venir de la configuración de la empresa
-    const decimalSeparator = ','; // o '.' dependiendo de la configuración
-    const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
-    
-    // Eliminar separadores existentes para trabajar con un número limpio
-    value = value.replace(new RegExp('\\' + thousandsSeparator, 'g'), '');
-    value = value.replace(new RegExp('\\' + decimalSeparator, 'g'), '.');
-    
-    // Convertir a número y formatear
-    let numValue = parseFloat(value);
-    if (isNaN(numValue)) return;
-    
-    // Formatear con 2 decimales
-    const formatted = numValue.toFixed(2);
-    
-    // Convertir a formato local
-    const parts = formatted.split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-    const decimalPart = parts[1];
-    
-    // Actualizar el valor del input
-    input.value = integerPart + decimalSeparator + decimalPart;
+    // Formatear el límite de crédito como moneda usando Cleave.js
+    if (document.getElementById('LimiteCredito')) {
+        // Obtener el separador decimal de la configuración global, que debe ser
+        // establecido en el layout o al inicio del documento
+        const separadorDecimal = window.appConfig?.separadorDecimal || ',';
+        
+        new Cleave('#LimiteCredito', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            numeralDecimalMark: separadorDecimal,
+            numeralDecimalScale: 2,
+            prefix: ''
+        });
+    }
 }
 
 /**
@@ -306,54 +284,13 @@ function formatCurrency(input) {
  */
 function initImageUpload() {
     const imageInput = document.getElementById('imagen');
-    const previewContainer = document.getElementById('preview-container');
-    const dropzoneArea = document.getElementById('dropzone-area');
-    const fileNameElem = document.getElementById('file-name');
-    const fileSizeElem = document.getElementById('file-size');
-    const removeFileBtn = document.getElementById('remove-file');
+    const profileImage = document.querySelector('.profile-image');
+    const resetBtn = document.getElementById('reset-image');
     
-    if (!imageInput || !previewContainer || !dropzoneArea) return;
-    
-    // Manejo de arrastrar y soltar
-    dropzoneArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        dropzoneArea.classList.add('dragover');
-    });
-    
-    dropzoneArea.addEventListener('dragleave', function() {
-        dropzoneArea.classList.remove('dragover');
-    });
-    
-    dropzoneArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        dropzoneArea.classList.remove('dragover');
-        
-        if (e.dataTransfer.files.length) {
-            imageInput.files = e.dataTransfer.files;
-            handleFileSelect();
-        }
-    });
-    
-    // Manejar clic en el área
-    dropzoneArea.addEventListener('click', function() {
-        imageInput.click();
-    });
+    if (!imageInput || !profileImage) return;
     
     // Manejar cambio de archivo
-    imageInput.addEventListener('change', handleFileSelect);
-    
-    // Botón para eliminar archivo
-    if (removeFileBtn) {
-        removeFileBtn.addEventListener('click', function() {
-            imageInput.value = '';
-            previewContainer.classList.add('d-none');
-            dropzoneArea.classList.remove('d-none');
-            fileNameElem.textContent = '';
-            fileSizeElem.textContent = '';
-        });
-    }
-    
-    function handleFileSelect() {
+    imageInput.addEventListener('change', function() {
         if (imageInput.files && imageInput.files[0]) {
             const file = imageInput.files[0];
             
@@ -365,30 +302,49 @@ function initImageUpload() {
                 return;
             }
             
-            // Validar tamaño (máximo 800KB)
-            const maxSize = 800 * 1024; // 800KB en bytes
-            if (file.size > maxSize) {
-                alert('La imagen es demasiado grande. El tamaño máximo permitido es 800KB.');
+            // Validar tamaño máximo (800KB)
+            if (file.size > 800 * 1024) {
+                alert('El tamaño de la imagen no debe exceder 800KB');
                 imageInput.value = '';
                 return;
             }
             
-            // Mostrar información del archivo
-            fileNameElem.textContent = file.name;
-            fileSizeElem.textContent = formatFileSize(file.size);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Eliminar placeholder y cualquier imagen previa
+                profileImage.innerHTML = '';
+                
+                // Crear elemento de imagen 
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Vista previa';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                // Añadir la imagen a la previsualización
+                profileImage.appendChild(img);
+                
+                // Mostrar botón de reset
+                if (resetBtn) resetBtn.style.display = 'inline-block';
+            };
             
-            // Mostrar contenedor de preview y ocultar dropzone
-            previewContainer.classList.remove('d-none');
-            dropzoneArea.classList.add('d-none');
-            
-            // En un caso real, también podríamos mostrar una previsualización de la imagen
+            reader.readAsDataURL(file);
         }
-    }
+    });
     
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' bytes';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    // Manejar reset de imagen
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            // Limpiar el input de archivo
+            imageInput.value = '';
+            
+            // Restaurar el placeholder
+            profileImage.innerHTML = '<i class="fas fa-user profile-image-placeholder"></i>';
+            
+            // Ocultar botón de reset
+            resetBtn.style.display = 'none';
+        });
     }
 }
 
@@ -399,4 +355,21 @@ $(document).ready(function() {
     initTabs();
     initSelect2();
     initImageUpload();
-}); 
+});
+
+/**
+ * Inicializa los campos Select2 para una mejor experiencia de usuario
+ */
+function initSelectFields() {
+    // Inicializar select2 para países con banderas
+    $('.select2-country').select2({
+        placeholder: "Seleccione un país",
+        allowClear: true,
+        theme: "bootstrap-5",
+        width: '100%',
+        templateResult: formatCountryOption,
+        templateSelection: formatCountrySelection
+    }).on('select2:open', function() {
+        document.querySelector('.select2-search__field').focus();
+    });
+} 

@@ -97,6 +97,11 @@ app.MapControllerRoute(
     defaults: new { controller = "Retenciones" });
 
 app.MapControllerRoute(
+    name: "ventasClientes",
+    pattern: "ventas/clientes/{action=Index}/{id?}",
+    defaults: new { controller = "Clientes" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

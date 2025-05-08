@@ -97,9 +97,22 @@
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label asp-for="PaisId" class="form-label"></label>
-                                                <select asp-for="PaisId" class="form-select" 
-                                                        asp-items="ViewBag.PaisId">
-                                                    <option value="">-- Seleccione --</option>
+                                                <select name="Pais" class="form-select select2-flags" required>
+                                                    @foreach (var country in ViewBag.Countries)
+                                                    {
+                                                        if (Model.Pais?.Nombre == country.Name)
+                                                        {
+                                                            <option value="@country.Name" data-flag="@country.Code.ToLower()" selected>
+                                                                @country.Name
+                                                            </option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@country.Name" data-flag="@country.Code.ToLower()">
+                                                                @country.Name
+                                                            </option>
+                                                        }
+                                                    }
                                                 </select>
                                                 <span asp-validation-for="PaisId" class="text-danger"></span>
                                             </div>
@@ -344,19 +357,46 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="~/js/clientes/form.js"></script>
     
     <script>
         // Pasar los datos de cuentas contables al JavaScript
         window.cuentasContablesData = @Html.Raw(ViewBag.CuentasContablesJson ?? "[]");
         
+        // Configuración global para formateo de moneda
+        window.appConfig = {
+            separadorDecimal: '@ViewBag.SeparadorDecimal',
+            precisionDecimal: @ViewBag.PrecisionDecimal
+        };
+        
         $(document).ready(function() {
-            // Inicializar Select2 para las cuentas contables
+            // Inicializar Select2 para cuentas contables
             initSelect2();
             // Inicializar pestañas
             initTabs();
             // Inicializar subida de imágenes
             initImageUpload();
+            // Inicializar formateadores de campos
+            initFormatters();
+            
+            // Inicializar select2 con banderas (igual que en el módulo de empresas)
+            $('.select2-flags').select2({
+                theme: 'bootstrap-5',
+                templateResult: formatOption,
+                templateSelection: formatOption
+            });
+            
+            // Función para formatear opciones con banderas
+            function formatOption(option) {
+                if (!option.id) return option.text;
+                
+                const flagCode = $(option.element).data('flag');
+                if (!flagCode) return option.text;
+                
+                return $(`<span><img src="https://flagcdn.com/24x18/${flagCode}.png" alt="${option.text} flag" class="me-2" /> ${option.text}</span>`);
+            }
         });
     </script>
 } 
