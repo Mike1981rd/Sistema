@@ -3,16 +3,15 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="aurora-breadcrumb">
+<div class="aurora-breadcrumb mb-1">
     <a href="/" class="aurora-breadcrumb-item">Inicio</a>
     <span class="aurora-breadcrumb-item">Dashboard</span>
 </div>
 
-<div class="aurora-dashboard-section">
-    <h2 class="aurora-dashboard-title">
-        Resumen financiero
+<div class="aurora-dashboard-section mt-2">
+    <div class="d-flex justify-content-end mb-2">
         <small class="text-muted fs-6">Hoy, @Model.CurrentDate.ToString("dd/MM/yyyy")</small>
-    </h2>
+    </div>
     
     <div class="row">
         <div class="col-md-3">
@@ -85,7 +84,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row mt-3">
     <div class="col-lg-8">
         <div class="aurora-card" style="height: 400px;">
             <div class="aurora-card-header">

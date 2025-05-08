@@ -7,14 +7,14 @@
 
 <div class="container-fluid">
     <!-- Page Heading -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <a asp-action="Index" class="btn btn-sm btn-outline-secondary mb-2">
                 <i class="fas fa-arrow-left me-1"></i> Volver a Cuentas
             </a>
-            <h2 class="mb-0 text-gray-800">
+            <h5 class="mb-0 text-gray-800 font-weight-normal">
                 <i class="fas fa-receipt me-2 text-primary"></i>Transacciones - @(banco?.Nombre ?? "")
-            </h2>
+            </h5>
         </div>
         <div>
             <a asp-action="NuevaTransaccion" asp-route-id="@(banco?.Id ?? 0)" class="btn btn-primary rounded-pill shadow-sm px-4">
@@ -154,15 +154,8 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Transacciones</h6>
-            <div class="dropdown">
-                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-download me-1"></i> Exportar
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i> Excel</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i> PDF</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i> CSV</a></li>
-                </ul>
+            <div id="exportButtonsContainer">
+                <!-- Las funciones de exportación de DataTables se insertarán aquí desde JavaScript -->
             </div>
         </div>
         <div class="card-body">
@@ -170,14 +163,14 @@
                 <table class="table table-hover table-striped border-bottom" id="transaccionesTable">
                     <thead class="bg-light text-dark">
                         <tr>
-                            <th scope="col" class="text-center"><i class="fas fa-calendar-alt me-1 text-primary"></i> Fecha</th>
-                            <th scope="col"><i class="fas fa-tag me-1 text-primary"></i> Tipo</th>
-                            <th scope="col"><i class="fas fa-comment me-1 text-primary"></i> Concepto</th>
-                            <th scope="col"><i class="fas fa-key me-1 text-primary"></i> Referencia</th>
-                            <th scope="col"><i class="fas fa-user me-1 text-primary"></i> Contacto</th>
-                            <th scope="col"><i class="fas fa-exchange-alt me-1 text-primary"></i> Destino</th>
-                            <th scope="col" class="text-end"><i class="fas fa-money-bill-wave me-1 text-primary"></i> Monto</th>
-                            <th scope="col" class="text-center"><i class="fas fa-cogs me-1 text-primary"></i> Acciones</th>
+                            <th scope="col" class="text-center">Fecha</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Concepto</th>
+                            <th scope="col">Referencia</th>
+                            <th scope="col">Contacto</th>
+                            <th scope="col">Destino</th>
+                            <th scope="col" class="text-end">Monto</th>
+                            <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -214,16 +207,16 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <a href="#" class="btn btn-sm btn-outline-info" title="Ver detalles"
+                                        <a href="#" class="btn btn-sm text-info" title="Ver detalles"
                                            data-bs-toggle="modal" data-bs-target="#detalleTransaccionModal" 
                                            data-id="@item.Id">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Editar"
+                                        <a href="#" class="btn btn-sm text-secondary" title="Editar"
                                            onclick="alert('Funcionalidad en desarrollo')">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="#" class="btn btn-sm btn-outline-danger" title="Anular"
+                                        <a href="#" class="btn btn-sm text-danger" title="Anular"
                                            onclick="return confirm('¿Está seguro de anular esta transacción?')">
                                             <i class="fas fa-ban"></i>
                                         </a>
@@ -236,22 +229,30 @@
                         <tr class="bg-light fw-bold">
                             <td colspan="6" class="text-end">Total Ingresos:</td>
                             <td class="text-end text-success">
-                                @Model.Where(t => 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente)
-                                  .Sum(t => t.Monto).ToString("N2")
+                                @{
+                                    var totalIngresos = Model.Where(t => 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso || 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente ||
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Deposito)
+                                      .Sum(t => t.Monto);
+                                }
+                                @totalIngresos.ToString("N2")
                             </td>
                             <td></td>
                         </tr>
                         <tr class="bg-light fw-bold">
                             <td colspan="6" class="text-end">Total Egresos:</td>
                             <td class="text-end text-danger">
-                                @Model.Where(t => 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
-                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque)
-                                  .Sum(t => t.Monto).ToString("N2")
+                                @{
+                                    var totalEgresos = Model.Where(t => 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Gasto || 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ||
+                                        t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Retiro)
+                                      .Sum(t => t.Monto);
+                                }
+                                @totalEgresos.ToString("N2")
                             </td>
                             <td></td>
                         </tr>
@@ -334,133 +335,132 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Inicializar fechas por defecto (último mes)
-            const today = new Date();
-            const lastMonth = new Date();
-            lastMonth.setMonth(today.getMonth() - 1);
+            // Inicializar la tabla con DataTables
+            var table = $('#transaccionesTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel me-1"></i> Excel',
+                        className: 'btn btn-sm btn-outline-success',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf me-1"></i> PDF',
+                        className: 'btn btn-sm btn-outline-danger',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6]
+                        }
+                    },
+                    {
+                        extend: 'csv',
+                        text: '<i class="fas fa-file-csv me-1"></i> CSV',
+                        className: 'btn btn-sm btn-outline-primary',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6]
+                        }
+                    }
+                ],
+                responsive: true,
+                order: [[0, 'desc']], // Ordenar por fecha descendente
+                pageLength: 10
+            });
             
-            $('#startDate').val(lastMonth.toISOString().split('T')[0]);
-            $('#endDate').val(today.toISOString().split('T')[0]);
+            // Mover botones al div de exportar
+            $('.dt-buttons').detach().appendTo('#exportButtonsContainer');
             
-            // Filtrado de transacciones
+            // Aplicar filtros
             $('#applyFilters').click(function() {
-                applyFilters();
+                var startDate = $('#startDate').val() ? new Date($('#startDate').val()) : null;
+                var endDate = $('#endDate').val() ? new Date($('#endDate').val()) : null;
+                var type = $('#transactionType').val();
+                var keyword = $('#keyword').val().toLowerCase();
+                
+                table.draw();
             });
             
+            // Limpiar filtros
             $('#clearFilters').click(function() {
-                $('#filterForm')[0].reset();
-                $('#startDate').val(lastMonth.toISOString().split('T')[0]);
-                $('#endDate').val(today.toISOString().split('T')[0]);
-                applyFilters();
-            });
-            
-            function applyFilters() {
-                const startDate = $('#startDate').val();
-                const endDate = $('#endDate').val();
-                const transactionType = $('#transactionType').val().toLowerCase();
-                const keyword = $('#keyword').val().toLowerCase();
+                $('#startDate').val('');
+                $('#endDate').val('');
+                $('#transactionType').val('');
+                $('#keyword').val('');
                 
-                $('#transaccionesTable tbody tr').each(function() {
-                    const row = $(this);
-                    const date = new Date(row.find('td:eq(0)').text().split('/').reverse().join('-'));
-                    const type = row.find('td:eq(1)').text().trim().toLowerCase();
-                    const concept = row.find('td:eq(2)').text().toLowerCase();
-                    const reference = row.find('td:eq(3)').text().toLowerCase();
-                    const contact = row.find('td:eq(4)').text().toLowerCase();
-                    
-                    let show = true;
-                    
-                    // Filtrar por fecha
-                    if (startDate) {
-                        const startDateObj = new Date(startDate);
-                        if (date < startDateObj) show = false;
-                    }
-                    
-                    if (endDate) {
-                        const endDateObj = new Date(endDate);
-                        if (date > endDateObj) show = false;
-                    }
-                    
-                    // Filtrar por tipo
-                    if (transactionType && !type.includes(transactionType)) show = false;
-                    
-                    // Filtrar por palabra clave
-                    if (keyword && !concept.includes(keyword) && !reference.includes(keyword) && !contact.includes(keyword)) show = false;
-                    
-                    row.toggle(show);
-                });
-                
-                // Actualizar totales después de filtrar
-                updateTotals();
-            }
-            
-            function updateTotals() {
-                let totalIngresos = 0;
-                let totalEgresos = 0;
-                
-                $('#transaccionesTable tbody tr:visible').each(function() {
-                    const row = $(this);
-                    const type = row.find('td:eq(1)').text().trim();
-                    const monto = parseFloat(row.find('td:eq(6)').text().replace(/\./g, '').replace(',', '.'));
-                    
-                    if (type.includes('Ingreso') || type.includes('CobroCliente')) {
-                        totalIngresos += monto;
-                    } else if (type.includes('Gasto') || type.includes('PagoProveedor') || type.includes('Cheque')) {
-                        totalEgresos += monto;
-                    }
-                });
-                
-                // Actualizar los totales en el footer
-                $('#transaccionesTable tfoot tr:eq(0) td:eq(1)').text(totalIngresos.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-                $('#transaccionesTable tfoot tr:eq(1) td:eq(1)').text(totalEgresos.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-            }
-            
-            // Modal de detalles de transacción
-            $('#detalleTransaccionModal').on('show.bs.modal', function (event) {
-                const button = $(event.relatedTarget);
-                const id = button.data('id');
-                
-                // Aquí normalmente harías una llamada AJAX para obtener los detalles
-                // Por ahora, simularemos con datos de la tabla
-                const row = button.closest('tr');
-                const fecha = row.find('td:eq(0)').text();
-                const tipo = row.find('td:eq(1)').text().trim();
-                const concepto = row.find('td:eq(2)').text();
-                const referencia = row.find('td:eq(3)').text();
-                const contacto = row.find('td:eq(4)').text();
-                const bancoDestino = row.find('td:eq(5)').text();
-                const monto = row.find('td:eq(6)').text();
-                
-                // Llenar el modal con los datos
-                $('#modalFecha').text(fecha);
-                $('#modalTipo').text(tipo);
-                $('#modalMonto').text(monto);
-                $('#modalReferencia').text(referencia || 'N/A');
-                $('#modalConcepto').text(concepto);
-                $('#modalDescripcion').text('Descripción detallada de la transacción...');
-                $('#modalContacto').text(contacto || 'N/A');
-                $('#modalBancoDestino').text(bancoDestino || 'N/A');
-                $('#modalUsuarioCreacion').text('Usuario del sistema');
-                $('#modalFechaCreacion').text(fecha);
+                table.draw();
             });
         });
     </script>
 }
 
 <style>
-    .card.border-left-primary {
-        border-left: 0.25rem solid #4e73df !important;
+    /* Reducir espaciado en la página */
+    .card {
+        margin-bottom: 1rem !important;
     }
     
-    .card.border-left-success {
-        border-left: 0.25rem solid #1cc88a !important;
+    .card-body {
+        padding: 1rem !important;
     }
     
-    .card.border-left-info {
-        border-left: 0.25rem solid #36b9cc !important;
+    /* Ajustar los botones de acción para que no se vean encajonados */
+    .btn-group .btn {
+        border: none;
+        padding: 0.25rem 0.5rem;
     }
     
+    /* Ajustar tamaño de fuente y espaciado en la tabla */
+    .table td, .table th {
+        padding: 0.5rem 0.75rem;
+        vertical-align: middle;
+    }
+    
+    /* Asegurar que el contenedor principal tenga un tamaño fijo */
+    .container-fluid {
+        max-width: 100%;
+        padding: 0.75rem;
+    }
+    
+    /* Ajustar el tamaño de las tarjetas de información */
+    .card.border-left-primary,
+    .card.border-left-success,
+    .card.border-left-info,
     .card.border-left-warning {
-        border-left: 0.25rem solid #f6c23e !important;
+        height: auto !important;
+    }
+    
+    .card.border-left-primary .card-body,
+    .card.border-left-success .card-body,
+    .card.border-left-info .card-body,
+    .card.border-left-warning .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .h5 {
+        font-size: 1rem !important;
+    }
+    
+    .text-xs {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Exportar botones */
+    #exportButtonsContainer {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .dt-buttons {
+        margin-left: auto;
+    }
+    
+    /* Ocultar el dropdown de exportar ya que usaremos DataTables */
+    #exportDropdown {
+        display: none;
     }
 </style> 

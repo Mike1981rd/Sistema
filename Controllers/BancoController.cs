@@ -330,7 +330,8 @@ namespace SistemaContable.Controllers
                 FechaApertura = banco.FechaApertura,
                 Activo = banco.Activo,
                 CuentaContableId = banco.CuentaContableId,
-                CuentaContableNombre = banco.CuentaContable?.Nombre
+                CuentaContableNombre = banco.CuentaContable?.Nombre,
+                LogoUrl = banco.LogoUrl // Aseguramos que la URL del logo se cargue correctamente
             };
             
             // Obtener cuentas contables de tipo Bancos
