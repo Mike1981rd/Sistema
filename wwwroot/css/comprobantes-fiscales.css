@@ -46,17 +46,44 @@
 }
 
 /* Estilos para botones de acciones */
-.aurora-actions {
+.btn-group {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 0.5rem;
 }
 
-.btn-icon {
+.btn-group .btn {
+    border: none;
+    background: transparent;
+    transition: transform 0.2s, color 0.2s;
     padding: 0.25rem 0.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.btn-group .btn:hover {
+    transform: scale(1.2);
+}
+
+.btn-group .text-primary:hover {
+    color: #0062ff !important;
+}
+
+.btn-group .text-info:hover {
+    color: #17a2b8 !important;
+}
+
+.btn-group .text-danger:hover {
+    color: #dc3545 !important;
+}
+
+.btn-group .text-secondary:hover {
+    color: #6c757d !important;
+}
+
+/* Hover en filas de la tabla */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    cursor: pointer;
 }
 
 /* Estilos para etiquetas requeridas */
