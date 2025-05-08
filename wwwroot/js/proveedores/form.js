@@ -226,19 +226,23 @@ function initSelect2() {
             dataType: 'json',
             delay: 250,
             data: function(params) {
+                console.log("Enviando búsqueda:", params.term);
                 return {
                     term: params.term || ''
                 };
             },
-            processResults: function(data) {
+            processResults: function(data, params) {
+                console.log("Resultados recibidos:", data);
                 // Añadir opción para crear nuevo vendedor si la búsqueda no coincide exactamente
-                var results = data.results;
+                var results = data.results || [];
                 
-                if (results.length == 0 && this.term && this.term.trim() !== '') {
+                // Usar params.term que es el término de búsqueda actual
+                if (results.length == 0 && params.term && params.term.trim() !== '') {
+                    console.log("Agregando opción para crear nuevo vendedor:", params.term);
                     results.push({
                         id: 'new',
-                        text: 'Crear vendedor: "' + this.term + '"',
-                        term: this.term
+                        text: 'Crear vendedor: "' + params.term + '"',
+                        term: params.term
                     });
                 }
                 
@@ -246,12 +250,18 @@ function initSelect2() {
                     results: results
                 };
             },
+            error: function(xhr, status, error) {
+                console.error("Error en la búsqueda AJAX:", error);
+                console.error("Estado:", status);
+                console.error("Respuesta:", xhr.responseText);
+            },
             cache: true
         },
         templateResult: formatVendedorResult,
         templateSelection: formatVendedorSelection
     }).on('select2:select', function(e) {
         var data = e.params.data;
+        console.log("Elemento seleccionado:", data);
         
         // Si se selecciona la opción "Crear nuevo vendedor"
         if (data.id === 'new') {
@@ -260,6 +270,7 @@ function initSelect2() {
             
             // Mostrar modal de confirmación
             if (confirm('¿Desea crear el vendedor "' + data.term + '"?')) {
+                console.log("Creando vendedor:", data.term);
                 // Crear el vendedor mediante AJAX
                 $.ajax({
                     url: window.location.origin + '/Proveedores/CrearVendedor',
@@ -267,6 +278,7 @@ function initSelect2() {
                     contentType: 'application/json',
                     data: JSON.stringify({ nombre: data.term }),
                     success: function(response) {
+                        console.log("Respuesta del servidor:", response);
                         if (response.success) {
                             // Añadir el nuevo vendedor a las opciones
                             var newOption = new Option(response.vendedor.text, response.vendedor.id, true, true);
@@ -278,8 +290,11 @@ function initSelect2() {
                             alert('Error: ' + response.message);
                         }
                     },
-                    error: function() {
-                        alert('Error al crear el vendedor');
+                    error: function(xhr, status, error) {
+                        console.error("Error al crear vendedor:", error);
+                        console.error("Estado:", status);
+                        console.error("Respuesta:", xhr.responseText);
+                        alert('Error al crear el vendedor: ' + error);
                     }
                 });
             }

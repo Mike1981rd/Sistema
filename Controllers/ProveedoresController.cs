@@ -407,103 +407,133 @@ namespace SistemaContable.Controllers
         [HttpGet]
         public async Task<IActionResult> BuscarVendedores(string term)
         {
-            if (string.IsNullOrEmpty(term))
+            try
             {
-                var todosVendedores = await _context.Vendedores
-                    .Where(v => v.Activo)
+                Console.WriteLine($"BuscarVendedores llamado con término: '{term}'");
+                
+                if (string.IsNullOrEmpty(term))
+                {
+                    var todosVendedores = await _context.Vendedores
+                        .Where(v => v.Activo)
+                        .OrderBy(v => v.Nombre)
+                        .Take(20)
+                        .Select(v => new 
+                        {
+                            id = v.Id,
+                            text = v.Nombre
+                        })
+                        .ToListAsync();
+                    
+                    Console.WriteLine($"Devolviendo {todosVendedores.Count} vendedores (sin término)");
+                    return Json(new { results = todosVendedores });
+                }
+
+                var vendedores = await _context.Vendedores
+                    .Where(v => v.Activo && v.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(v => v.Nombre)
-                    .Take(20)
+                    .Take(10)
                     .Select(v => new 
                     {
                         id = v.Id,
                         text = v.Nombre
                     })
                     .ToListAsync();
-                
-                return Json(new { results = todosVendedores });
+
+                Console.WriteLine($"Devolviendo {vendedores.Count} vendedores para el término '{term}'");
+                return Json(new { results = vendedores });
             }
-
-            var vendedores = await _context.Vendedores
-                .Where(v => v.Activo && v.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(v => v.Nombre)
-                .Take(10)
-                .Select(v => new 
-                {
-                    id = v.Id,
-                    text = v.Nombre
-                })
-                .ToListAsync();
-
-            return Json(new { results = vendedores });
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en BuscarVendedores: {ex.Message}");
+                // Incluso en caso de error, devolvemos un objeto válido pero vacío
+                // para que el cliente pueda seguir funcionando
+                return Json(new { results = new List<object>(), error = ex.Message });
+            }
         }
 
         // POST: Proveedores/CrearVendedor
         [HttpPost]
         public async Task<IActionResult> CrearVendedor([FromBody] Dictionary<string, string> datos)
         {
-            if (datos == null || !datos.ContainsKey("nombre") || string.IsNullOrWhiteSpace(datos["nombre"]))
+            try
             {
-                return BadRequest(new { success = false, message = "El nombre es obligatorio" });
-            }
-
-            var nombreVendedor = datos["nombre"].Trim();
-
-            // Verificar si ya existe un vendedor con ese nombre
-            var vendedorExistente = await _context.Vendedores.FirstOrDefaultAsync(v => 
-                v.Nombre.Equals(nombreVendedor, StringComparison.OrdinalIgnoreCase));
-
-            if (vendedorExistente != null)
-            {
-                if (vendedorExistente.Activo)
+                Console.WriteLine("CrearVendedor llamado con datos: " + 
+                    (datos != null ? string.Join(", ", datos.Select(x => $"{x.Key}={x.Value}")) : "null"));
+                
+                if (datos == null || !datos.ContainsKey("nombre") || string.IsNullOrWhiteSpace(datos["nombre"]))
                 {
-                    // Si existe y está activo, retornar ese vendedor
-                    return Json(new { 
-                        success = true, 
-                        message = "El vendedor ya existe", 
-                        vendedor = new { 
-                            id = vendedorExistente.Id, 
-                            text = vendedorExistente.Nombre 
-                        } 
-                    });
+                    Console.WriteLine("Error: Nombre faltante o vacío");
+                    return BadRequest(new { success = false, message = "El nombre es obligatorio" });
                 }
-                else
+
+                var nombreVendedor = datos["nombre"].Trim();
+                Console.WriteLine($"Nombre de vendedor a crear: '{nombreVendedor}'");
+
+                // Verificar si ya existe un vendedor con ese nombre
+                var vendedorExistente = await _context.Vendedores.FirstOrDefaultAsync(v => 
+                    v.Nombre.Equals(nombreVendedor, StringComparison.OrdinalIgnoreCase));
+
+                if (vendedorExistente != null)
                 {
-                    // Si existe pero está inactivo, reactivarlo
-                    vendedorExistente.Activo = true;
-                    _context.Update(vendedorExistente);
-                    await _context.SaveChangesAsync();
-                    
-                    return Json(new { 
-                        success = true, 
-                        message = "Vendedor reactivado", 
-                        vendedor = new { 
-                            id = vendedorExistente.Id, 
-                            text = vendedorExistente.Nombre 
-                        } 
-                    });
+                    if (vendedorExistente.Activo)
+                    {
+                        // Si existe y está activo, retornar ese vendedor
+                        Console.WriteLine($"Vendedor existente y activo encontrado, ID: {vendedorExistente.Id}");
+                        return Json(new { 
+                            success = true, 
+                            message = "El vendedor ya existe", 
+                            vendedor = new { 
+                                id = vendedorExistente.Id, 
+                                text = vendedorExistente.Nombre 
+                            } 
+                        });
+                    }
+                    else
+                    {
+                        // Si existe pero está inactivo, reactivarlo
+                        Console.WriteLine($"Reactivando vendedor existente, ID: {vendedorExistente.Id}");
+                        vendedorExistente.Activo = true;
+                        _context.Update(vendedorExistente);
+                        await _context.SaveChangesAsync();
+                        
+                        return Json(new { 
+                            success = true, 
+                            message = "Vendedor reactivado", 
+                            vendedor = new { 
+                                id = vendedorExistente.Id, 
+                                text = vendedorExistente.Nombre 
+                            } 
+                        });
+                    }
                 }
+
+                // Crear nuevo vendedor
+                var nuevoVendedor = new Vendedor
+                {
+                    Nombre = nombreVendedor,
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow,
+                    PorcentajeComision = 0 // Valor por defecto, se puede editar después
+                };
+
+                _context.Vendedores.Add(nuevoVendedor);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Nuevo vendedor creado con ID: {nuevoVendedor.Id}");
+                return Json(new { 
+                    success = true, 
+                    message = "Vendedor creado exitosamente", 
+                    vendedor = new { 
+                        id = nuevoVendedor.Id, 
+                        text = nuevoVendedor.Nombre 
+                    } 
+                });
             }
-
-            // Crear nuevo vendedor
-            var nuevoVendedor = new Vendedor
+            catch (Exception ex)
             {
-                Nombre = nombreVendedor,
-                Activo = true,
-                FechaCreacion = DateTime.UtcNow,
-                PorcentajeComision = 0 // Valor por defecto, se puede editar después
-            };
-
-            _context.Vendedores.Add(nuevoVendedor);
-            await _context.SaveChangesAsync();
-
-            return Json(new { 
-                success = true, 
-                message = "Vendedor creado exitosamente", 
-                vendedor = new { 
-                    id = nuevoVendedor.Id, 
-                    text = nuevoVendedor.Nombre 
-                } 
-            });
+                Console.WriteLine($"Error en CrearVendedor: {ex.Message}");
+                return StatusCode(500, new { success = false, message = $"Error interno: {ex.Message}" });
+            }
         }
 
         // PUT: Proveedores/EditarVendedor
