@@ -20,7 +20,7 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <i class="far fa-building fa-2x text-primary"></i>
+                            <i class="far fa-building fa-2x text-primary opacity-75"></i>
                         </div>
                         <div class="col">
                             <div class="text-xs text-uppercase text-muted mb-1">
@@ -37,7 +37,7 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                            <i class="fas fa-chart-line fa-2x text-success opacity-75"></i>
                         </div>
                         <div class="col">
                             <div class="text-xs text-uppercase text-muted mb-1">
@@ -54,7 +54,7 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <i class="fas fa-toggle-on fa-2x text-info"></i>
+                            <i class="fas fa-toggle-on fa-2x text-info opacity-75"></i>
                         </div>
                         <div class="col">
                             <div class="text-xs text-uppercase text-muted mb-1">
@@ -71,7 +71,7 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <i class="fas fa-sync-alt fa-2x text-warning"></i>
+                            <i class="fas fa-sync-alt fa-2x text-warning opacity-75"></i>
                         </div>
                         <div class="col">
                             <div class="text-xs text-uppercase text-muted mb-1">
@@ -101,15 +101,15 @@
                 <table class="table table-hover table-striped border-bottom" id="bancoTable">
                     <thead class="bg-light text-dark">
                         <tr>
-                            <th scope="col"><i class="fas fa-landmark me-1 text-primary"></i> Cuenta</th>
-                            <th scope="col"><i class="fas fa-city me-1 text-success"></i> Entidad</th>
-                            <th scope="col"><i class="fas fa-tags me-1 text-danger"></i> Tipo</th>
-                            <th scope="col"><i class="fas fa-key me-1 text-warning"></i> Número</th>
-                            <th scope="col"><i class="fas fa-money-bill-wave me-1 text-primary"></i> Moneda</th>
-                            <th scope="col" class="text-end"><i class="fas fa-wallet me-1 text-success"></i> Saldo Actual</th>
-                            <th scope="col" class="text-end"><i class="fas fa-hand-holding-usd me-1 text-danger"></i> Pdte. Conciliar</th>
-                            <th scope="col" class="text-center"><i class="fas fa-toggle-on me-1 text-info"></i> Estado</th>
-                            <th scope="col" class="text-center"><i class="fas fa-tools me-1 text-secondary"></i> Acciones</th>
+                            <th scope="col">Cuenta</th>
+                            <th scope="col">Entidad</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Número</th>
+                            <th scope="col">Moneda</th>
+                            <th scope="col" class="text-end">Saldo Actual</th>
+                            <th scope="col" class="text-end">Pdte. Conciliar</th>
+                            <th scope="col" class="text-center">Estado</th>
+                            <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,23 +168,23 @@
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <a asp-action="Transacciones" asp-route-id="@item.Id" 
-                                           class="btn btn-sm btn-outline-primary rounded-start" title="Ver transacciones">
+                                           class="btn btn-sm text-primary" title="Ver transacciones">
                                             <i class="fas fa-money-check-alt"></i>
                                         </a>
                                         <a asp-action="NuevaTransaccion" asp-route-id="@item.Id" 
-                                           class="btn btn-sm btn-outline-success" title="Registrar transacción">
+                                           class="btn btn-sm text-success" title="Registrar transacción">
                                             <i class="fas fa-hand-holding-usd"></i>
                                         </a>
                                         <a asp-action="Edit" asp-route-id="@item.Id" 
-                                           class="btn btn-sm btn-outline-secondary" title="Editar">
+                                           class="btn btn-sm text-secondary" title="Editar">
                                             <i class="fas fa-pen"></i>
                                         </a>
                                         <a asp-action="Details" asp-route-id="@item.Id" 
-                                           class="btn btn-sm btn-outline-info" title="Detalles">
+                                           class="btn btn-sm text-info" title="Detalles">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
                                         <a asp-action="Delete" asp-route-id="@item.Id" 
-                                           class="btn btn-sm btn-outline-danger rounded-end" title="Eliminar">
+                                           class="btn btn-sm text-danger" title="Eliminar">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
                                     </div>

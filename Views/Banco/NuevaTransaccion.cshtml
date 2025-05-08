@@ -99,7 +99,7 @@
                             <div class="col-md-6">
                                 <div class="form-group" id="bancoDestinoGroup" style="display: none;">
                                     <label asp-for="BancoDestinoIdString" class="form-label">Cuenta Destino</label>
-                                    <select asp-for="BancoDestinoIdString" class="form-select">
+                                    <select asp-for="BancoDestinoIdString" id="BancoDestinoIdString" class="form-select">
                                         <option value="">-- Seleccionar Cuenta Destino --</option>
                                         @foreach (var item in ViewBag.BancosDestino)
                                         {
@@ -196,24 +196,36 @@
                 // Mostrar/ocultar banco destino solo para transferencias (valor 2)
                 if (tipo == '2') { // Transferencia
                     $('#bancoDestinoGroup').show();
-                    $('#bancoDestinoId').prop('required', true);
+                    $('#BancoDestinoIdString').prop('required', true);
                 } else {
                     $('#bancoDestinoGroup').hide();
-                    $('#bancoDestinoId').prop('required', false);
+                    $('#BancoDestinoIdString').prop('required', false);
+                    $('#BancoDestinoIdString').val(''); // Limpiar el valor si no es transferencia
                 }
                 
                 // Mostrar/ocultar contacto para ciertos tipos
                 if (tipo == '4' || tipo == '5') { // Pago a Proveedor o Cobro a Cliente
                     $('#contactoGroup').show();
-                    $('#contactoId').prop('required', true);
+                    $('#ContactoId').prop('required', true);
                 } else {
                     $('#contactoGroup').show(); // Siempre visible pero opcional
-                    $('#contactoId').prop('required', false);
+                    $('#ContactoId').prop('required', false);
                 }
             });
             
             // Disparar el evento change al cargar la página
             $('#tipoTransaccion').trigger('change');
+            
+            // Validar que se haya seleccionado un destino antes de enviar el formulario
+            $('form').submit(function(e) {
+                var tipo = $('#tipoTransaccion').val();
+                if (tipo == '2' && $('#BancoDestinoIdString').val() == '') {
+                    alert('Por favor seleccione una cuenta destino para la transferencia.');
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            });
         });
     </script>
 } 

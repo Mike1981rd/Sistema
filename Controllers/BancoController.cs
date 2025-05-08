@@ -590,19 +590,10 @@ namespace SistemaContable.Controllers
                 Fecha = DateTime.Now
             };
             
-            // Obtener cuentas contables de tipo Efectivo (Caja y Banco)
+            // Obtener ID de empresa
             var EmpresaId = await _empresaService.ObtenerEmpresaActualId();
             
-            // Obtener cuentas principales de efectivo y equivalentes
-            var cuentasEfectivo = await _context.CuentasContables
-                .Where(c => c.EmpresaId == EmpresaId && 
-                       (c.UsoCuenta == "Efectivo" || c.UsoCuenta == "Bancos") && 
-                       c.TipoCuenta == "Movimiento" && 
-                       c.Id != banco.CuentaContableId)
-                .OrderBy(c => c.Codigo)
-                .ToListAsync();
-                
-            // También incluir otros bancos
+            // Obtener otros bancos para transferencias
             var bancos = await _context.Bancos
                 .Where(b => b.Id != id && b.Activo && b.EmpresaId == EmpresaId)
                 .OrderBy(b => b.Nombre)
@@ -610,20 +601,6 @@ namespace SistemaContable.Controllers
             
             // Crear una lista combinada para el dropdown
             var cuentasDestino = new List<SelectListItem>();
-            
-            // Agregar las cuentas de efectivo
-            if (cuentasEfectivo.Any())
-            {
-                cuentasDestino.Add(new SelectListItem { Value = "", Text = "-- CUENTAS DE EFECTIVO --", Disabled = true });
-                foreach (var cuenta in cuentasEfectivo)
-                {
-                    cuentasDestino.Add(new SelectListItem 
-                    { 
-                        Value = $"C{cuenta.Id}", 
-                        Text = $"{cuenta.Codigo} - {cuenta.Nombre}" 
-                    });
-                }
-            }
             
             // Agregar los bancos
             if (bancos.Any())
@@ -688,7 +665,7 @@ namespace SistemaContable.Controllers
                 };
                 
                 // Procesar el ID de destino según el formato
-                if (viewModel.BancoDestinoId.HasValue && !string.IsNullOrEmpty(viewModel.BancoDestinoIdString))
+                if (!string.IsNullOrEmpty(viewModel.BancoDestinoIdString))
                 {
                     string destinoId = viewModel.BancoDestinoIdString;
                     
@@ -698,6 +675,7 @@ namespace SistemaContable.Controllers
                         if (int.TryParse(destinoId.Substring(1), out int bancoId))
                         {
                             transaccion.BancoDestinoId = bancoId;
+                            viewModel.BancoDestinoId = bancoId; // Asegurarnos de que el modelo tenga el valor
                         }
                     }
                     else if (destinoId.StartsWith("C"))
@@ -709,6 +687,7 @@ namespace SistemaContable.Controllers
                             // Aquí podríamos implementar la lógica para transferencias a cuentas contables
                             // Por ahora, lo dejamos como ejemplo
                             transaccion.CuentaContableDestinoId = cuentaId;
+                            viewModel.CuentaContableDestinoId = cuentaId; // Asignar al modelo
                         }
                     }
                 }
@@ -785,34 +764,12 @@ namespace SistemaContable.Controllers
             // Recargar las cuentas destino
             var EmpresaId2 = await _empresaService.ObtenerEmpresaActualId();
             
-            var cuentasEfectivo = await _context.CuentasContables
-                .Where(c => c.EmpresaId == EmpresaId2 && 
-                       (c.UsoCuenta == "Efectivo" || c.UsoCuenta == "Bancos") && 
-                       c.TipoCuenta == "Movimiento" && 
-                       c.Id != banco2.CuentaContableId)
-                .OrderBy(c => c.Codigo)
-                .ToListAsync();
-                
             var bancos = await _context.Bancos
                 .Where(b => b.Id != viewModel.BancoId && b.Activo && b.EmpresaId == EmpresaId2)
                 .OrderBy(b => b.Nombre)
                 .ToListAsync();
             
             var cuentasDestino = new List<SelectListItem>();
-            
-            if (cuentasEfectivo.Any())
-            {
-                cuentasDestino.Add(new SelectListItem { Value = "", Text = "-- CUENTAS DE EFECTIVO --", Disabled = true });
-                foreach (var cuenta in cuentasEfectivo)
-                {
-                    cuentasDestino.Add(new SelectListItem 
-                    { 
-                        Value = $"C{cuenta.Id}", 
-                        Text = $"{cuenta.Codigo} - {cuenta.Nombre}",
-                        Selected = viewModel.BancoDestinoIdString == $"C{cuenta.Id}"
-                    });
-                }
-            }
             
             if (bancos.Any())
             {
