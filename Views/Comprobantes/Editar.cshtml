@@ -1,0 +1,274 @@
+@model SistemaContable.Models.ComprobanteFiscal
+
+@{
+    ViewData["Title"] = "Editar Comprobante Fiscal";
+}
+
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Editar Comprobante Fiscal</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Comprobantes" asp-action="Index">Comprobantes Fiscales</a>
+                    </li>
+                    <li class="breadcrumb-item active">Editar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form asp-action="Editar">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="FechaCreacion" />
+        
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">Configuración general</h5>
+                        <p class="card-subtitle text-muted small">Edita los datos principales de tu numeración</p>
+                    </div>
+                    <div class="col-auto d-flex align-items-center">
+                        <label class="form-check-label me-2">Preferida</label>
+                        <div class="form-check form-switch">
+                            <input asp-for="Preferida" class="form-check-input" role="switch">
+                        </div>
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" title="Marca esta opción si deseas que esta sea la numeración preferida para este tipo de documento"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TipoDocumento" class="form-label"></label>
+                        <select asp-for="TipoDocumento" class="form-select" required>
+                            <option value="">Seleccionar</option>
+                            @foreach (var tipo in ViewBag.TiposDocumento)
+                            {
+                                <option value="@tipo">@tipo</option>
+                            }
+                        </select>
+                        <span asp-validation-for="TipoDocumento" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Tipo" class="form-label"></label>
+                        <select asp-for="Tipo" class="form-select" required>
+                            <option value="">Seleccionar</option>
+                            @foreach (var tipo in ViewBag.TiposComprobante)
+                            {
+                                <option value="@tipo">@tipo</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Tipo" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control" required>
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Prefijo" class="form-label"></label>
+                        <input asp-for="Prefijo" class="form-control" maxlength="10" />
+                        <span asp-validation-for="Prefijo" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="NumeroInicial" class="form-label"></label>
+                        <input asp-for="NumeroInicial" class="form-control" type="number" min="1" required>
+                        <span asp-validation-for="NumeroInicial" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="NumeroFinal" class="form-label"></label>
+                        <input asp-for="NumeroFinal" class="form-control" type="number" min="0">
+                        <span asp-validation-for="NumeroFinal" class="text-danger"></span>
+                        <small class="form-text text-muted">Deja en blanco si no hay límite</small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="SiguienteNumero" class="form-label"></label>
+                        <input asp-for="SiguienteNumero" class="form-control" type="number" min="1" required>
+                        <span asp-validation-for="SiguienteNumero" class="text-danger"></span>
+                        <small class="form-text text-muted">Próximo número a utilizar</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="FechaVencimiento" class="form-label"></label>
+                        <input asp-for="FechaVencimiento" class="form-control" type="date" required>
+                        <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
+                        <i class="fas fa-question-circle text-muted ms-1" data-bs-toggle="tooltip" title="Fecha en la que expira esta secuencia de numeración según la DGII"></i>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Sucursal" class="form-label"></label>
+                        <select asp-for="Sucursal" class="form-select" required>
+                            <option value="Principal">Principal</option>
+                            <!-- Agregar dinámicamente otras sucursales según sea necesario -->
+                        </select>
+                        <span asp-validation-for="Sucursal" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="Electronica" class="form-check-input" role="switch">
+                            <label asp-for="Electronica" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col">
+                <div class="alert alert-warning">
+                    <div class="d-flex">
+                        <i class="fas fa-exclamation-triangle me-3 fs-5 align-self-center"></i>
+                        <div>
+                            <h5 class="alert-heading">¡Precaución al editar!</h5>
+                            <p class="mb-0">
+                                Modificar la configuración de numeración podría afectar a documentos ya emitidos. 
+                                Asegúrate de mantener la consistencia con tus registros fiscales.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3 mb-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Información del sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Fecha de creación:</strong></p>
+                                <p class="text-muted">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Última modificación:</strong></p>
+                                <p class="text-muted">@Model.UltimaModificacion.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-end mb-5">
+            <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Actualizar automáticamente el prefijo al cambiar el tipo de comprobante
+            $('#Tipo').on('change', function() {
+                const selectedOption = $(this).val();
+                if (selectedOption) {
+                    // Extraer el prefijo (ejemplo: "B01 - Crédito fiscal" -> "B01")
+                    const prefijo = selectedOption.split(' - ')[0];
+                    $('#Prefijo').val(prefijo);
+                }
+            });
+
+            // Validación de fecha de vencimiento (debe ser futura)
+            $('#FechaVencimiento').on('change', function() {
+                const fechaSeleccionada = new Date($(this).val());
+                const hoy = new Date();
+                
+                // Establecer horas, minutos, segundos y milisegundos a cero para comparar solo fechas
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fechaSeleccionada < hoy) {
+                    // Mostrar error
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.invalid-feedback').length) {
+                        $(this).after('<div class="invalid-feedback">La fecha de vencimiento debe ser futura</div>');
+                    }
+                } else {
+                    // Quitar error
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.invalid-feedback').remove();
+                }
+            });
+
+            // Validación de número siguiente (debe ser >= número inicial)
+            $('#NumeroInicial, #SiguienteNumero').on('change', function() {
+                const inicial = parseInt($('#NumeroInicial').val()) || 1;
+                const siguiente = parseInt($('#SiguienteNumero').val()) || 1;
+                
+                if (siguiente < inicial) {
+                    $('#SiguienteNumero').addClass('is-invalid');
+                    if (!$('#SiguienteNumero').next('.invalid-feedback').length) {
+                        $('#SiguienteNumero').after('<div class="invalid-feedback">El siguiente número debe ser mayor o igual al número inicial</div>');
+                    }
+                } else {
+                    $('#SiguienteNumero').removeClass('is-invalid');
+                    $('#SiguienteNumero').next('.invalid-feedback').remove();
+                }
+            });
+
+            // Validación de número final (debe ser mayor que el inicial y mayor o igual que siguiente)
+            $('#NumeroInicial, #NumeroFinal, #SiguienteNumero').on('change', function() {
+                const inicial = parseInt($('#NumeroInicial').val()) || 1;
+                const siguiente = parseInt($('#SiguienteNumero').val()) || 1;
+                const final = parseInt($('#NumeroFinal').val());
+                
+                // Solo validar si hay un número final
+                if (final) {
+                    let isValid = true;
+                    let errorMsg = '';
+                    
+                    if (final <= inicial) {
+                        isValid = false;
+                        errorMsg = 'El número final debe ser mayor que el número inicial';
+                    } else if (final < siguiente) {
+                        isValid = false;
+                        errorMsg = 'El número final debe ser mayor o igual al siguiente número';
+                    }
+                    
+                    if (!isValid) {
+                        $('#NumeroFinal').addClass('is-invalid');
+                        if (!$('#NumeroFinal').next('.invalid-feedback').length) {
+                            $('#NumeroFinal').after('<div class="invalid-feedback">' + errorMsg + '</div>');
+                        } else {
+                            $('#NumeroFinal').next('.invalid-feedback').text(errorMsg);
+                        }
+                    } else {
+                        $('#NumeroFinal').removeClass('is-invalid');
+                        $('#NumeroFinal').next('.invalid-feedback').remove();
+                    }
+                } else {
+                    $('#NumeroFinal').removeClass('is-invalid');
+                    $('#NumeroFinal').next('.invalid-feedback').remove();
+                }
+            });
+        });
+    </script>
+} 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="~/css/aurora-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/menu-fixes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/comprobantes-fiscales.css" asp-append-version="true" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- DataTables CSS -->
@@ -117,6 +118,9 @@
                     </a>
                     <a href="/configuracion/retenciones" class="aurora-submenu-item" data-title="Retenciones">
                         <i class="fas fa-percentage me-2"></i>Retenciones
+                    </a>
+                    <a href="/configuracion/comprobantes-fiscales" class="aurora-submenu-item" data-title="Comprobantes">
+                        <i class="fas fa-receipt me-2"></i>Comprobantes
                     </a>
                     <a href="/configuracion/usuarios" class="aurora-submenu-item" data-title="Usuarios">
                         <i class="fas fa-users me-2"></i>Usuarios
@@ -242,7 +246,7 @@
 
             // Mejorar la visualización en páginas específicas
             const currentPath = window.location.pathname.toLowerCase();
-            if (currentPath.includes('/plazopago') || currentPath.includes('/retenciones')) {
+            if (currentPath.includes('/plazopago') || currentPath.includes('/retenciones') || currentPath.includes('/comprobantes') || currentPath.includes('/comprobantes-fiscales')) {
                 // Forzar apertura del menú de configuración
                 const configMenuItem = document.querySelector('.aurora-nav-item[data-title="Configuración"]');
                 const configSubmenu = document.querySelector('.aurora-nav-item[data-title="Configuración"] + .aurora-submenu');
@@ -258,6 +262,9 @@
                     } else if (currentPath.includes('/retenciones')) {
                         const retencionesItem = configSubmenu.querySelector('a[href*="/Retenciones"]');
                         if (retencionesItem) retencionesItem.classList.add('active');
+                    } else if (currentPath.includes('/comprobantes') || currentPath.includes('/comprobantes-fiscales')) {
+                        const comprobantesItem = configSubmenu.querySelector('a[href*="/comprobantes"]');
+                        if (comprobantesItem) comprobantesItem.classList.add('active');
                     }
                 }
             }

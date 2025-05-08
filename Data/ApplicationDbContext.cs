@@ -36,6 +36,9 @@ namespace SistemaContable.Data
         
         // Retenciones
         public DbSet<Retencion> Retenciones { get; set; }
+        
+        // Comprobantes Fiscales
+        public DbSet<ComprobanteFiscal> ComprobantesFiscales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -251,13 +254,32 @@ namespace SistemaContable.Data
                     }
                 );
             });
+            
+            // Configuración para ComprobanteFiscal
+            builder.Entity<ComprobanteFiscal>(entity =>
+            {
+                entity.ToTable("ComprobantesFiscales");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TipoDocumento).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Tipo).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Prefijo).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.Sucursal).IsRequired().HasMaxLength(100);
+                
+                // Defaults
+                entity.Property(e => e.NumeroInicial).HasDefaultValue(1);
+                entity.Property(e => e.SiguienteNumero).HasDefaultValue(1);
+                entity.Property(e => e.Preferida).HasDefaultValue(false);
+                entity.Property(e => e.Electronica).HasDefaultValue(false);
+            });
         }
 
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries()
                 .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
-                            e.Entity is PlazoPago || e.Entity is Retencion) && 
+                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -327,6 +349,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     retencion.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is ComprobanteFiscal comprobanteFiscal)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        comprobanteFiscal.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    comprobanteFiscal.UltimaModificacion = DateTime.UtcNow;
                 }
             }
 

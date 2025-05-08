@@ -1,0 +1,88 @@
+@model SistemaContable.Models.ComprobanteFiscal
+
+@{
+    ViewData["Title"] = "Eliminar Comprobante Fiscal";
+}
+
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Eliminar Comprobante Fiscal</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Comprobantes" asp-action="Index">Comprobantes Fiscales</a>
+                    </li>
+                    <li class="breadcrumb-item active">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>¿Está seguro que desea eliminar este comprobante fiscal?</h5>
+                <p>Esta acción no se puede deshacer.</p>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Detalles del comprobante fiscal</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-3">Nombre:</dt>
+                                <dd class="col-sm-9">@Model.Nombre</dd>
+                                
+                                <dt class="col-sm-3">Tipo:</dt>
+                                <dd class="col-sm-9">@Model.Tipo</dd>
+                                
+                                <dt class="col-sm-3">Documento:</dt>
+                                <dd class="col-sm-9">@Model.TipoDocumento</dd>
+                                
+                                <dt class="col-sm-3">Prefijo:</dt>
+                                <dd class="col-sm-9">@Model.Prefijo</dd>
+                                
+                                <dt class="col-sm-3">Secuencia:</dt>
+                                <dd class="col-sm-9">
+                                    @Model.SiguienteNumero 
+                                    @if (Model.NumeroFinal.HasValue)
+                                    {
+                                        <span class="text-muted">/ @Model.NumeroFinal</span>
+                                    }
+                                </dd>
+                                
+                                <dt class="col-sm-3">Sucursal:</dt>
+                                <dd class="col-sm-9">@Model.Sucursal</dd>
+                                
+                                <dt class="col-sm-3">Vencimiento:</dt>
+                                <dd class="col-sm-9">@Model.FechaVencimiento.ToShortDateString()</dd>
+                                
+                                <dt class="col-sm-3">Preferida:</dt>
+                                <dd class="col-sm-9">@(Model.Preferida ? "Sí" : "No")</dd>
+                                
+                                <dt class="col-sm-3">Electrónica:</dt>
+                                <dd class="col-sm-9">@(Model.Electronica ? "Sí" : "No")</dd>
+                                
+                                <dt class="col-sm-3">Fecha de creación:</dt>
+                                <dd class="col-sm-9">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form asp-action="Eliminar" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex justify-content-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Confirmar eliminación</button>
+                </div>
+            </form>
+ 

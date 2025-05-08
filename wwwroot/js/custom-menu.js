@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expandir submenú de configuración inmediatamente para páginas de esa sección
     const isInConfigSection = currentPath.includes('/plazopago') || 
                               currentPath.includes('/retenciones') || 
+                              currentPath.includes('/comprobantes') || 
+                              currentPath.includes('/comprobantes-fiscales') || 
                               currentPath.includes('/impuestos') || 
                               currentPath.includes('/empresas/configurar') ||
                               currentPath.includes('/configuracion/') ||
@@ -39,6 +41,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (targetItem) targetItem.classList.add('active');
             } else if (currentPath.includes('/retenciones')) {
                 const targetItem = configSubmenu.querySelector('a[href*="/Retenciones"]');
+                if (targetItem) targetItem.classList.add('active');
+            } else if (currentPath.includes('/comprobantes') || currentPath.includes('/comprobantes-fiscales')) {
+                const targetItem = configSubmenu.querySelector('a[href*="/comprobantes"]');
                 if (targetItem) targetItem.classList.add('active');
             }
         }
