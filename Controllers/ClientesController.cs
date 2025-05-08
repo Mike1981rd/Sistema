@@ -233,91 +233,101 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
+                // Obtener el cliente actual de la base de datos para mantener valores que no deberían cambiar
+                var clienteActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+                if (clienteActual == null)
                 {
-                    // Obtener el cliente actual de la base de datos
-                    var clienteActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-                    if (clienteActual == null)
+                    return NotFound();
+                }
+
+                // Procesar la imagen si se proporcionó una nueva
+                if (imagen != null && imagen.Length > 0)
+                {
+                    // Eliminar la imagen anterior si existe
+                    if (!string.IsNullOrEmpty(clienteActual.ImagenUrl))
                     {
-                        return NotFound();
+                        EliminarImagen(clienteActual.ImagenUrl);
                     }
 
-                    // Procesar la imagen si se proporcionó una nueva
-                    if (imagen != null && imagen.Length > 0)
+                    cliente.ImagenUrl = await GuardarImagen(imagen);
+                }
+                else
+                {
+                    // Mantener la imagen actual
+                    cliente.ImagenUrl = clienteActual.ImagenUrl;
+                }
+                
+                // Procesar el país seleccionado
+                if (!string.IsNullOrEmpty(Pais))
+                {
+                    // Buscar el ID del país en la base de datos o crearlo si no existe
+                    var paisEntity = await _context.Paises.FirstOrDefaultAsync(p => p.Nombre == Pais);
+                    if (paisEntity == null)
                     {
-                        // Eliminar la imagen anterior si existe
-                        if (!string.IsNullOrEmpty(clienteActual.ImagenUrl))
+                        // Obtener el código del país desde DataLists
+                        var paisData = DataLists.LatinAmericanCountries.FirstOrDefault(c => c.Name == Pais);
+                        if (paisData != null)
                         {
-                            EliminarImagen(clienteActual.ImagenUrl);
+                            paisEntity = new Pais
+                            {
+                                Nombre = Pais,
+                                Codigo = paisData.Code
+                            };
+                            _context.Paises.Add(paisEntity);
+                            await _context.SaveChangesAsync();
                         }
-
-                        cliente.ImagenUrl = await GuardarImagen(imagen);
-                    }
-                    else
-                    {
-                        // Mantener la imagen actual
-                        cliente.ImagenUrl = clienteActual.ImagenUrl;
                     }
                     
-                    // Procesar el país seleccionado
-                    if (!string.IsNullOrEmpty(Pais))
+                    // Asignar el ID del país al cliente
+                    if (paisEntity != null)
                     {
-                        // Buscar el ID del país en la base de datos o crearlo si no existe
-                        var paisEntity = await _context.Paises.FirstOrDefaultAsync(p => p.Nombre == Pais);
-                        if (paisEntity == null)
-                        {
-                            // Obtener el código del país desde DataLists
-                            var paisData = DataLists.LatinAmericanCountries.FirstOrDefault(c => c.Name == Pais);
-                            if (paisData != null)
-                            {
-                                paisEntity = new Pais
-                                {
-                                    Nombre = Pais,
-                                    Codigo = paisData.Code
-                                };
-                                _context.Paises.Add(paisEntity);
-                                await _context.SaveChangesAsync();
-                            }
-                        }
-                        
-                        // Asignar el ID del país al cliente
-                        if (paisEntity != null)
-                        {
-                            cliente.PaisId = paisEntity.Id;
-                        }
+                        cliente.PaisId = paisEntity.Id;
                     }
-
-                    // Asegurar que al menos uno de los dos se seleccione
-                    if (!cliente.EsCliente && !cliente.EsProveedor)
-                    {
-                        cliente.EsCliente = true; // Por defecto es cliente
-                    }
-
-                    // Mantener la fecha de creación original
-                    cliente.FechaCreacion = clienteActual.FechaCreacion;
-                    cliente.FechaModificacion = DateTime.UtcNow;
-
-                    _context.Update(cliente);
-                    await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                else if (clienteActual.PaisId.HasValue)
                 {
-                    if (!ClienteExists(cliente.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    // Mantener el país anterior si no se selecciona uno nuevo
+                    cliente.PaisId = clienteActual.PaisId;
                 }
+
+                // Asegurar que al menos uno de los dos se seleccione
+                if (!cliente.EsCliente && !cliente.EsProveedor)
+                {
+                    cliente.EsCliente = true; // Por defecto es cliente
+                }
+
+                // Mantener la fecha de creación original y otras propiedades importantes
+                cliente.FechaCreacion = clienteActual.FechaCreacion;
+                cliente.FechaModificacion = DateTime.UtcNow;
+
+                // Actualizar el cliente en la base de datos
+                _context.Update(cliente);
+                await _context.SaveChangesAsync();
+                
+                // Redirigir a la lista de clientes después de guardar
                 return RedirectToAction(nameof(Index));
             }
-
-            CargarViewBags();
-            return View(cliente);
+            catch (Exception ex)
+            {
+                // Log de errores para diagnóstico
+                Console.WriteLine($"Error al actualizar cliente: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "Ha ocurrido un error al guardar los cambios. Por favor, inténtelo de nuevo.");
+                
+                // Cargar los datos necesarios para volver a mostrar el formulario
+                CargarViewBags();
+                
+                // Obtener la empresa actual para sus configuraciones
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                var empresa = await _context.Empresas.FindAsync(empresaId);
+                
+                // Configuración de formato decimal
+                ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
+                ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
+                
+                return View(cliente);
+            }
         }
 
         // GET: Clientes/Delete/5

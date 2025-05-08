@@ -123,6 +123,7 @@ function setupFormValidation() {
         const tipoIdentificacionId = $('#TipoIdentificacionId').val();
         const numeroIdentificacion = $('#NumeroIdentificacion').val().trim();
         
+        // Validar campos requeridos
         if (!nombreRazonSocial) {
             e.preventDefault();
             alert('El nombre o razón social es obligatorio.');
@@ -141,8 +142,31 @@ function setupFormValidation() {
             return false;
         }
         
+        // Preparar el valor del límite de crédito para envío
+        prepareDecimalFieldsForSubmission();
+        
+        // Todo está bien, permitir el envío del formulario
         return true;
     });
+}
+
+/**
+ * Prepara los campos decimales para su envío, asegurando que tengan el formato correcto
+ */
+function prepareDecimalFieldsForSubmission() {
+    // Preparar el campo LimiteCredito para su envío
+    const limiteCreditoInput = document.getElementById('LimiteCredito');
+    if (limiteCreditoInput && limiteCreditoInput.cleave) {
+        // Obtener el valor sin formato y normalizarlo para el servidor
+        const rawValue = limiteCreditoInput.cleave.getRawValue();
+        // Si hay un valor, asegurar que tenga el formato correcto para el servidor
+        if (rawValue) {
+            // Usar punto como separador decimal para el valor que se envía al servidor
+            const numericValue = parseFloat(rawValue.replace(',', '.'));
+            // Asignar el valor numérico directamente al campo
+            limiteCreditoInput.value = numericValue;
+        }
+    }
 }
 
 /**
@@ -185,14 +209,12 @@ function initSelect2() {
     });
     
     // Inicializar Select2 para países con banderas
-    $('#PaisId').select2({
+    $('.select2-flags').select2({
         theme: 'bootstrap-5',
-        placeholder: 'Seleccione un país',
+        placeholder: "Seleccione un país",
         allowClear: true,
         width: '100%',
-        dropdownParent: $('body'),
-        templateResult: formatCountryOption,
-        templateSelection: formatCountrySelection
+        dropdownParent: $('body')
     });
     
     // Aplicar formatos especiales
@@ -200,82 +222,26 @@ function initSelect2() {
 }
 
 /**
- * Formatea las opciones del país con banderas
- */
-function formatCountryOption(country) {
-    if (!country.id) return country.text;
-    
-    // Usar código ISO del país para las banderas (en minúsculas)
-    const countryCode = $(country.element).attr('data-code')?.toLowerCase();
-    if (!countryCode) return country.text;
-    
-    // Usar la ruta de imágenes local para las banderas en vez de un servicio externo
-    const flagUrl = `/images/flags/${countryCode.toUpperCase()}.png`;
-    
-    return $(`
-        <div class="country-option d-flex align-items-center">
-            <img src="${flagUrl}" class="country-flag" onerror="this.style.display='none'" />
-            <span class="country-name">${country.text}</span>
-        </div>
-    `);
-}
-
-/**
- * Formatea la opción seleccionada del país con bandera
- */
-function formatCountrySelection(country) {
-    if (!country.id) return country.text;
-    
-    // Usar código ISO del país para las banderas (en minúsculas)
-    const countryCode = $(country.element).attr('data-code')?.toLowerCase();
-    if (!countryCode) return country.text;
-    
-    // Usar la ruta de imágenes local para las banderas en vez de un servicio externo
-    const flagUrl = `/images/flags/${countryCode.toUpperCase()}.png`;
-    
-    return $(`
-        <div class="country-option d-flex align-items-center">
-            <img src="${flagUrl}" class="country-flag" onerror="this.style.display='none'" />
-            <span class="country-name">${country.text}</span>
-        </div>
-    `);
-}
-
-/**
- * Inicializa el manejo de pestañas
- */
-function initTabs() {
-    $('.nav-tabs-underline .nav-link').on('click', function(e) {
-        e.preventDefault();
-        
-        // Remover la clase active de todas las pestañas y contenidos
-        $('.nav-tabs-underline .nav-link').removeClass('active');
-        $('.form-tab-pane').removeClass('active');
-        
-        // Añadir la clase active a la pestaña actual y su contenido
-        $(this).addClass('active');
-        const targetId = $(this).attr('href');
-        $(targetId).addClass('active');
-    });
-}
-
-/**
- * Inicializa formateadores para campos específicos
+ * Inicializa los formateadores para campos específicos
  */
 function initFormatters() {
     // Formatear el límite de crédito como moneda usando Cleave.js
     if (document.getElementById('LimiteCredito')) {
-        // Obtener el separador decimal de la configuración global, que debe ser
-        // establecido en el layout o al inicio del documento
+        // Obtener el separador decimal de la configuración global
         const separadorDecimal = window.appConfig?.separadorDecimal || ',';
         
-        new Cleave('#LimiteCredito', {
+        // Nueva instancia de Cleave con la configuración correcta para separador decimal (,)
+        const cleaveInstance = new Cleave('#LimiteCredito', {
             numeral: true,
             numeralThousandsGroupStyle: 'thousand',
             numeralDecimalMark: separadorDecimal,
             numeralDecimalScale: 2,
-            prefix: ''
+            delimiter: (separadorDecimal === ',' ? '.' : ','), // Si el decimal es coma, el delimitador debe ser punto
+            numeralPositiveOnly: true // Solo permitir números positivos
         });
+        
+        // Guardar referencia a la instancia de Cleave en el elemento para poder acceder después
+        document.getElementById('LimiteCredito').cleave = cleaveInstance;
     }
 }
 
@@ -339,13 +305,44 @@ function initImageUpload() {
             // Limpiar el input de archivo
             imageInput.value = '';
             
-            // Restaurar el placeholder
-            profileImage.innerHTML = '<i class="fas fa-user profile-image-placeholder"></i>';
+            // Si estamos en modo edición y hay una imagen existente, restaurarla
+            if (profileImage.dataset.originalImage) {
+                profileImage.innerHTML = `<img src="${profileImage.dataset.originalImage}" alt="Imagen original" style="width:100%;height:100%;object-fit:cover;">`;
+            } else {
+                // Restaurar el placeholder
+                profileImage.innerHTML = '<i class="fas fa-user profile-image-placeholder"></i>';
+            }
             
-            // Ocultar botón de reset
-            resetBtn.style.display = 'none';
+            // Ocultar botón de reset si estamos en modo creación
+            if (!profileImage.dataset.originalImage) {
+                resetBtn.style.display = 'none';
+            }
         });
     }
+    
+    // Guardar referencia a la imagen original (solo en modo edición)
+    if (profileImage.querySelector('img')) {
+        const originalImageSrc = profileImage.querySelector('img').src;
+        profileImage.dataset.originalImage = originalImageSrc;
+    }
+}
+
+/**
+ * Inicializa el manejo de pestañas
+ */
+function initTabs() {
+    $('.nav-tabs-underline .nav-link').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remover la clase active de todas las pestañas y contenidos
+        $('.nav-tabs-underline .nav-link').removeClass('active');
+        $('.form-tab-pane').removeClass('active');
+        
+        // Añadir la clase active a la pestaña actual y su contenido
+        $(this).addClass('active');
+        const targetId = $(this).attr('href');
+        $(targetId).addClass('active');
+    });
 }
 
 /**
