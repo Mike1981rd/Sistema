@@ -1,19 +1,24 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SistemaContable.Models
 {
     public class PlazoPago
     {
+        [Key]
         public int Id { get; set; }
         
-        [Required(ErrorMessage = "El nombre del plazo es obligatorio")]
-        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres")]
+        [Required(ErrorMessage = "El nombre es obligatorio")]
+        [Display(Name = "Nombre")]
+        [StringLength(50)]
         public string Nombre { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "El número de días es obligatorio")]
-        [Range(0, 365, ErrorMessage = "Los días deben estar entre 0 y 365")]
+        [Display(Name = "Días")]
         public int? Dias { get; set; }
+        
+        [Display(Name = "Es el predeterminado")]
+        public bool EsPredeterminado { get; set; }
         
         // Indica si es un plazo especial como "Vencimiento manual"
         public bool EsVencimientoManual { get; set; } = false;

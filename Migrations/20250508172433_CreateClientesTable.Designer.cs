@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SistemaContable.Data;
@@ -11,9 +12,11 @@ using SistemaContable.Data;
 namespace SistemaContable.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250508172433_CreateClientesTable")]
+    partial class CreateClientesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,9 +278,6 @@ namespace SistemaContable.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<int?>("PaisId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("PlazoPagoId")
                         .HasColumnType("integer");
 
@@ -303,8 +303,6 @@ namespace SistemaContable.Migrations
                     b.HasIndex("ListaPrecioId");
 
                     b.HasIndex("MunicipioId");
-
-                    b.HasIndex("PaisId");
 
                     b.HasIndex("PlazoPagoId");
 
@@ -807,35 +805,7 @@ namespace SistemaContable.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ListasPrecios", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Activa = true,
-                            Descripcion = "Precios regulares",
-                            EsPredeterminada = true,
-                            Nombre = "Lista Regular"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Activa = true,
-                            Descripcion = "Precios para mayoristas",
-                            EsPredeterminada = false,
-                            Nombre = "Mayoristas",
-                            Porcentaje = 10m
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Activa = true,
-                            Descripcion = "Precios para clientes VIP",
-                            EsPredeterminada = false,
-                            Nombre = "VIP",
-                            Porcentaje = 20m
-                        });
+                    b.ToTable("ListasPrecios");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.Municipio", b =>
@@ -859,89 +829,6 @@ namespace SistemaContable.Migrations
                     b.HasIndex("ProvinciaId");
 
                     b.ToTable("Municipios", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "Santo Domingo Este",
-                            ProvinciaId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Santo Domingo Norte",
-                            ProvinciaId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Nombre = "Santiago",
-                            ProvinciaId = 2
-                        });
-                });
-
-            modelBuilder.Entity("SistemaContable.Models.Pais", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Bandera")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Codigo")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Paises", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Bandera = "/images/flags/DO.png",
-                            Codigo = "DO",
-                            Nombre = "República Dominicana"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Bandera = "/images/flags/US.png",
-                            Codigo = "US",
-                            Nombre = "Estados Unidos"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Bandera = "/images/flags/ES.png",
-                            Codigo = "ES",
-                            Nombre = "España"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Bandera = "/images/flags/MX.png",
-                            Codigo = "MX",
-                            Nombre = "México"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Bandera = "/images/flags/CO.png",
-                            Codigo = "CO",
-                            Nombre = "Colombia"
-                        });
                 });
 
             modelBuilder.Entity("SistemaContable.Models.PlazoPago", b =>
@@ -987,7 +874,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4673),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4890),
                             Nombre = "De contado"
                         },
                         new
@@ -997,7 +884,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4676),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4893),
                             Nombre = "8 días"
                         },
                         new
@@ -1007,7 +894,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4678),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4895),
                             Nombre = "15 días"
                         },
                         new
@@ -1017,7 +904,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4679),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4897),
                             Nombre = "30 días"
                         },
                         new
@@ -1027,7 +914,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4681),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4899),
                             Nombre = "60 días"
                         },
                         new
@@ -1036,7 +923,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = true,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(4682),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(4900),
                             Nombre = "Vencimiento manual"
                         });
                 });
@@ -1057,23 +944,6 @@ namespace SistemaContable.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Provincias", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "Santo Domingo"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Santiago"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Nombre = "La Vega"
-                        });
                 });
 
             modelBuilder.Entity("SistemaContable.Models.Retencion", b =>
@@ -1133,8 +1003,8 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Impuesto Sobre la Renta al 10%",
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(6271),
-                            FechaModificacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(6272),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(5901),
+                            FechaModificacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(5902),
                             Nombre = "ISR 10%",
                             Porcentaje = 10.00m,
                             Tipo = "ISR"
@@ -1144,8 +1014,8 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Retención del IVA al 15%",
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(6274),
-                            FechaModificacion = new DateTime(2025, 5, 8, 18, 54, 0, 369, DateTimeKind.Utc).AddTicks(6275),
+                            FechaCreacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(5904),
+                            FechaModificacion = new DateTime(2025, 5, 8, 17, 24, 32, 217, DateTimeKind.Utc).AddTicks(5905),
                             Nombre = "IVA Retenido 15%",
                             Porcentaje = 15.00m,
                             Tipo = "IVA"
@@ -1205,27 +1075,7 @@ namespace SistemaContable.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TiposIdentificacion", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Descripcion = "Cédula de identidad y electoral",
-                            Nombre = "Cédula"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Descripcion = "Registro Nacional del Contribuyente",
-                            Nombre = "RNC"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Descripcion = "Pasaporte",
-                            Nombre = "Pasaporte"
-                        });
+                    b.ToTable("TiposIdentificacion");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.TipoNcf", b =>
@@ -1251,33 +1101,7 @@ namespace SistemaContable.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TiposNcf", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Codigo = "B01",
-                            Nombre = "Factura de Crédito Fiscal"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Codigo = "B02",
-                            Nombre = "Factura de Consumo"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Codigo = "B03",
-                            Nombre = "Nota de Débito"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Codigo = "B04",
-                            Nombre = "Nota de Crédito"
-                        });
+                    b.ToTable("TiposNcf");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.TransaccionBanco", b =>
@@ -1397,29 +1221,7 @@ namespace SistemaContable.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Vendedores", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Activo = true,
-                            Email = "juan@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 374, DateTimeKind.Utc).AddTicks(865),
-                            Nombre = "Juan Pérez",
-                            PorcentajeComision = 5m,
-                            Telefono = "809-555-1234"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Activo = true,
-                            Email = "maria@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 8, 18, 54, 0, 374, DateTimeKind.Utc).AddTicks(876),
-                            Nombre = "María González",
-                            PorcentajeComision = 7m,
-                            Telefono = "809-555-5678"
-                        });
+                    b.ToTable("Vendedores");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.AjusteConciliacion", b =>
@@ -1492,10 +1294,6 @@ namespace SistemaContable.Migrations
                         .HasForeignKey("MunicipioId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SistemaContable.Models.Pais", "Pais")
-                        .WithMany()
-                        .HasForeignKey("PaisId");
-
                     b.HasOne("SistemaContable.Models.PlazoPago", "PlazoPago")
                         .WithMany()
                         .HasForeignKey("PlazoPagoId")
@@ -1507,7 +1305,7 @@ namespace SistemaContable.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SistemaContable.Models.ComprobanteFiscal", "TipoNcf")
+                    b.HasOne("SistemaContable.Models.TipoNcf", "TipoNcf")
                         .WithMany()
                         .HasForeignKey("TipoNcfId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1524,8 +1322,6 @@ namespace SistemaContable.Migrations
                     b.Navigation("ListaPrecio");
 
                     b.Navigation("Municipio");
-
-                    b.Navigation("Pais");
 
                     b.Navigation("PlazoPago");
 

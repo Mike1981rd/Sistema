@@ -39,6 +39,16 @@ namespace SistemaContable.Data
         
         // Comprobantes Fiscales
         public DbSet<ComprobanteFiscal> ComprobantesFiscales { get; set; }
+        
+        // Clientes module
+        public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<TipoIdentificacion> TiposIdentificacion { get; set; }
+        public DbSet<Municipio> Municipios { get; set; }
+        public DbSet<Provincia> Provincias { get; set; }
+        public DbSet<Pais> Paises { get; set; }
+        public DbSet<TipoNcf> TiposNcf { get; set; }
+        public DbSet<ListaPrecio> ListasPrecios { get; set; }
+        public DbSet<Vendedor> Vendedores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -272,6 +282,154 @@ namespace SistemaContable.Data
                 entity.Property(e => e.SiguienteNumero).HasDefaultValue(1);
                 entity.Property(e => e.Preferida).HasDefaultValue(false);
                 entity.Property(e => e.Electronica).HasDefaultValue(false);
+            });
+            
+            // Configuración para Cliente
+            builder.Entity<Cliente>(entity =>
+            {
+                entity.ToTable("Clientes");
+                entity.HasKey(e => e.Id);
+                
+                // Relaciones con entidades relacionadas
+                entity.HasOne(c => c.TipoIdentificacion)
+                      .WithMany()
+                      .HasForeignKey(c => c.TipoIdentificacionId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(c => c.Municipio)
+                      .WithMany()
+                      .HasForeignKey(c => c.MunicipioId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.PlazoPago)
+                      .WithMany()
+                      .HasForeignKey(c => c.PlazoPagoId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.TipoNcf)
+                      .WithMany()
+                      .HasForeignKey(c => c.TipoNcfId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.ListaPrecio)
+                      .WithMany()
+                      .HasForeignKey(c => c.ListaPrecioId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.Vendedor)
+                      .WithMany()
+                      .HasForeignKey(c => c.VendedorId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.CuentaPorCobrar)
+                      .WithMany()
+                      .HasForeignKey(c => c.CuentaPorCobrarId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(c => c.CuentaPorPagar)
+                      .WithMany()
+                      .HasForeignKey(c => c.CuentaPorPagarId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+            
+            // Configuración para TipoIdentificacion
+            builder.Entity<TipoIdentificacion>(entity =>
+            {
+                entity.ToTable("TiposIdentificacion");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new TipoIdentificacion { Id = 1, Nombre = "Cédula", Descripcion = "Cédula de identidad y electoral" },
+                    new TipoIdentificacion { Id = 2, Nombre = "RNC", Descripcion = "Registro Nacional del Contribuyente" },
+                    new TipoIdentificacion { Id = 3, Nombre = "Pasaporte", Descripcion = "Pasaporte" }
+                );
+            });
+            
+            // Configuración para Provincia
+            builder.Entity<Provincia>(entity =>
+            {
+                entity.ToTable("Provincias");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new Provincia { Id = 1, Nombre = "Santo Domingo" },
+                    new Provincia { Id = 2, Nombre = "Santiago" },
+                    new Provincia { Id = 3, Nombre = "La Vega" }
+                );
+            });
+            
+            // Configuración para Municipio
+            builder.Entity<Municipio>(entity =>
+            {
+                entity.ToTable("Municipios");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new Municipio { Id = 1, Nombre = "Santo Domingo Este", ProvinciaId = 1 },
+                    new Municipio { Id = 2, Nombre = "Santo Domingo Norte", ProvinciaId = 1 },
+                    new Municipio { Id = 3, Nombre = "Santiago", ProvinciaId = 2 }
+                );
+            });
+            
+            // Configuración para TipoNcf
+            builder.Entity<TipoNcf>(entity =>
+            {
+                entity.ToTable("TiposNcf");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new TipoNcf { Id = 1, Nombre = "Factura de Crédito Fiscal", Codigo = "B01" },
+                    new TipoNcf { Id = 2, Nombre = "Factura de Consumo", Codigo = "B02" },
+                    new TipoNcf { Id = 3, Nombre = "Nota de Débito", Codigo = "B03" },
+                    new TipoNcf { Id = 4, Nombre = "Nota de Crédito", Codigo = "B04" }
+                );
+            });
+            
+            // Configuración para ListaPrecio
+            builder.Entity<ListaPrecio>(entity =>
+            {
+                entity.ToTable("ListasPrecios");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new ListaPrecio { Id = 1, Nombre = "Lista Regular", Descripcion = "Precios regulares", EsPredeterminada = true, Activa = true },
+                    new ListaPrecio { Id = 2, Nombre = "Mayoristas", Descripcion = "Precios para mayoristas", Porcentaje = 10, EsPredeterminada = false, Activa = true },
+                    new ListaPrecio { Id = 3, Nombre = "VIP", Descripcion = "Precios para clientes VIP", Porcentaje = 20, EsPredeterminada = false, Activa = true }
+                );
+            });
+            
+            // Configuración para Vendedor
+            builder.Entity<Vendedor>(entity =>
+            {
+                entity.ToTable("Vendedores");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new Vendedor { Id = 1, Nombre = "Juan Pérez", Email = "juan@example.com", Telefono = "809-555-1234", PorcentajeComision = 5, Activo = true },
+                    new Vendedor { Id = 2, Nombre = "María González", Email = "maria@example.com", Telefono = "809-555-5678", PorcentajeComision = 7, Activo = true }
+                );
+            });
+            
+            // Configuración para Pais
+            builder.Entity<Pais>(entity =>
+            {
+                entity.ToTable("Paises");
+                entity.HasKey(e => e.Id);
+                
+                // Seed data
+                entity.HasData(
+                    new Pais { Id = 1, Nombre = "República Dominicana", Codigo = "DO", Bandera = "/images/flags/DO.png" },
+                    new Pais { Id = 2, Nombre = "Estados Unidos", Codigo = "US", Bandera = "/images/flags/US.png" },
+                    new Pais { Id = 3, Nombre = "España", Codigo = "ES", Bandera = "/images/flags/ES.png" },
+                    new Pais { Id = 4, Nombre = "México", Codigo = "MX", Bandera = "/images/flags/MX.png" },
+                    new Pais { Id = 5, Nombre = "Colombia", Codigo = "CO", Bandera = "/images/flags/CO.png" }
+                );
             });
         }
 

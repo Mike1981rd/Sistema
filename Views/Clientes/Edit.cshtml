@@ -1,0 +1,362 @@
+@model SistemaContable.Models.Cliente
+
+@{
+    ViewData["Title"] = "Editar Cliente";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/clientes.css" />
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Editar Cliente</h1>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </a>
+                </div>
+            </div>
+
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="row">
+                    <!-- Panel izquierdo (formulario) -->
+                    <div class="col-md-8">
+                        <!-- Nav tabs con estilo Underline -->
+                        <ul class="nav nav-tabs-underline" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" href="#tab-general" role="tab" data-bs-toggle="tab">
+                                    Generales
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-ventas" role="tab" data-bs-toggle="tab">
+                                    Configuración de Ventas
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-contable" role="tab" data-bs-toggle="tab">
+                                    Configuración Contable
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-facturas" role="tab" data-bs-toggle="tab">
+                                    Facturas
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-cotizaciones" role="tab" data-bs-toggle="tab">
+                                    Cotizaciones
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-notas-debito" role="tab" data-bs-toggle="tab">
+                                    Notas de Débito
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#tab-comprobantes" role="tab" data-bs-toggle="tab">
+                                    Comprobantes Contables
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab content -->
+                        <div class="tab-content">
+                            <!-- Tab Generales -->
+                            <div class="form-tab-pane active" id="tab-general">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <label asp-for="NombreRazonSocial" class="form-label"></label>
+                                                <input asp-for="NombreRazonSocial" class="form-control" />
+                                                <span asp-validation-for="NombreRazonSocial" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="TipoIdentificacionId" class="form-label"></label>
+                                                <select asp-for="TipoIdentificacionId" class="form-select" 
+                                                        asp-items="ViewBag.TipoIdentificacionId"></select>
+                                                <span asp-validation-for="TipoIdentificacionId" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="NumeroIdentificacion" class="form-label"></label>
+                                                <input asp-for="NumeroIdentificacion" class="form-control" />
+                                                <span asp-validation-for="NumeroIdentificacion" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="PaisId" class="form-label"></label>
+                                                <select asp-for="PaisId" class="form-select" 
+                                                        asp-items="ViewBag.PaisId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="PaisId" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="MunicipioId" class="form-label"></label>
+                                                <select asp-for="MunicipioId" class="form-select" 
+                                                        asp-items="ViewBag.MunicipioId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="MunicipioId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <label asp-for="Direccion" class="form-label"></label>
+                                                <input asp-for="Direccion" class="form-control" />
+                                                <span asp-validation-for="Direccion" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="Email" class="form-label"></label>
+                                                <input asp-for="Email" class="form-control" />
+                                                <span asp-validation-for="Email" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="Telefono" class="form-label"></label>
+                                                <input asp-for="Telefono" class="form-control" />
+                                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="Celular" class="form-label"></label>
+                                                <input asp-for="Celular" class="form-control" />
+                                                <span asp-validation-for="Celular" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Configuración de Ventas -->
+                            <div class="form-tab-pane" id="tab-ventas">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="TipoNcfId" class="form-label"></label>
+                                                <select asp-for="TipoNcfId" class="form-select" 
+                                                        asp-items="ViewBag.TipoNcfId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="TipoNcfId" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="PlazoPagoId" class="form-label"></label>
+                                                <select asp-for="PlazoPagoId" class="form-select" 
+                                                        asp-items="ViewBag.PlazoPagoId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="PlazoPagoId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="ListaPrecioId" class="form-label"></label>
+                                                <select asp-for="ListaPrecioId" class="form-select" 
+                                                        asp-items="ViewBag.ListaPrecioId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="ListaPrecioId" class="text-danger"></span>
+                                            </div>
+                                            <!-- Vendedor oculto por ahora -->
+                                            <div class="col-md-6 d-none">
+                                                <label asp-for="VendedorId" class="form-label"></label>
+                                                <select asp-for="VendedorId" class="form-select" 
+                                                        asp-items="ViewBag.VendedorId">
+                                                    <option value="">-- Seleccione --</option>
+                                                </select>
+                                                <span asp-validation-for="VendedorId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="LimiteCredito" class="form-label"></label>
+                                                <input asp-for="LimiteCredito" class="form-control" />
+                                                <span asp-validation-for="LimiteCredito" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Configuración Contable -->
+                            <div class="form-tab-pane" id="tab-contable">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label asp-for="CuentaPorCobrarId" class="form-label"></label>
+                                                <select asp-for="CuentaPorCobrarId" class="form-control select2-cuenta" data-text="@ViewData["CuentaPorCobrarTexto"]">
+                                                    <option value="">-- Seleccione --</option>
+                                                    @if (Model.CuentaPorCobrarId.HasValue)
+                                                    {
+                                                        <option value="@Model.CuentaPorCobrarId" selected>@ViewData["CuentaPorCobrarTexto"]</option>
+                                                    }
+                                                </select>
+                                                <span asp-validation-for="CuentaPorCobrarId" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="CuentaPorPagarId" class="form-label"></label>
+                                                <select asp-for="CuentaPorPagarId" class="form-control select2-cuenta" data-text="@ViewData["CuentaPorPagarTexto"]">
+                                                    <option value="">-- Seleccione --</option>
+                                                    @if (Model.CuentaPorPagarId.HasValue)
+                                                    {
+                                                        <option value="@Model.CuentaPorPagarId" selected>@ViewData["CuentaPorPagarTexto"]</option>
+                                                    }
+                                                </select>
+                                                <span asp-validation-for="CuentaPorPagarId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Facturas -->
+                            <div class="form-tab-pane" id="tab-facturas">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="alert alert-info">
+                                            Esta sección mostrará las facturas asociadas al cliente.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Cotizaciones -->
+                            <div class="form-tab-pane" id="tab-cotizaciones">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="alert alert-info">
+                                            Esta sección mostrará las cotizaciones asociadas al cliente.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Notas de Débito -->
+                            <div class="form-tab-pane" id="tab-notas-debito">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="alert alert-info">
+                                            Esta sección mostrará las notas de débito asociadas al cliente.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Comprobantes Contables -->
+                            <div class="form-tab-pane" id="tab-comprobantes">
+                                <div class="card border-0">
+                                    <div class="card-body px-0">
+                                        <div class="alert alert-info">
+                                            Esta sección mostrará los comprobantes contables asociados al cliente.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Panel derecho (imagen) -->
+                    <div class="col-md-4">
+                        <!-- Tipo de entidad - Oculto -->
+                        <div class="card mb-4 d-none">
+                            <div class="card-body">
+                                <h5 class="card-title">Tipo</h5>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" asp-for="EsCliente" id="EsCliente" />
+                                            <label class="form-check-label" for="EsCliente">Cliente</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" asp-for="EsProveedor" id="EsProveedor" />
+                                            <label class="form-check-label" for="EsProveedor">Proveedor</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Imagen -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Imagen</h5>
+                                
+                                <div class="profile-image-container">
+                                    <div class="profile-image">
+                                        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                                        {
+                                            <img src="@Model.ImagenUrl" alt="@Model.NombreRazonSocial" />
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user profile-image-placeholder"></i>
+                                        }
+                                    </div>
+                                    
+                                    <div class="upload-buttons">
+                                        <button type="button" class="btn-upload" onclick="document.getElementById('imagen').click()">
+                                            Upload new photo
+                                        </button>
+                                        <button type="button" class="btn-reset" id="reset-image">
+                                            Reset
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="upload-info">
+                                        Allowed JPG, GIF or PNG. Max size of 800K
+                                    </div>
+                                    
+                                    <input type="file" id="imagen" name="imagen" class="d-none" accept=".jpg,.jpeg,.png,.gif" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/clientes/form.js"></script>
+    
+    <script>
+        // Pasar los datos de cuentas contables al JavaScript
+        window.cuentasContablesData = @Html.Raw(ViewBag.CuentasContablesJson ?? "[]");
+        
+        $(document).ready(function() {
+            // Inicializar Select2 para las cuentas contables
+            initSelect2();
+            // Inicializar pestañas
+            initTabs();
+            // Inicializar subida de imágenes
+            initImageUpload();
+        });
+    </script>
+} 
