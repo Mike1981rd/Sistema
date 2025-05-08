@@ -276,7 +276,9 @@ function initSelect2() {
                     url: window.location.origin + '/Proveedores/CrearVendedor',
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ nombre: data.term }),
+                    data: JSON.stringify({ 
+                        nombre: data.term 
+                    }),
                     success: function(response) {
                         console.log("Respuesta del servidor:", response);
                         if (response.success) {

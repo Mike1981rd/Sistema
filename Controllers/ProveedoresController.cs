@@ -470,8 +470,9 @@ namespace SistemaContable.Controllers
                 Console.WriteLine($"Nombre de vendedor a crear: '{nombreVendedor}'");
 
                 // Verificar si ya existe un vendedor con ese nombre
-                var vendedorExistente = await _context.Vendedores.FirstOrDefaultAsync(v => 
-                    v.Nombre.Equals(nombreVendedor, StringComparison.OrdinalIgnoreCase));
+                var vendedorExistente = await _context.Vendedores
+                    .Where(v => v.Nombre.ToLower() == nombreVendedor.ToLower())
+                    .FirstOrDefaultAsync();
 
                 if (vendedorExistente != null)
                 {
@@ -554,8 +555,9 @@ namespace SistemaContable.Controllers
             var nombreVendedor = datos["nombre"].Trim();
 
             // Verificar si ya existe un vendedor con ese nombre (diferente del que estamos editando)
-            var existeNombre = await _context.Vendedores.AnyAsync(v => 
-                v.Nombre.Equals(nombreVendedor, StringComparison.OrdinalIgnoreCase) && v.Id != vendedorId);
+            var existeNombre = await _context.Vendedores
+                .Where(v => v.Nombre.ToLower() == nombreVendedor.ToLower() && v.Id != vendedorId)
+                .AnyAsync();
 
             if (existeNombre)
             {
