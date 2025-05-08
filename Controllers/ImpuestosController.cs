@@ -6,6 +6,7 @@ using SistemaContable.Models;
 using SistemaContable.Services;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.Json;
 
 namespace SistemaContable.Controllers
 {
@@ -26,7 +27,7 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Impuestos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool activos = true)
         {
             // Obtener la empresa actual
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
@@ -34,11 +35,14 @@ namespace SistemaContable.Controllers
             {
                 return RedirectToAction("Index", "Empresas");
             }
+            
+            // Pasar el estado de filtro a la vista
+            ViewBag.MostrarActivos = activos;
 
             return View(await _context.Impuestos
                 .Include(i => i.CuentaContableVentas)
                 .Include(i => i.CuentaContableCompras)
-                .Where(i => i.EmpresaId == empresaId)
+                .Where(i => i.EmpresaId == empresaId && i.Activo == activos)
                 .OrderBy(i => i.Nombre)
                 .ToListAsync());
         }
@@ -81,7 +85,7 @@ namespace SistemaContable.Controllers
         // POST: Impuestos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId")] Impuesto impuesto)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,Activo")] Impuesto impuesto)
         {
             // Obtener la empresa actual
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
@@ -124,7 +128,7 @@ namespace SistemaContable.Controllers
         // POST: Impuestos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,FechaCreacion,EstaEnUso,EmpresaId")] Impuesto impuesto)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,FechaCreacion,EstaEnUso,EmpresaId,Activo")] Impuesto impuesto)
         {
             if (id != impuesto.Id)
             {
@@ -207,12 +211,24 @@ namespace SistemaContable.Controllers
         
         private async Task CargarCuentasContables(int empresaId)
         {
-            // Cargar solo cuentas de tipo Movimiento para los selectores
+            // Obtener todas las cuentas contables para la empresa actual
+            var cuentasContables = await _context.CuentasContables
+                .Where(c => c.EmpresaId == empresaId && c.Activo)
+                .OrderBy(c => c.Codigo)
+                .ToListAsync();
+            
+            // Guardamos la lista completa para su uso en el select2
+            ViewBag.CuentasContablesJson = JsonSerializer.Serialize(
+                cuentasContables.Select(c => new { 
+                    id = c.Id, 
+                    text = $"{c.Codigo} - {c.Nombre}",
+                    codigo = c.Codigo,
+                    nombre = c.Nombre
+                }));
+            
+            // Mantenemos el SelectList para compatibilidad con la vista actual
             ViewBag.CuentasContables = new SelectList(
-                await _context.CuentasContables
-                    .Where(c => c.EmpresaId == empresaId && c.TipoCuenta == "Movimiento" && c.Activo)
-                    .OrderBy(c => c.Codigo)
-                    .ToListAsync(),
+                cuentasContables,
                 "Id",
                 "CodigoNombre",
                 null

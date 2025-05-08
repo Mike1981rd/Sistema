@@ -8,8 +8,8 @@
 <div class="aurora-card mb-4">
     <div class="aurora-card-header d-flex justify-content-between align-items-center">
         <h1 class="h4 mb-0">Impuestos</h1>
-        <a asp-action="Create" class="btn btn-success btn-sm">
-            <i class="fas fa-plus me-1"></i>Nuevo Impuesto
+        <a asp-action="Create" class="btn btn-success rounded-pill shadow-sm">
+            <i class="fas fa-plus-circle me-1"></i>Nuevo Impuesto
         </a>
     </div>
     <div class="aurora-card-body">
@@ -20,6 +20,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
+        
+        <!-- Pestañas para filtrar por estado -->
+        <div class="mb-4">
+            <ul class="nav nav-tabs border-0">
+                <li class="nav-item me-3">
+                    <a class="nav-link px-0 py-2 border-0 @(ViewBag.MostrarActivos ? "fw-bold text-success border-bottom border-2 border-success" : "text-muted")" 
+                       href="@Url.Action("Index", new { activos = true })">
+                        <i class="fas fa-check-circle me-1"></i>Activos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-0 py-2 border-0 @(!ViewBag.MostrarActivos ? "fw-bold text-danger border-bottom border-2 border-danger" : "text-muted")" 
+                       href="@Url.Action("Index", new { activos = false })">
+                        <i class="fas fa-times-circle me-1"></i>Inactivos
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
         <div class="table-responsive">
             <table id="tablaDatos" class="table table-hover table-striped">
                 <thead>
@@ -29,7 +48,7 @@
                         <th>@Html.DisplayNameFor(model => model.Porcentaje)</th>
                         <th>Acreditable</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,28 +60,49 @@
                             <td>@(item.Porcentaje.HasValue ? $"{item.Porcentaje.Value:N2}%" : "N/A")</td>
                             <td>
                                 @if(item.EsAcreditable) {
-                                    <span class="badge bg-success">Sí</span>
+                                    <div class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Acreditable
+                                    </div>
                                 } else {
-                                    <span class="badge bg-secondary">No</span>
+                                    <div class="badge bg-secondary">
+                                        <i class="fas fa-times me-1"></i>No Acreditable
+                                    </div>
                                 }
                             </td>
                             <td>
-                                @if(item.EstaEnUso) {
-                                    <span class="badge bg-info">En uso</span>
-                                } else {
-                                    <span class="badge bg-light text-dark">Disponible</span>
-                                }
+                                <div class="d-flex gap-2">
+                                    @if(item.EstaEnUso) {
+                                        <div class="badge bg-info">
+                                            <i class="fas fa-sync-alt me-1"></i>En uso
+                                        </div>
+                                    } else {
+                                        <div class="badge bg-light text-dark">
+                                            <i class="fas fa-pause-circle me-1"></i>Disponible
+                                        </div>
+                                    }
+                                    @if(item.Activo) {
+                                        <div class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Activo
+                                        </div>
+                                    } else {
+                                        <div class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Inactivo
+                                        </div>
+                                    }
+                                </div>
                             </td>
                             <td>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-info-circle"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger @(item.EstaEnUso ? "disabled" : "")">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="text-primary btn btn-sm btn-link p-0" title="Editar">
+                                        <i class="fas fa-pen-to-square fs-5"></i>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="text-info btn btn-sm btn-link p-0" title="Detalles">
+                                        <i class="fas fa-circle-info fs-5"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger btn btn-sm btn-link p-0 @(item.EstaEnUso ? "disabled" : "")" title="Eliminar">
+                                        <i class="fas fa-trash-can fs-5"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -75,6 +115,10 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Inicializar tooltips
+            $('[title]').tooltip();
+            
+            // Inicializar DataTable
             $('#tablaDatos').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
