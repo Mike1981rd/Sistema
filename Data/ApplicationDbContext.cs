@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaContable.Models;
+using SistemaContable.Models.Enums;
 using System;
 using System.Linq;
 using System.Threading;
@@ -26,6 +27,9 @@ namespace SistemaContable.Data
         public DbSet<AjusteConciliacion> AjustesConciliacion { get; set; }
         public DbSet<AsientoContable> AsientosContables { get; set; }
         public DbSet<DetalleAsientoContable> DetallesAsientoContable { get; set; }
+        
+        // Impuestos
+        public DbSet<Impuesto> Impuestos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -149,12 +153,40 @@ namespace SistemaContable.Data
                 .WithMany()
                 .HasForeignKey(d => d.CuentaContableId)
                 .OnDelete(DeleteBehavior.Restrict);
+                
+            // Configuración para la entidad Impuesto
+            builder.Entity<Impuesto>(entity =>
+            {
+                entity.ToTable("Impuestos");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Descripcion).HasMaxLength(500);
+                entity.Property(e => e.Porcentaje).HasPrecision(5, 2);
+                
+                // Relaciones con CuentaContable
+                entity.HasOne(e => e.CuentaContableVentas)
+                      .WithMany()
+                      .HasForeignKey(e => e.CuentaContableVentasId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(e => e.CuentaContableCompras)
+                      .WithMany()
+                      .HasForeignKey(e => e.CuentaContableComprasId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                // Relación con Empresa
+                entity.HasOne(e => e.Empresa)
+                      .WithMany()
+                      .HasForeignKey(e => e.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -182,6 +214,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     contacto.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Impuesto impuesto)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        impuesto.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    impuesto.FechaModificacion = DateTime.UtcNow;
                 }
             }
 
@@ -193,7 +237,7 @@ namespace SistemaContable.Data
             ConvertDatesToUtc();
             
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -221,6 +265,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     contacto.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Impuesto impuesto)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        impuesto.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    impuesto.FechaModificacion = DateTime.UtcNow;
                 }
             }
             

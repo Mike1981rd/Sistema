@@ -23,6 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
+builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
 
 // Configura logging para EntityFramework en entorno de desarrollo
 if (builder.Environment.IsDevelopment())

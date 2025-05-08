@@ -49,6 +49,9 @@ namespace SistemaContable.Models
         [NotMapped]
         public bool TieneDependencias => SubCuentas?.Count > 0;
         
+        [NotMapped]
+        public string CodigoNombre => $"{Codigo} - {Nombre}";
+        
         // ID de la empresa a la que pertenece esta cuenta
         [Required]
         public int EmpresaId { get; set; }
