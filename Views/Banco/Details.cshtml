@@ -1,0 +1,257 @@
+@model SistemaContable.Models.Banco
+@{
+    ViewData["Title"] = "Detalles de Cuenta Bancaria";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex flex-column mb-4">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary mb-2" style="width: fit-content;">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Cuentas
+        </a>
+        <h2 class="text-gray-800 mb-0">
+            <i class="fas fa-university text-primary me-2"></i>@Model.Nombre
+        </h2>
+        <p class="text-muted">@Model.EntidadBancaria - @Model.NumeroCuenta</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Información general -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 text-primary">Información General</h6>
+                    <div>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </a>
+                        <a asp-action="NuevaTransaccion" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-success ms-2">
+                            <i class="fas fa-plus me-1"></i> Nueva Transacción
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Nombre de la Cuenta</dt>
+                                <dd>@Model.Nombre</dd>
+                                
+                                <dt>Número de Cuenta</dt>
+                                <dd>@Model.NumeroCuenta</dd>
+                                
+                                <dt>Entidad Bancaria</dt>
+                                <dd>@Model.EntidadBancaria</dd>
+                                
+                                <dt>Tipo de Cuenta</dt>
+                                <dd>
+                                    <span class="badge rounded-pill 
+                                        @(Model.TipoCuenta == SistemaContable.Models.TipoCuentaBancaria.Corriente ? "bg-info" : 
+                                          Model.TipoCuenta == SistemaContable.Models.TipoCuentaBancaria.Ahorro ? "bg-success" : 
+                                          Model.TipoCuenta == SistemaContable.Models.TipoCuentaBancaria.Inversion ? "bg-warning" : 
+                                          Model.TipoCuenta == SistemaContable.Models.TipoCuentaBancaria.Credito ? "bg-danger" : "bg-secondary")">
+                                        @Model.TipoCuenta.ToString()
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Moneda</dt>
+                                <dd>@Model.Moneda</dd>
+                                
+                                <dt>Fecha de Apertura</dt>
+                                <dd>@Model.FechaApertura.ToString("dd/MM/yyyy")</dd>
+                                
+                                <dt>Estado</dt>
+                                <dd>
+                                    @if (Model.Activo)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    }
+                                </dd>
+                                
+                                <dt>Cuenta Contable</dt>
+                                <dd>@(Model.CuentaContable?.Nombre ?? "No asignada")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Descripcion))
+                    {
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Descripción</h6>
+                                <p>@Model.Descripcion</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Saldos -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 text-primary">Saldos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <h6 class="text-muted">Saldo Inicial</h6>
+                                <h4>@Model.SaldoInicial.ToString("N2") @Model.Moneda</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <h6 class="text-muted">Saldo Actual</h6>
+                                <h4 class="@(Model.SaldoActual < 0 ? "text-danger" : "text-success")">
+                                    @Model.SaldoActual.ToString("N2") @Model.Moneda
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <h6 class="text-muted">Pendiente Conciliar</h6>
+                                <h4 class="@(Model.SaldoPendienteReconciliacion < 0 ? "text-danger" : "text-success")">
+                                    @Model.SaldoPendienteReconciliacion.ToString("N2") @Model.Moneda
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Últimas transacciones -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 text-primary">Últimas Transacciones</h6>
+                    <a asp-action="Transacciones" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list me-1"></i> Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Transacciones != null && ((List<SistemaContable.Models.TransaccionBanco>)ViewBag.Transacciones).Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Concepto</th>
+                                        <th>Referencia</th>
+                                        <th class="text-end">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in ViewBag.Transacciones)
+                                    {
+                                        <tr>
+                                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <span class="badge rounded-pill
+                                                    @(item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Deposito || 
+                                                      item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente || 
+                                                      item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso ? "bg-success" : 
+                                                      item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Transferencia ? "bg-info" : 
+                                                      item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ajuste ? "bg-warning" : "bg-danger")">
+                                                    @item.Tipo.ToString()
+                                                </span>
+                                            </td>
+                                            <td>@item.Concepto</td>
+                                            <td>@item.Referencia</td>
+                                            <td class="text-end @(item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Deposito || 
+                                                                 item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente || 
+                                                                 item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso ? "text-success" : 
+                                                                 item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ajuste && item.Monto > 0 ? "text-success" : 
+                                                                 item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ajuste && item.Monto < 0 ? "text-danger" : "text-danger")">
+                                                @((item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Retiro || 
+                                                   item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                                   item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                                   item.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque ? "-" : "")+item.Monto.ToString("N2"))
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay transacciones registradas aún</p>
+                            <a asp-action="NuevaTransaccion" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus me-1"></i> Registrar Primera Transacción
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <!-- Acciones Rápidas -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="NuevaTransaccion" asp-route-id="@Model.Id" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-2"></i> Nueva Transacción
+                        </a>
+                        <a asp-action="Transacciones" asp-route-id="@Model.Id" class="btn btn-info">
+                            <i class="fas fa-list-alt me-2"></i> Ver Todas las Transacciones
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i> Editar Cuenta
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i> Eliminar Cuenta
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="fas fa-calendar-alt me-2 text-info"></i> <strong>Fecha de Apertura:</strong> @Model.FechaApertura.ToString("dd/MM/yyyy")</p>
+                    <p><i class="fas fa-clock me-2 text-info"></i> <strong>Antigüedad:</strong> @((DateTime.Now - Model.FechaApertura).Days) días</p>
+                    
+                    @if (ViewBag.Transacciones != null)
+                    {
+                        var transacciones = (List<SistemaContable.Models.TransaccionBanco>)ViewBag.Transacciones;
+                        <p><i class="fas fa-exchange-alt me-2 text-info"></i> <strong>Total Transacciones:</strong> @transacciones.Count</p>
+                        
+                        if (transacciones.Any())
+                        {
+                            var ultimaTransaccion = transacciones.OrderByDescending(t => t.Fecha).FirstOrDefault();
+                            <p><i class="fas fa-history me-2 text-info"></i> <strong>Última Transacción:</strong> @(ultimaTransaccion != null ? ultimaTransaccion.Fecha.ToString("dd/MM/yyyy") : "N/A")</p>
+                            
+                            var depositos = transacciones.Where(t => t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Deposito || 
+                                                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.CobroCliente || 
+                                                                    t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Ingreso).Sum(t => t.Monto);
+                            
+                            var retiros = transacciones.Where(t => t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Retiro || 
+                                                                  t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.PagoProveedor || 
+                                                                  t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.GastoBancario || 
+                                                                  t.Tipo == SistemaContable.Models.TipoTransaccionBancaria.Cheque).Sum(t => t.Monto);
+                            
+                            <p><i class="fas fa-arrow-up me-2 text-success"></i> <strong>Total Ingresos:</strong> @depositos.ToString("N2") @Model.Moneda</p>
+                            <p><i class="fas fa-arrow-down me-2 text-danger"></i> <strong>Total Egresos:</strong> @retiros.ToString("N2") @Model.Moneda</p>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

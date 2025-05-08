@@ -1,0 +1,64 @@
+@model SistemaContable.Models.Banco
+@{
+    ViewData["Title"] = "Eliminar Cuenta Bancaria";
+}
+
+<div class="container-fluid">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="m-0">¿Está seguro que desea eliminar esta cuenta bancaria?</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.TieneTransacciones == true)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Esta cuenta bancaria tiene transacciones asociadas y no puede ser eliminada. Debe eliminar primero las transacciones.</strong>
+                        </div>
+                    }
+                    
+                    <dl class="row">
+                        <dt class="col-sm-3">Nombre:</dt>
+                        <dd class="col-sm-9">@Model.Nombre</dd>
+                        
+                        <dt class="col-sm-3">Número de Cuenta:</dt>
+                        <dd class="col-sm-9">@Model.NumeroCuenta</dd>
+                        
+                        <dt class="col-sm-3">Entidad Bancaria:</dt>
+                        <dd class="col-sm-9">@Model.EntidadBancaria</dd>
+                        
+                        <dt class="col-sm-3">Tipo de Cuenta:</dt>
+                        <dd class="col-sm-9">@Model.TipoCuenta</dd>
+                        
+                        <dt class="col-sm-3">Moneda:</dt>
+                        <dd class="col-sm-9">@Model.Moneda</dd>
+                        
+                        <dt class="col-sm-3">Saldo Actual:</dt>
+                        <dd class="col-sm-9">@Model.SaldoActual.ToString("N2")</dd>
+                        
+                        <dt class="col-sm-3">Cuenta Contable:</dt>
+                        <dd class="col-sm-9">@(Model.CuentaContable?.Nombre ?? "No asignada")</dd>
+                    </dl>
+                    
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-danger" @(ViewBag.TieneTransacciones == true ? "disabled" : "")>
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

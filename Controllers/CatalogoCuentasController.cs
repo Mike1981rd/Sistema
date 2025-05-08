@@ -423,6 +423,18 @@ namespace SistemaContable.Controllers
                 
             ViewBag.TieneSubcuentas = tieneSubcuentas;
             
+            // Verificar si tiene movimientos contables
+            var tieneMovimientos = await _context.DetallesAsientoContable
+                .AnyAsync(d => d.CuentaContableId == id);
+                
+            ViewBag.TieneMovimientos = tieneMovimientos;
+            
+            // Verificar si la cuenta está asociada a algún banco
+            var cuentaAsociadaABanco = await _context.Bancos
+                .AnyAsync(b => b.CuentaContableId == id);
+                
+            ViewBag.CuentaAsociadaABanco = cuentaAsociadaABanco;
+            
             // Verificar si tiene saldos iniciales
             var tieneSaldos = await _context.SaldosIniciales
                 .AnyAsync(s => s.CuentaContableId == id);
@@ -459,14 +471,47 @@ namespace SistemaContable.Controllers
                 
             if (cuentaContable == null)
             {
+                _logger.LogWarning($"No se encontró la cuenta contable con ID {id} para eliminar");
                 return NotFound();
             }
             
             // Verificar si es una cuenta del sistema
             if (cuentaContable.EsCuentaSistema)
             {
+                _logger.LogWarning($"Intento de eliminar cuenta del sistema: {cuentaContable.Nombre} (ID: {id})");
                 TempData["ErrorMessage"] = "No se puede eliminar una cuenta del sistema.";
                 return RedirectToAction(nameof(Index));
+            }
+            
+            // Verificar si la cuenta tiene movimientos contables
+            var tieneMovimientos = await _context.DetallesAsientoContable
+                .AnyAsync(d => d.CuentaContableId == id);
+                
+            if (tieneMovimientos)
+            {
+                _logger.LogWarning($"Intento de eliminar cuenta con movimientos: {cuentaContable.Nombre} (ID: {id})");
+                TempData["ErrorMessage"] = "No se puede eliminar esta cuenta porque tiene movimientos contables asociados.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+            
+            // Verificar si la cuenta está asociada a algún banco
+            var cuentaAsociadaABanco = await _context.Bancos
+                .AnyAsync(b => b.CuentaContableId == id);
+                
+            if (cuentaAsociadaABanco)
+            {
+                _logger.LogWarning($"Intento de eliminar cuenta asociada a un banco: {cuentaContable.Nombre} (ID: {id})");
+                TempData["ErrorMessage"] = "No se puede eliminar esta cuenta porque está asociada a una cuenta bancaria. Debe modificar la cuenta bancaria primero.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+            
+            // Verificar si tiene subcuentas
+            var tieneSubcuentas = await _context.CuentasContables
+                .AnyAsync(c => c.CuentaPadreId == id);
+                
+            if (tieneSubcuentas)
+            {
+                _logger.LogInformation($"La cuenta {cuentaContable.Nombre} (ID: {id}) tiene subcuentas. Se eliminarán recursivamente.");
             }
             
             // Verificar si tiene saldos iniciales
@@ -475,6 +520,7 @@ namespace SistemaContable.Controllers
                 
             if (tieneSaldos && !cuentaDestinoId.HasValue)
             {
+                _logger.LogWarning($"Intento de eliminar cuenta con saldos sin cuenta destino: {cuentaContable.Nombre} (ID: {id})");
                 TempData["ErrorMessage"] = "No se puede eliminar esta cuenta porque tiene saldos iniciales. Debe transferir estos saldos a otra cuenta.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -483,9 +529,13 @@ namespace SistemaContable.Controllers
             
             try
             {
+                _logger.LogInformation($"Iniciando eliminación de cuenta: {cuentaContable.Nombre} (ID: {id})");
+                
                 // Si tiene saldos y se proporcionó una cuenta destino, transferir saldos
                 if (tieneSaldos && cuentaDestinoId.HasValue)
                 {
+                    _logger.LogInformation($"Transfiriendo saldos de cuenta {id} a cuenta {cuentaDestinoId.Value}");
+                    
                     // Transferir saldos a la cuenta destino
                     var saldos = await _context.SaldosIniciales
                         .Where(s => s.CuentaContableId == id)
@@ -497,9 +547,11 @@ namespace SistemaContable.Controllers
                     }
                     
                     await _context.SaveChangesAsync();
+                    _logger.LogInformation($"Saldos transferidos correctamente");
                 }
                 
                 // Eliminar subcuentas recursivamente
+                _logger.LogInformation($"Eliminando subcuentas recursivamente");
                 await EliminarSubcuentasRecursivamente(id);
                 
                 // Eliminar la cuenta
@@ -508,13 +560,14 @@ namespace SistemaContable.Controllers
                 
                 await transaction.CommitAsync();
                 
+                _logger.LogInformation($"Cuenta {cuentaContable.Nombre} (ID: {id}) eliminada exitosamente");
                 TempData["SuccessMessage"] = "Cuenta eliminada exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error al eliminar cuenta {Id}", id);
+                _logger.LogError(ex, $"Error al eliminar cuenta {id}: {ex.Message}");
                 TempData["ErrorMessage"] = $"Error al eliminar la cuenta: {ex.Message}";
                 return RedirectToAction(nameof(Delete), new { id });
             }

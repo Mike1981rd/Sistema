@@ -54,6 +54,9 @@ namespace SistemaContable.Models
 
         public bool Activo { get; set; } = true;
 
+        [StringLength(500)]
+        public string? LogoUrl { get; set; }
+
         [Required]
         public int EmpresaId { get; set; }
         public virtual Empresa? Empresa { get; set; }

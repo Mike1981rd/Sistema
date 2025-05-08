@@ -49,6 +49,10 @@ namespace SistemaContable.Models
         public int? BancoDestinoId { get; set; }
         public virtual Banco? BancoDestino { get; set; }
         
+        // Nueva propiedad para transferencias a cuentas contables
+        public int? CuentaContableDestinoId { get; set; }
+        public virtual CuentaContable? CuentaContableDestino { get; set; }
+        
         [Required]
         public int EmpresaId { get; set; }
         public virtual Empresa? Empresa { get; set; }
@@ -58,6 +62,22 @@ namespace SistemaContable.Models
         
         public string? UsuarioCreacion { get; set; }
         public string? UsuarioModificacion { get; set; }
+        
+        [NotMapped]
+        public string TipoFormatted => Tipo.ToString();
+        
+        [NotMapped]
+        public bool EsIngreso => 
+            Tipo == TipoTransaccionBancaria.Deposito || 
+            Tipo == TipoTransaccionBancaria.CobroCliente || 
+            Tipo == TipoTransaccionBancaria.Ingreso;
+            
+        [NotMapped]
+        public bool EsEgreso => 
+            Tipo == TipoTransaccionBancaria.Retiro || 
+            Tipo == TipoTransaccionBancaria.PagoProveedor || 
+            Tipo == TipoTransaccionBancaria.GastoBancario || 
+            Tipo == TipoTransaccionBancaria.Cheque;
     }
     
     public enum TipoTransaccionBancaria

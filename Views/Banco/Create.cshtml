@@ -17,8 +17,28 @@
             <h6 class="m-0 font-weight-bold text-primary">Datos de la cuenta</h6>
         </div>
         <div class="card-body">
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Logo del Banco</label>
+                            <div class="logo-upload-container">
+                                <div class="logo-preview">
+                                    <div class="no-logo" id="logoPreview">
+                                        <i class="fas fa-university"></i>
+                                        <span>Sin logo</span>
+                                    </div>
+                                </div>
+                                <div class="logo-upload mt-2">
+                                    <input type="file" asp-for="LogoFile" class="form-control" accept="image/*" />
+                                    <small class="form-text text-muted">Seleccione una imagen para el logo del banco (opcional).</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="row">
                     <div class="col-md-6">
@@ -56,8 +76,11 @@
                     <div class="col-md-4">
                         <div class="form-group mb-3">
                             <label asp-for="Moneda" class="form-label"></label>
-                            <select asp-for="Moneda" class="form-select" asp-items="ViewBag.Monedas">
-                                <option value="">-- Seleccione --</option>
+                            <select asp-for="Moneda" class="form-select select2-flags">
+                                @foreach (var country in DataLists.LatinAmericanCountries.GroupBy(c => c.Currency).Select(g => g.First()))
+                                {
+                                    <option value="@country.Currency" data-flag="@country.Code.ToLower()">@country.Currency - @country.CurrencyName</option>
+                                }
                             </select>
                             <span asp-validation-for="Moneda" class="text-danger"></span>
                         </div>
@@ -69,8 +92,10 @@
                         <div class="form-group mb-3">
                             <label asp-for="SaldoInicial" class="form-label"></label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                <input asp-for="SaldoInicial" class="form-control" type="number" step="0.01" />
+                                <span class="input-group-text" id="monedaPrefix">
+                                    <span id="selectedCurrencySymbol">$</span>
+                                </span>
+                                <input asp-for="SaldoInicial" class="form-control money-format" type="text" />
                             </div>
                             <span asp-validation-for="SaldoInicial" class="text-danger"></span>
                         </div>
@@ -112,4 +137,69 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar select2 con banderas
+            $('.select2-flags').select2({
+                theme: 'bootstrap-5',
+                templateResult: formatOption,
+                templateSelection: formatOption
+            }).on('change', function() {
+                updateCurrencySymbol($(this).val());
+            });
+            
+            // Función para formatear opciones con banderas
+            function formatOption(option) {
+                if (!option.id) return option.text;
+                
+                const flagCode = $(option.element).data('flag');
+                if (!flagCode) return option.text;
+                
+                return $(`<span><img src="https://flagcdn.com/24x18/${flagCode.toLowerCase()}.png" alt="${option.text} flag" class="me-2" /> ${option.text}</span>`);
+            }
+
+            // Actualizar el símbolo de moneda cuando se cambia la selección
+            function updateCurrencySymbol(currency) {
+                let symbol = '';
+                
+                switch(currency) {
+                    case 'USD': symbol = '$'; break;
+                    case 'EUR': symbol = '€'; break;
+                    case 'DOP': symbol = 'RD$'; break;
+                    case 'MXN': symbol = 'MX$'; break;
+                    case 'COP': symbol = 'COL$'; break;
+                    case 'ARS': symbol = 'AR$'; break;
+                    default: symbol = currency;
+                }
+                
+                $("#selectedCurrencySymbol").text(symbol);
+            }
+            
+            // Inicializar formato de moneda para el campo de saldo
+            var separadorDecimal = '.'; // Obtener de la configuración de la empresa
+            var cleave = new Cleave('.money-format', {
+                numeral: true,
+                numeralThousandsGroupStyle: 'thousand',
+                numeralDecimalMark: separadorDecimal,
+                numeralDecimalScale: 2
+            });
+            
+            // Inicializar con la moneda seleccionada
+            updateCurrencySymbol($('#Moneda').val());
+
+            // Previsualización de la imagen del logo al seleccionarla
+            $("#LogoFile").change(function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        $("#logoPreview").html('<img src="' + e.target.result + '" class="img-fluid" style="max-height: 150px;">');
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        });
+    </script>
 } 

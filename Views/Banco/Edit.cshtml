@@ -1,0 +1,261 @@
+@model SistemaContable.ViewModels.BancoViewModel
+@{
+    ViewData["Title"] = "Editar Cuenta Bancaria";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex flex-column mb-4">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary mb-2" style="width: fit-content;">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Cuentas
+        </a>
+        <h4 class="text-gray-800 font-weight-normal mb-0">
+            <i class="fas fa-edit text-primary me-2"></i>Editar Cuenta Bancaria
+        </h4>
+        <p class="text-muted">Modifique los datos de la cuenta bancaria</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="LogoUrl" />
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Logo del Banco</label>
+                                    <div class="logo-upload-container">
+                                        <div class="logo-preview">
+                                            <div class="@(string.IsNullOrEmpty(Model.LogoUrl) ? "no-logo" : "")" id="logoPreview">
+                                                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                                                {
+                                                    <img src="@Model.LogoUrl" alt="Logo" class="img-fluid" style="max-height: 150px;" />
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-university"></i>
+                                                    <span>Sin logo</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="logo-upload mt-2">
+                                            <input type="file" asp-for="LogoFile" class="form-control" accept="image/*" />
+                                            <small class="form-text text-muted">Seleccione una imagen para cambiar el logo del banco (opcional).</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Nombre" class="form-label">Nombre de la Cuenta</label>
+                                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Cuenta Corriente Principal" />
+                                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="NumeroCuenta" class="form-label">Número de Cuenta</label>
+                                    <input asp-for="NumeroCuenta" class="form-control" placeholder="Ej: 00123456789" />
+                                    <span asp-validation-for="NumeroCuenta" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="EntidadBancaria" class="form-label">Entidad Bancaria</label>
+                                    <input asp-for="EntidadBancaria" class="form-control" placeholder="Ej: Banco Popular" />
+                                    <span asp-validation-for="EntidadBancaria" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="TipoCuenta" class="form-label">Tipo de Cuenta</label>
+                                    <select asp-for="TipoCuenta" class="form-select">
+                                        <option value="0">Corriente</option>
+                                        <option value="1">Ahorro</option>
+                                        <option value="2">Inversión</option>
+                                        <option value="3">Crédito</option>
+                                        <option value="4">Tarjeta</option>
+                                        <option value="5">Otro</option>
+                                    </select>
+                                    <span asp-validation-for="TipoCuenta" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Moneda" class="form-label">Moneda</label>
+                                    <select asp-for="Moneda" class="form-select select2-flags">
+                                        @foreach (var country in DataLists.LatinAmericanCountries.GroupBy(c => c.Currency).Select(g => g.First()))
+                                        {
+                                            <option value="@country.Currency" data-flag="@country.Code.ToLower()">@country.Currency - @country.CurrencyName</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="Moneda" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="FechaApertura" class="form-label">Fecha de Apertura</label>
+                                    <input asp-for="FechaApertura" class="form-control" type="date" />
+                                    <span asp-validation-for="FechaApertura" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="SaldoInicial" class="form-label">Saldo Inicial</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="monedaPrefix">
+                                            <span id="selectedCurrencySymbol">$</span>
+                                        </span>
+                                        <input asp-for="SaldoInicial" class="form-control money-format" type="text" />
+                                    </div>
+                                    <span asp-validation-for="SaldoInicial" class="text-danger"></span>
+                                    <small class="form-text text-muted">Cambiar el saldo inicial ajustará automáticamente el saldo actual.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="CuentaContableId" class="form-label">Cuenta Contable</label>
+                                    <select asp-for="CuentaContableId" class="form-select" asp-items="ViewBag.CuentasContables"></select>
+                                    <span asp-validation-for="CuentaContableId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Descripcion" class="form-label">Descripción (Opcional)</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Detalles adicionales sobre la cuenta"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                            <label asp-for="Activo" class="form-check-label">Cuenta Activa</label>
+                            <span asp-validation-for="Activo" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Información Importante</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            El saldo actual se calculará automáticamente en base al saldo inicial y las transacciones.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            Modificar el saldo inicial ajustará el saldo actual proporcionalmente.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            La cuenta contable asociada se usa para el registro en el sistema contable.
+                        </li>
+                        <li>
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            Desactivar una cuenta no eliminará los datos asociados a ella.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar select2 con banderas
+            $('.select2-flags').select2({
+                theme: 'bootstrap-5',
+                templateResult: formatOption,
+                templateSelection: formatOption
+            }).on('change', function() {
+                updateCurrencySymbol($(this).val());
+            });
+            
+            // Función para formatear opciones con banderas
+            function formatOption(option) {
+                if (!option.id) return option.text;
+                
+                const flagCode = $(option.element).data('flag');
+                if (!flagCode) return option.text;
+                
+                return $(`<span><img src="https://flagcdn.com/24x18/${flagCode.toLowerCase()}.png" alt="${option.text} flag" class="me-2" /> ${option.text}</span>`);
+            }
+
+            // Actualizar el símbolo de moneda cuando se cambia la selección
+            function updateCurrencySymbol(currency) {
+                let symbol = '';
+                
+                switch(currency) {
+                    case 'USD': symbol = '$'; break;
+                    case 'EUR': symbol = '€'; break;
+                    case 'DOP': symbol = 'RD$'; break;
+                    case 'MXN': symbol = 'MX$'; break;
+                    case 'COP': symbol = 'COL$'; break;
+                    case 'ARS': symbol = 'AR$'; break;
+                    default: symbol = currency;
+                }
+                
+                $("#selectedCurrencySymbol").text(symbol);
+            }
+            
+            // Inicializar formato de moneda para el campo de saldo
+            var separadorDecimal = '.'; // Obtener de la configuración de la empresa
+            var cleave = new Cleave('.money-format', {
+                numeral: true,
+                numeralThousandsGroupStyle: 'thousand',
+                numeralDecimalMark: separadorDecimal,
+                numeralDecimalScale: 2
+            });
+            
+            // Inicializar con la moneda seleccionada
+            updateCurrencySymbol($('#Moneda').val());
+
+            // Previsualización de la imagen del logo al seleccionarla
+            $("#LogoFile").change(function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        $("#logoPreview").html('<img src="' + e.target.result + '" class="img-fluid" style="max-height: 150px;">');
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        });
+    </script>
+} 

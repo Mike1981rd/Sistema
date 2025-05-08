@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using SistemaContable.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace SistemaContable.ViewModels
 {
@@ -61,6 +62,12 @@ namespace SistemaContable.ViewModels
         
         [Display(Name = "Nombre de cuenta contable")]
         public string? CuentaContableNombre { get; set; }
+        
+        [Display(Name = "Logo del banco")]
+        public string? LogoUrl { get; set; }
+        
+        [Display(Name = "Cargar logo del banco")]
+        public IFormFile? LogoFile { get; set; }
     }
     
     public class TransaccionBancariaViewModel
@@ -111,5 +118,12 @@ namespace SistemaContable.ViewModels
         
         [Display(Name = "Nombre de cuenta destino")]
         public string? BancoDestinoNombre { get; set; }
+        
+        [Display(Name = "Cuenta destino ID con prefijo")]
+        public string? BancoDestinoIdString { get; set; }
+        
+        // Propiedad para transferencias a cuentas contables (no bancos)
+        [Display(Name = "Cuenta contable destino")]
+        public int? CuentaContableDestinoId { get; set; }
     }
 } 

@@ -1,0 +1,225 @@
+@model SistemaContable.ViewModels.TransaccionBancariaViewModel
+@{
+    ViewData["Title"] = "Nueva Transacción Bancaria";
+    var banco = ViewBag.Banco as SistemaContable.Models.Banco;
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex flex-column mb-4">
+        <a asp-action="Transacciones" asp-route-id="@Model.BancoId" class="btn btn-sm btn-outline-secondary mb-2" style="width: fit-content;">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Transacciones
+        </a>
+        <h2 class="text-gray-800 mb-0">
+            <i class="fas fa-plus-circle text-primary me-2"></i>Nueva Transacción
+        </h2>
+        <p class="text-muted">Cuenta: @(banco?.Nombre ?? "")</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-action="NuevaTransaccion" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <input type="hidden" asp-for="BancoId" />
+                        <input type="hidden" asp-for="BancoNombre" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Tipo" class="form-label">Tipo de Transacción</label>
+                                    <select asp-for="Tipo" class="form-select" id="tipoTransaccion">
+                                        <option value="0">Depósito</option>
+                                        <option value="1">Retiro</option>
+                                        <option value="2">Transferencia</option>
+                                        <option value="3">Cheque</option>
+                                        <option value="4">Pago a Proveedor</option>
+                                        <option value="5">Cobro a Cliente</option>
+                                        <option value="6">Gasto Bancario</option>
+                                        <option value="7">Ingreso</option>
+                                        <option value="8">Ajuste</option>
+                                    </select>
+                                    <span asp-validation-for="Tipo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Monto" class="form-label">Monto</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="monedaPrefix">
+                                            <span id="currencySymbol">@(banco?.Moneda ?? "")</span>
+                                        </span>
+                                        <input asp-for="Monto" class="form-control money-format" type="text" />
+                                    </div>
+                                    <span asp-validation-for="Monto" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Fecha" class="form-label">Fecha</label>
+                                    <input asp-for="Fecha" class="form-control" type="date" />
+                                    <span asp-validation-for="Fecha" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Referencia" class="form-label">Referencia</label>
+                                    <input asp-for="Referencia" class="form-control" placeholder="Ej: Número de cheque, recibo" />
+                                    <span asp-validation-for="Referencia" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Concepto" class="form-label">Concepto</label>
+                            <input asp-for="Concepto" class="form-control" placeholder="Razón de la transacción" />
+                            <span asp-validation-for="Concepto" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Descripcion" class="form-label">Descripción (Opcional)</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Detalles adicionales"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group" id="contactoGroup">
+                                    <label asp-for="ContactoId" class="form-label">Contacto</label>
+                                    <select asp-for="ContactoId" class="form-select" asp-items="ViewBag.Contactos">
+                                        <option value="">-- Seleccionar Contacto --</option>
+                                    </select>
+                                    <span asp-validation-for="ContactoId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group" id="bancoDestinoGroup" style="display: none;">
+                                    <label asp-for="BancoDestinoIdString" class="form-label">Cuenta Destino</label>
+                                    <select asp-for="BancoDestinoIdString" class="form-select">
+                                        <option value="">-- Seleccionar Cuenta Destino --</option>
+                                        @foreach (var item in ViewBag.BancosDestino)
+                                        {
+                                            if (item.Disabled)
+                                            {
+                                                <optgroup label="@item.Text"></optgroup>
+                                            }
+                                            else
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="BancoDestinoIdString" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a asp-action="Transacciones" asp-route-id="@Model.BancoId" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Guardar Transacción
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Información de la Cuenta</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Nombre:</dt>
+                        <dd class="col-sm-7">@(banco?.Nombre ?? "")</dd>
+                        
+                        <dt class="col-sm-5">Número:</dt>
+                        <dd class="col-sm-7">@(banco?.NumeroCuenta ?? "")</dd>
+                        
+                        <dt class="col-sm-5">Entidad:</dt>
+                        <dd class="col-sm-7">@(banco?.EntidadBancaria ?? "")</dd>
+                        
+                        <dt class="col-sm-5">Moneda:</dt>
+                        <dd class="col-sm-7">@(banco?.Moneda ?? "")</dd>
+                        
+                        <dt class="col-sm-5">Saldo Actual:</dt>
+                        <dd class="col-sm-7 font-weight-bold @(banco?.SaldoActual < 0 ? "text-danger" : "text-success-dark")">
+                            @(banco?.SaldoActual.ToString("N2") ?? "0.00")
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Ayuda</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text"><strong>Depósito:</strong> Ingreso de dinero a la cuenta.</p>
+                    <p class="card-text"><strong>Retiro:</strong> Salida de dinero de la cuenta.</p>
+                    <p class="card-text"><strong>Transferencia:</strong> Movimiento de fondos entre cuentas bancarias.</p>
+                    <p class="card-text"><strong>Cheque:</strong> Emisión de un cheque desde la cuenta.</p>
+                    <p class="card-text"><strong>Pago a Proveedor:</strong> Salida de dinero para pagar a un proveedor.</p>
+                    <p class="card-text"><strong>Cobro a Cliente:</strong> Ingreso de dinero por pago de un cliente.</p>
+                    <p class="card-text"><strong>Gasto Bancario:</strong> Comisiones, intereses u otros cobros del banco.</p>
+                    <p class="card-text"><strong>Ajuste:</strong> Corrección del saldo (puede ser positivo o negativo).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar formato de moneda para el campo de monto
+            var separadorDecimal = '.'; // Obtener de la configuración de la empresa
+            var cleave = new Cleave('.money-format', {
+                numeral: true,
+                numeralThousandsGroupStyle: 'thousand',
+                numeralDecimalMark: separadorDecimal,
+                numeralDecimalScale: 2
+            });
+            
+            // Mostrar/ocultar campos según el tipo de transacción
+            $('#tipoTransaccion').change(function() {
+                var tipo = $(this).val();
+                
+                // Mostrar/ocultar banco destino solo para transferencias (valor 2)
+                if (tipo == '2') { // Transferencia
+                    $('#bancoDestinoGroup').show();
+                    $('#bancoDestinoId').prop('required', true);
+                } else {
+                    $('#bancoDestinoGroup').hide();
+                    $('#bancoDestinoId').prop('required', false);
+                }
+                
+                // Mostrar/ocultar contacto para ciertos tipos
+                if (tipo == '4' || tipo == '5') { // Pago a Proveedor o Cobro a Cliente
+                    $('#contactoGroup').show();
+                    $('#contactoId').prop('required', true);
+                } else {
+                    $('#contactoGroup').show(); // Siempre visible pero opcional
+                    $('#contactoId').prop('required', false);
+                }
+            });
+            
+            // Disparar el evento change al cargar la página
+            $('#tipoTransaccion').trigger('change');
+        });
+    </script>
+} 
+
+<style>
+    .text-success-dark {
+        color: #0c5e31 !important;
+    }
+</style> 
