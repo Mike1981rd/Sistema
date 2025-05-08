@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SistemaContable.Data;
@@ -11,9 +12,11 @@ using SistemaContable.Data;
 namespace SistemaContable.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250508124310_DropEmpresaId1Column")]
+    partial class DropEmpresaId1Column
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,7 +650,7 @@ namespace SistemaContable.Migrations
                             Dias = 0,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6716),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8950),
                             Nombre = "De contado"
                         },
                         new
@@ -656,7 +659,7 @@ namespace SistemaContable.Migrations
                             Dias = 8,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6719),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8954),
                             Nombre = "8 días"
                         },
                         new
@@ -665,7 +668,7 @@ namespace SistemaContable.Migrations
                             Dias = 15,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6721),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8955),
                             Nombre = "15 días"
                         },
                         new
@@ -674,7 +677,7 @@ namespace SistemaContable.Migrations
                             Dias = 30,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6722),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8957),
                             Nombre = "30 días"
                         },
                         new
@@ -683,7 +686,7 @@ namespace SistemaContable.Migrations
                             Dias = 60,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6724),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8959),
                             Nombre = "60 días"
                         },
                         new
@@ -691,7 +694,7 @@ namespace SistemaContable.Migrations
                             Id = 6,
                             EsVencimientoManual = true,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 8, 12, 47, 40, 134, DateTimeKind.Utc).AddTicks(6726),
+                            FechaCreacion = new DateTime(2025, 5, 8, 12, 43, 9, 567, DateTimeKind.Utc).AddTicks(8960),
                             Nombre = "Vencimiento manual"
                         });
                 });

@@ -1,0 +1,140 @@
+/* Ajustes para el menú del sistema Aurora */
+
+/* Prevenir parpadeos durante la carga inicial */
+.menu-initializing .aurora-submenu,
+.menu-initializing .aurora-nav {
+    transition: none !important;
+}
+
+/* Ocultar contenido durante inicialización */
+.menu-initializing .aurora-main {
+    opacity: 0.98;
+    transition: opacity 0.2s ease;
+}
+
+/* Base styles for submenus */
+.aurora-submenu {
+    position: relative;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease-out;
+    display: block;
+}
+
+/* Eliminar margen en el contenedor principal */
+.aurora-main > .container,
+.aurora-main > .container-fluid {
+    margin-top: 0;
+    padding-top: 1rem;
+}
+
+/* Ajustar el espacio disponible para elementos del submenu */
+.aurora-submenu.show {
+    max-height: 500px;
+    transition: max-height 0.25s ease-in;
+}
+
+/* Prevenir que las animaciones afecten al layout */
+.aurora-nav,
+.aurora-submenu,
+.aurora-nav-item,
+.aurora-submenu-item {
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Estilo para los elementos del submenu */
+.aurora-submenu-item {
+    padding: 8px 20px 8px 30px;
+    display: flex;
+    align-items: center;
+    color: var(--aurora-light);
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Estilo para los íconos */
+.aurora-submenu-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+/* Resaltar elementos al hacer hover */
+.aurora-submenu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Estilo para elemento activo */
+.aurora-submenu-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-left: 3px solid var(--aurora-accent);
+    padding-left: 27px;
+}
+
+/* Fix para el menú de configuración */
+.aurora-nav-item[data-title="Configuración"] {
+    position: relative;
+    z-index: 101; /* Asegurar que está sobre otros elementos */
+}
+
+/* Fix para la tabla en la vista de Términos de Pago */
+.aurora-main table {
+    width: 100%;
+    margin-top: 0.5rem;
+    border-collapse: collapse;
+}
+
+/* Eliminar bordes innecesarios */
+.aurora-main .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Asegurar que los contenedores tengan espacio correcto */
+.aurora-main > .container-fluid,
+.aurora-main > .container {
+    padding: 1rem;
+}
+
+/* Estilos específicos para la página de Términos de Pago */
+.dataTables_wrapper {
+    width: 100%;
+    padding: 0;
+}
+
+/* Estilos para controles de DataTables */
+.dataTables_length, 
+.dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+/* Arreglar problema de bordes */
+.card {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Evitar que el contenido se corte en vista móvil */
+@media (max-width: 768px) {
+    .table-responsive {
+        border: none;
+        overflow-x: auto;
+    }
+    
+    .aurora-submenu-item {
+        padding-left: 20px;
+    }
+    
+    .aurora-submenu-item.active {
+        padding-left: 17px;
+    }
+    
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+} 

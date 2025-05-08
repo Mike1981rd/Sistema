@@ -24,6 +24,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
+builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
 
 // Configura logging para EntityFramework en entorno de desarrollo
 if (builder.Environment.IsDevelopment())
@@ -84,6 +85,16 @@ app.MapControllerRoute(
     name: "bancosConciliacion",
     pattern: "bancos/conciliacion", 
     defaults: new { controller = "Banco", action = "Conciliacion" });
+
+app.MapControllerRoute(
+    name: "plazosPago",
+    pattern: "PlazoPago/{action=Index}/{id?}",
+    defaults: new { controller = "PlazoPago" });
+
+app.MapControllerRoute(
+    name: "retenciones",
+    pattern: "Retenciones/{action=Index}/{id?}",
+    defaults: new { controller = "Retenciones" });
 
 app.MapControllerRoute(
     name: "default",

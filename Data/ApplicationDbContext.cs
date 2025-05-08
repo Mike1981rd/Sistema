@@ -30,6 +30,9 @@ namespace SistemaContable.Data
         
         // Impuestos
         public DbSet<Impuesto> Impuestos { get; set; }
+        
+        // Plazos de Pago
+        public DbSet<PlazoPago> PlazosPago { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -181,12 +184,32 @@ namespace SistemaContable.Data
                       .HasForeignKey(e => e.EmpresaId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+            
+            // Configuración para PlazoPago
+            builder.Entity<PlazoPago>(entity =>
+            {
+                entity.ToTable("PlazosPago");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Dias).IsRequired(false);
+                
+                // Datos semilla para plazos predeterminados
+                entity.HasData(
+                    new PlazoPago { Id = 1, Nombre = "De contado", Dias = 0, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 2, Nombre = "8 días", Dias = 8, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 3, Nombre = "15 días", Dias = 15, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 4, Nombre = "30 días", Dias = 30, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 5, Nombre = "60 días", Dias = 60, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 6, Nombre = "Vencimiento manual", Dias = null, EsVencimientoManual = true, FechaCreacion = DateTime.UtcNow }
+                );
+            });
         }
 
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || e.Entity is PlazoPago) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -226,6 +249,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     impuesto.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is PlazoPago plazoPago)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        plazoPago.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    plazoPago.FechaModificacion = DateTime.UtcNow;
                 }
             }
 
@@ -237,7 +272,7 @@ namespace SistemaContable.Data
             ConvertDatesToUtc();
             
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || e.Entity is PlazoPago) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -277,6 +312,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     impuesto.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is PlazoPago plazoPago)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        plazoPago.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    plazoPago.FechaModificacion = DateTime.UtcNow;
                 }
             }
             
