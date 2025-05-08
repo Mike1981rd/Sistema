@@ -1,0 +1,319 @@
+@model SistemaContable.ViewModels.ClienteDetalleViewModel
+@{
+    #nullable disable
+    ViewData["Title"] = "Detalle de Proveedor";
+    var cliente = Model.Cliente;
+}
+
+<div class="container-fluid">
+    <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+        <ol class="breadcrumb pt-0">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index"><i class="fas fa-home"></i></a>
+            </li>
+            <li class="breadcrumb-item">
+                Compras
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Index">Proveedores</a>
+            </li>
+            <li class="breadcrumb-item active">Detalle de Proveedor</li>
+        </ol>
+    </nav>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Detalle de Proveedor</h1>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@cliente.Id" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <!-- Información principal -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Información General</h5>
+                            <span class="badge @(cliente.EsCliente && cliente.EsProveedor ? "bg-success" : (cliente.EsCliente ? "bg-primary" : "bg-info"))">
+                                @cliente.Tipo
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.NombreRazonSocial)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.NombreRazonSocial)</dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.TipoIdentificacion)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.TipoIdentificacion != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.TipoIdentificacion.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.NumeroIdentificacion)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.NumeroIdentificacion)</dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Direccion)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.Direccion)</dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Municipio)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.Municipio != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.Municipio.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Email)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.Email)</dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Telefono)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.Telefono)</dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Celular)</dt>
+                                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Cliente.Celular)</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Configuración de compras -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Configuración de Compras</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.TipoNcf)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.TipoNcf != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.TipoNcf.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.PlazoPago)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.PlazoPago != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.PlazoPago.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.ListaPrecio)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.ListaPrecio != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.ListaPrecio.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.Vendedor)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.Vendedor != null)
+                                            {
+                                                @Html.DisplayFor(model => model.Cliente.Vendedor.Nombre)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.LimiteCredito)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.LimiteCredito.HasValue)
+                                            {
+                                                @($"RD$ {cliente.LimiteCredito.Value:N2}")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Configuración contable -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Configuración Contable</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.CuentaPorCobrar)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.CuentaPorCobrar != null)
+                                            {
+                                                <span>@cliente.CuentaPorCobrar.Codigo - @cliente.CuentaPorCobrar.Nombre</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definida</span>
+                                            }
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cliente.CuentaPorPagar)</dt>
+                                        <dd class="col-sm-8">
+                                            @if (cliente.CuentaPorPagar != null)
+                                            {
+                                                <span>@cliente.CuentaPorPagar.Codigo - @cliente.CuentaPorPagar.Nombre</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definida</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <!-- Imagen del proveedor -->
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            @if (!string.IsNullOrEmpty(cliente.ImagenUrl))
+                            {
+                                <img src="@cliente.ImagenUrl" alt="@cliente.NombreRazonSocial" class="img-fluid mb-3" style="max-height: 150px; border-radius: 10px;" />
+                            }
+                            else
+                            {
+                                <div class="avatar-placeholder mb-3">
+                                    <i class="fas fa-user fa-3x"></i>
+                                </div>
+                            }
+                            <h5>@cliente.NombreRazonSocial</h5>
+                            <p class="text-muted">@cliente.NumeroIdentificacion</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen financiero -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Resumen Financiero</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Facturas por Pagar</span>
+                                    <span class="badge bg-primary rounded-pill">@Model.PorPagar.ToString("C")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Anticipos Entregados</span>
+                                    <span class="badge bg-success rounded-pill">@Model.AnticiposEntregados.ToString("C")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Notas de Crédito</span>
+                                    <span class="badge bg-secondary rounded-pill">@Model.NotasCredito.ToString("C")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Notas de Débito</span>
+                                    <span class="badge bg-secondary rounded-pill">@Model.NotasDebito.ToString("C")</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Acciones -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Acciones</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-invoice me-2"></i> Nueva Orden de Compra
+                                </a>
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-invoice-dollar me-2"></i> Registrar Factura
+                                </a>
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="fas fa-money-bill-wave me-2"></i> Registrar Pago
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@cliente.Id" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash me-2"></i> Eliminar Proveedor
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            color: #aaa;
+        }
+        
+        .financial-summary {
+            padding: 10px 0;
+        }
+        
+        .financial-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .financial-label {
+            font-weight: 500;
+        }
+        
+        .financial-value {
+            font-weight: 600;
+        }
+    </style>
+} 

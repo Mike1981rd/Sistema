@@ -1,7 +1,7 @@
 @model SistemaContable.Models.Cliente
 
 @{
-    ViewData["Title"] = "Editar Cliente";
+    ViewData["Title"] = "Editar Proveedor";
 }
 
 @section Styles {
@@ -15,16 +15,19 @@
                 <a asp-controller="Home" asp-action="Index"><i class="fas fa-home"></i></a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-action="Index">Clientes</a>
+                Compras
             </li>
-            <li class="breadcrumb-item active">Editar Cliente</li>
+            <li class="breadcrumb-item">
+                <a asp-action="Index">Proveedores</a>
+            </li>
+            <li class="breadcrumb-item active">Editar Proveedor</li>
         </ol>
     </nav>
     
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Editar Cliente</h1>
+                <h1 class="h3 mb-0">Editar Proveedor</h1>
                 <div>
                     <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i> Volver a la lista
@@ -36,8 +39,8 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger alert alert-danger mb-3" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
                 <input type="hidden" asp-for="Id" />
                 
-                <!-- Establecer EsCliente como true por defecto (para el caso de clientes) -->
-                <input type="hidden" asp-for="EsCliente" value="true" />
+                <!-- Establecer EsProveedor como true (para el caso de proveedores) -->
+                <input type="hidden" asp-for="EsProveedor" value="true" />
                 
                 <!-- Preservar la fecha de creación -->
                 <input type="hidden" asp-for="FechaCreacion" />
@@ -53,8 +56,8 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" href="#tab-ventas" role="tab" data-bs-toggle="tab">
-                                    Configuración de Ventas
+                                <a class="nav-link" href="#tab-compras" role="tab" data-bs-toggle="tab">
+                                    Configuración de Compras
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -68,13 +71,13 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" href="#tab-cotizaciones" role="tab" data-bs-toggle="tab">
-                                    Cotizaciones
+                                <a class="nav-link" href="#tab-ordenes" role="tab" data-bs-toggle="tab">
+                                    Órdenes de Compra
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" href="#tab-notas-debito" role="tab" data-bs-toggle="tab">
-                                    Notas de Débito
+                                <a class="nav-link" href="#tab-pagos" role="tab" data-bs-toggle="tab">
+                                    Pagos
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -173,8 +176,8 @@
                                 </div>
                             </div>
                             
-                            <!-- Tab Configuración de Ventas -->
-                            <div class="form-tab-pane" id="tab-ventas">
+                            <!-- Tab Configuración de Compras -->
+                            <div class="form-tab-pane" id="tab-compras">
                                 <div class="card border-0">
                                     <div class="card-body px-0">
                                         <div class="row mb-3">
@@ -234,25 +237,25 @@
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label asp-for="CuentaPorCobrarId" class="form-label"></label>
-                                                <select asp-for="CuentaPorCobrarId" class="form-control select2-cuenta" data-text="@ViewData["CuentaPorCobrarTexto"]">
+                                                <select asp-for="CuentaPorCobrarId" class="form-control select2-cuenta">
                                                     <option value="">-- Seleccione --</option>
-                                                    @if (Model.CuentaPorCobrarId.HasValue)
-                                                    {
-                                                        <option value="@Model.CuentaPorCobrarId" selected>@ViewData["CuentaPorCobrarTexto"]</option>
-                                                    }
                                                 </select>
                                                 <span asp-validation-for="CuentaPorCobrarId" class="text-danger"></span>
+                                                @if (ViewData["CuentaPorCobrarTexto"] != null)
+                                                {
+                                                    <small class="form-text text-muted">Cuenta actual: @ViewData["CuentaPorCobrarTexto"]</small>
+                                                }
                                             </div>
                                             <div class="col-md-6">
                                                 <label asp-for="CuentaPorPagarId" class="form-label"></label>
-                                                <select asp-for="CuentaPorPagarId" class="form-control select2-cuenta" data-text="@ViewData["CuentaPorPagarTexto"]">
+                                                <select asp-for="CuentaPorPagarId" class="form-control select2-cuenta">
                                                     <option value="">-- Seleccione --</option>
-                                                    @if (Model.CuentaPorPagarId.HasValue)
-                                                    {
-                                                        <option value="@Model.CuentaPorPagarId" selected>@ViewData["CuentaPorPagarTexto"]</option>
-                                                    }
                                                 </select>
                                                 <span asp-validation-for="CuentaPorPagarId" class="text-danger"></span>
+                                                @if (ViewData["CuentaPorPagarTexto"] != null)
+                                                {
+                                                    <small class="form-text text-muted">Cuenta actual: @ViewData["CuentaPorPagarTexto"]</small>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -263,30 +266,33 @@
                             <div class="form-tab-pane" id="tab-facturas">
                                 <div class="card border-0">
                                     <div class="card-body px-0">
+                                        <!-- Aquí se podría implementar una tabla con las facturas del proveedor -->
                                         <div class="alert alert-info">
-                                            Esta sección mostrará las facturas asociadas al cliente.
+                                            El proveedor no tiene facturas registradas.
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Tab Cotizaciones -->
-                            <div class="form-tab-pane" id="tab-cotizaciones">
+                            <!-- Tab Órdenes de Compra -->
+                            <div class="form-tab-pane" id="tab-ordenes">
                                 <div class="card border-0">
                                     <div class="card-body px-0">
+                                        <!-- Aquí se podría implementar una tabla con las órdenes de compra del proveedor -->
                                         <div class="alert alert-info">
-                                            Esta sección mostrará las cotizaciones asociadas al cliente.
+                                            El proveedor no tiene órdenes de compra registradas.
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Tab Notas de Débito -->
-                            <div class="form-tab-pane" id="tab-notas-debito">
+                            <!-- Tab Pagos -->
+                            <div class="form-tab-pane" id="tab-pagos">
                                 <div class="card border-0">
                                     <div class="card-body px-0">
+                                        <!-- Aquí se podría implementar una tabla con los pagos del proveedor -->
                                         <div class="alert alert-info">
-                                            Esta sección mostrará las notas de débito asociadas al cliente.
+                                            El proveedor no tiene pagos registrados.
                                         </div>
                                     </div>
                                 </div>
@@ -296,8 +302,9 @@
                             <div class="form-tab-pane" id="tab-comprobantes">
                                 <div class="card border-0">
                                     <div class="card-body px-0">
+                                        <!-- Aquí se podría implementar una tabla con los comprobantes contables del proveedor -->
                                         <div class="alert alert-info">
-                                            Esta sección mostrará los comprobantes contables asociados al cliente.
+                                            El proveedor no tiene comprobantes contables registrados.
                                         </div>
                                     </div>
                                 </div>
@@ -305,10 +312,67 @@
                         </div>
                     </div>
                     
-                    <!-- Panel derecho (imagen) -->
+                    <!-- Panel derecho (imagen y resumen financiero) -->
                     <div class="col-md-4">
-                        <!-- Tipo de entidad - Oculto -->
-                        <div class="card mb-4 d-none">
+                        <!-- Imagen -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Imagen</h5>
+                                
+                                <div class="profile-image-container">
+                                    <div class="profile-image">
+                                        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                                        {
+                                            <img src="@Model.ImagenUrl" alt="@Model.NombreRazonSocial" style="width:100%;height:100%;object-fit:cover;" />
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user profile-image-placeholder"></i>
+                                        }
+                                    </div>
+                                    
+                                    <div class="upload-buttons mt-3">
+                                        <button type="button" class="btn-upload" onclick="document.getElementById('imagen').click()">
+                                            Cambiar foto
+                                        </button>
+                                        <button type="button" class="btn-reset" id="reset-image">
+                                            Restaurar
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="upload-info mt-2">
+                                        Se permiten JPG, GIF o PNG. Tamaño máximo 800KB
+                                    </div>
+                                    
+                                    <input type="file" id="imagen" name="imagen" class="d-none" accept=".jpg,.jpeg,.png,.gif" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumen financiero -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Resumen Financiero</h5>
+                                
+                                <div class="financial-summary">
+                                    <div class="financial-item">
+                                        <span class="financial-label">Por Pagar:</span>
+                                        <span class="financial-value text-danger">@ViewBag.PorPagar.ToString("C")</span>
+                                    </div>
+                                    <div class="financial-item">
+                                        <span class="financial-label">Anticipos Entregados:</span>
+                                        <span class="financial-value text-success">@ViewBag.AnticiposEntregados.ToString("C")</span>
+                                    </div>
+                                    <div class="financial-item">
+                                        <span class="financial-label">Total Pagado:</span>
+                                        <span class="financial-value text-primary">@((ViewBag.PorPagar + ViewBag.AnticiposEntregados).ToString("C"))</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tipo de entidad -->
+                        <div class="card mb-4">
                             <div class="card-body">
                                 <h5 class="card-title">Tipo</h5>
                                 
@@ -319,45 +383,13 @@
                                             <label class="form-check-label" for="EsCliente">Cliente</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" asp-for="EsProveedor" id="EsProveedor" />
+                                            <input class="form-check-input" type="checkbox" asp-for="EsProveedor" id="EsProveedor" checked disabled />
                                             <label class="form-check-label" for="EsProveedor">Proveedor</label>
                                         </div>
+                                        <small class="form-text text-muted d-block mt-2">
+                                            La opción Proveedor no se puede desmarcar en este formulario.
+                                        </small>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Imagen -->
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <h5 class="card-title">Imagen</h5>
-                                
-                                <div class="profile-image-container">
-                                    <div class="profile-image">
-                                        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
-                                        {
-                                            <img src="@Model.ImagenUrl" alt="@Model.NombreRazonSocial" />
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-user profile-image-placeholder"></i>
-                                        }
-                                    </div>
-                                    
-                                    <div class="upload-buttons">
-                                        <button type="button" class="btn-upload" onclick="document.getElementById('imagen').click()">
-                                            Upload new photo
-                                        </button>
-                                        <button type="button" class="btn-reset" id="reset-image">
-                                            Reset
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="upload-info">
-                                        Allowed JPG, GIF or PNG. Max size of 800K
-                                    </div>
-                                    
-                                    <input type="file" id="imagen" name="imagen" class="d-none" accept=".jpg,.jpeg,.png,.gif" />
                                 </div>
                             </div>
                         </div>
@@ -366,7 +398,7 @@
                 
                 <div class="d-flex justify-content-end mt-4">
                     <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
@@ -377,7 +409,7 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="~/js/clientes/form.js"></script>
+    <script src="~/js/proveedores/form.js"></script>
     
     <script>
         // Pasar los datos de cuentas contables al JavaScript
@@ -390,16 +422,7 @@
         };
         
         $(document).ready(function() {
-            // Inicializar Select2 para cuentas contables
-            initSelect2();
-            // Inicializar pestañas
-            initTabs();
-            // Inicializar subida de imágenes
-            initImageUpload();
-            // Inicializar formateadores de campos
-            initFormatters();
-            
-            // Inicializar select2 con banderas (igual que en el módulo de empresas)
+            // Inicializar Select2 para países con banderas
             $('.select2-flags').select2({
                 theme: 'bootstrap-5',
                 templateResult: formatOption,

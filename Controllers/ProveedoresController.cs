@@ -16,16 +16,16 @@ using SistemaContable.Services;
 namespace SistemaContable.Controllers
 {
     /// <summary>
-    /// Controlador para la gestión de clientes y proveedores en el sistema.
-    /// Permite realizar operaciones CRUD y gestionar archivos asociados a los clientes.
+    /// Controlador para la gestión de proveedores en el sistema.
+    /// Permite realizar operaciones CRUD y gestionar archivos asociados a los proveedores.
     /// </summary>
-    public class ClientesController : Controller
+    public class ProveedoresController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IEmpresaService _empresaService;
 
-        public ClientesController(
+        public ProveedoresController(
             ApplicationDbContext context, 
             IWebHostEnvironment webHostEnvironment,
             IEmpresaService empresaService)
@@ -35,10 +35,10 @@ namespace SistemaContable.Controllers
             _empresaService = empresaService;
         }
 
-        // GET: Clientes
+        // GET: Proveedores
         public async Task<IActionResult> Index()
         {
-            var clientes = await _context.Clientes
+            var proveedores = await _context.Clientes
                 .Include(c => c.TipoIdentificacion)
                 .Include(c => c.Municipio)
                 .Include(c => c.Pais)
@@ -46,13 +46,13 @@ namespace SistemaContable.Controllers
                 .Include(c => c.TipoNcf)
                 .Include(c => c.ListaPrecio)
                 .Include(c => c.Vendedor)
-                .Where(c => c.EsCliente)
+                .Where(c => c.EsProveedor)
                 .ToListAsync();
 
-            return View(clientes);
+            return View(proveedores);
         }
 
-        // GET: Clientes/Details/5
+        // GET: Proveedores/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -60,7 +60,7 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var cliente = await _context.Clientes
+            var proveedor = await _context.Clientes
                 .Include(c => c.TipoIdentificacion)
                 .Include(c => c.Municipio)
                 .Include(c => c.Pais)
@@ -70,16 +70,16 @@ namespace SistemaContable.Controllers
                 .Include(c => c.Vendedor)
                 .Include(c => c.CuentaPorCobrar)
                 .Include(c => c.CuentaPorPagar)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.EsProveedor);
 
-            if (cliente == null)
+            if (proveedor == null)
             {
                 return NotFound();
             }
 
             var viewModel = new ClienteDetalleViewModel
             {
-                Cliente = cliente,
+                Cliente = proveedor,
                 CuentasPorCobrar = 0,
                 AnticiposRecibidos = 0,
                 AnticiposEntregados = 0,
@@ -88,13 +88,13 @@ namespace SistemaContable.Controllers
                 NotasDebito = 0
             };
 
-            // Aquí se podrían cargar los datos financieros reales del cliente
-            // Esto se implementará en el futuro cuando tengamos la lógica de facturas y pagos
+            // Aquí se podrían cargar los datos financieros reales del proveedor
+            // Esto se implementará en el futuro cuando tengamos la lógica de compras y pagos
 
             return View(viewModel);
         }
 
-        // GET: Clientes/Create
+        // GET: Proveedores/Create
         public async Task<IActionResult> Create()
         {
             CargarViewBags();
@@ -110,17 +110,17 @@ namespace SistemaContable.Controllers
             return View();
         }
 
-        // POST: Clientes/Create
+        // POST: Proveedores/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
+        public async Task<IActionResult> Create(Cliente proveedor, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
         {
             if (ModelState.IsValid)
             {
                 // Procesar la imagen si se proporcionó una
                 if (imagen != null && imagen.Length > 0)
                 {
-                    cliente.ImagenUrl = await GuardarImagen(imagen);
+                    proveedor.ImagenUrl = await GuardarImagen(imagen);
                 }
 
                 // Procesar el país seleccionado
@@ -144,32 +144,29 @@ namespace SistemaContable.Controllers
                         }
                     }
                     
-                    // Asignar el ID del país al cliente
+                    // Asignar el ID del país al proveedor
                     if (paisEntity != null)
                     {
-                        cliente.PaisId = paisEntity.Id;
+                        proveedor.PaisId = paisEntity.Id;
                     }
                 }
 
-                // Asegurar que al menos uno de los dos se seleccione
-                if (!cliente.EsCliente && !cliente.EsProveedor)
-                {
-                    cliente.EsCliente = true; // Por defecto es cliente
-                }
+                // Establecer como proveedor
+                proveedor.EsProveedor = true;
 
                 // Establecer la fecha de creación
-                cliente.FechaCreacion = DateTime.UtcNow;
+                proveedor.FechaCreacion = DateTime.UtcNow;
 
-                _context.Add(cliente);
+                _context.Add(proveedor);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
             CargarViewBags();
-            return View(cliente);
+            return View(proveedor);
         }
 
-        // GET: Clientes/Edit/5
+        // GET: Proveedores/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -177,8 +174,8 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente == null)
+            var proveedor = await _context.Clientes.FindAsync(id);
+            if (proveedor == null || !proveedor.EsProveedor)
             {
                 return NotFound();
             }
@@ -186,18 +183,18 @@ namespace SistemaContable.Controllers
             CargarViewBags();
 
             // Cargar los textos para las cuentas contables existentes
-            if (cliente.CuentaPorCobrarId.HasValue)
+            if (proveedor.CuentaPorCobrarId.HasValue)
             {
-                var cuentaPorCobrar = await _context.CuentasContables.FindAsync(cliente.CuentaPorCobrarId);
+                var cuentaPorCobrar = await _context.CuentasContables.FindAsync(proveedor.CuentaPorCobrarId);
                 if (cuentaPorCobrar != null)
                 {
                     ViewData["CuentaPorCobrarTexto"] = $"{cuentaPorCobrar.Codigo} - {cuentaPorCobrar.Nombre}";
                 }
             }
 
-            if (cliente.CuentaPorPagarId.HasValue)
+            if (proveedor.CuentaPorPagarId.HasValue)
             {
-                var cuentaPorPagar = await _context.CuentasContables.FindAsync(cliente.CuentaPorPagarId);
+                var cuentaPorPagar = await _context.CuentasContables.FindAsync(proveedor.CuentaPorPagarId);
                 if (cuentaPorPagar != null)
                 {
                     ViewData["CuentaPorPagarTexto"] = $"{cuentaPorPagar.Codigo} - {cuentaPorPagar.Nombre}";
@@ -220,24 +217,24 @@ namespace SistemaContable.Controllers
             ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
             ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
 
-            return View(cliente);
+            return View(proveedor);
         }
 
-        // POST: Clientes/Edit/5
+        // POST: Proveedores/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Cliente cliente, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
+        public async Task<IActionResult> Edit(int id, Cliente proveedor, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
         {
-            if (id != cliente.Id)
+            if (id != proveedor.Id)
             {
                 return NotFound();
             }
 
             try
             {
-                // Obtener el cliente actual de la base de datos para mantener valores que no deberían cambiar
-                var clienteActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-                if (clienteActual == null)
+                // Obtener el proveedor actual de la base de datos para mantener valores que no deberían cambiar
+                var proveedorActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.EsProveedor);
+                if (proveedorActual == null)
                 {
                     return NotFound();
                 }
@@ -246,17 +243,17 @@ namespace SistemaContable.Controllers
                 if (imagen != null && imagen.Length > 0)
                 {
                     // Eliminar la imagen anterior si existe
-                    if (!string.IsNullOrEmpty(clienteActual.ImagenUrl))
+                    if (!string.IsNullOrEmpty(proveedorActual.ImagenUrl))
                     {
-                        EliminarImagen(clienteActual.ImagenUrl);
+                        EliminarImagen(proveedorActual.ImagenUrl);
                     }
 
-                    cliente.ImagenUrl = await GuardarImagen(imagen);
+                    proveedor.ImagenUrl = await GuardarImagen(imagen);
                 }
                 else
                 {
                     // Mantener la imagen actual
-                    cliente.ImagenUrl = clienteActual.ImagenUrl;
+                    proveedor.ImagenUrl = proveedorActual.ImagenUrl;
                 }
                 
                 // Procesar el país seleccionado
@@ -280,39 +277,39 @@ namespace SistemaContable.Controllers
                         }
                     }
                     
-                    // Asignar el ID del país al cliente
+                    // Asignar el ID del país al proveedor
                     if (paisEntity != null)
                     {
-                        cliente.PaisId = paisEntity.Id;
+                        proveedor.PaisId = paisEntity.Id;
                     }
                 }
-                else if (clienteActual.PaisId.HasValue)
+                else if (proveedorActual.PaisId.HasValue)
                 {
                     // Mantener el país anterior si no se selecciona uno nuevo
-                    cliente.PaisId = clienteActual.PaisId;
+                    proveedor.PaisId = proveedorActual.PaisId;
                 }
 
-                // Asegurar que al menos uno de los dos se seleccione
-                if (!cliente.EsCliente && !cliente.EsProveedor)
-                {
-                    cliente.EsCliente = true; // Por defecto es cliente
-                }
+                // Asegurar que se mantenga como proveedor
+                proveedor.EsProveedor = true;
+                
+                // Mantener si era cliente también
+                proveedor.EsCliente = proveedorActual.EsCliente;
 
                 // Mantener la fecha de creación original y otras propiedades importantes
-                cliente.FechaCreacion = clienteActual.FechaCreacion;
-                cliente.FechaModificacion = DateTime.UtcNow;
+                proveedor.FechaCreacion = proveedorActual.FechaCreacion;
+                proveedor.FechaModificacion = DateTime.UtcNow;
 
-                // Actualizar el cliente en la base de datos
-                _context.Update(cliente);
+                // Actualizar el proveedor en la base de datos
+                _context.Update(proveedor);
                 await _context.SaveChangesAsync();
                 
-                // Redirigir a la lista de clientes después de guardar
+                // Redirigir a la lista de proveedores después de guardar
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 // Log de errores para diagnóstico
-                Console.WriteLine($"Error al actualizar cliente: {ex.Message}");
+                Console.WriteLine($"Error al actualizar proveedor: {ex.Message}");
                 ModelState.AddModelError(string.Empty, "Ha ocurrido un error al guardar los cambios. Por favor, inténtelo de nuevo.");
                 
                 // Cargar los datos necesarios para volver a mostrar el formulario
@@ -326,11 +323,11 @@ namespace SistemaContable.Controllers
                 ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
                 ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
                 
-                return View(cliente);
+                return View(proveedor);
             }
         }
 
-        // GET: Clientes/Delete/5
+        // GET: Proveedores/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -338,42 +335,52 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
-            var cliente = await _context.Clientes
+            var proveedor = await _context.Clientes
                 .Include(c => c.TipoIdentificacion)
                 .Include(c => c.Municipio)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.EsProveedor);
 
-            if (cliente == null)
+            if (proveedor == null)
             {
                 return NotFound();
             }
 
-            return View(cliente);
+            return View(proveedor);
         }
 
-        // POST: Clientes/Delete/5
+        // POST: Proveedores/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
+            var proveedor = await _context.Clientes.FindAsync(id);
             
-            if (cliente != null)
+            if (proveedor != null && proveedor.EsProveedor)
             {
-                // Eliminar la imagen si existe
-                if (!string.IsNullOrEmpty(cliente.ImagenUrl))
+                // Si es ambos, solo quitar la marca de proveedor
+                if (proveedor.EsCliente)
                 {
-                    EliminarImagen(cliente.ImagenUrl);
+                    proveedor.EsProveedor = false;
+                    _context.Update(proveedor);
+                }
+                else
+                {
+                    // Eliminar la imagen si existe
+                    if (!string.IsNullOrEmpty(proveedor.ImagenUrl))
+                    {
+                        EliminarImagen(proveedor.ImagenUrl);
+                    }
+                    
+                    _context.Clientes.Remove(proveedor);
                 }
                 
-                _context.Clientes.Remove(cliente);
                 await _context.SaveChangesAsync();
             }
             
             return RedirectToAction(nameof(Index));
         }
         
-        // GET: Clientes/BuscarCuentasContables
+        // GET: Proveedores/BuscarCuentasContables
         [HttpGet]
         public async Task<IActionResult> BuscarCuentasContables(string term)
         {
@@ -396,7 +403,7 @@ namespace SistemaContable.Controllers
             return Json(new { results = cuentas });
         }
 
-        // GET: Clientes/BuscarVendedores
+        // GET: Proveedores/BuscarVendedores
         [HttpGet]
         public async Task<IActionResult> BuscarVendedores(string term)
         {
@@ -430,7 +437,7 @@ namespace SistemaContable.Controllers
             return Json(new { results = vendedores });
         }
 
-        // POST: Clientes/CrearVendedor
+        // POST: Proveedores/CrearVendedor
         [HttpPost]
         public async Task<IActionResult> CrearVendedor([FromBody] Dictionary<string, string> datos)
         {
@@ -499,7 +506,7 @@ namespace SistemaContable.Controllers
             });
         }
 
-        // PUT: Clientes/EditarVendedor
+        // PUT: Proveedores/EditarVendedor
         [HttpPut]
         public async Task<IActionResult> EditarVendedor([FromBody] Dictionary<string, string> datos)
         {
@@ -547,7 +554,7 @@ namespace SistemaContable.Controllers
             });
         }
 
-        // DELETE: Clientes/EliminarVendedor
+        // DELETE: Proveedores/EliminarVendedor
         [HttpDelete]
         public async Task<IActionResult> EliminarVendedor([FromBody] Dictionary<string, string> datos)
         {
@@ -591,9 +598,9 @@ namespace SistemaContable.Controllers
             });
         }
 
-        private bool ClienteExists(int id)
+        private bool ProveedorExists(int id)
         {
-            return _context.Clientes.Any(e => e.Id == id);
+            return _context.Clientes.Any(e => e.Id == id && e.EsProveedor);
         }
 
         private void CargarViewBags()
@@ -647,8 +654,8 @@ namespace SistemaContable.Controllers
                 throw new InvalidOperationException("El tamaño máximo permitido es 2MB.");
             }
 
-            // Crear directorio para imágenes de clientes si no existe
-            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "clientes");
+            // Crear directorio para imágenes de proveedores si no existe
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "proveedores");
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -665,7 +672,7 @@ namespace SistemaContable.Controllers
             }
 
             // Devolver la ruta relativa para guardar en la base de datos
-            return $"/uploads/clientes/{uniqueFileName}";
+            return $"/uploads/proveedores/{uniqueFileName}";
         }
 
         private void EliminarImagen(string imagenUrl)

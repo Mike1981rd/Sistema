@@ -1,6 +1,6 @@
 /**
- * Clientes Form JS
- * Maneja la funcionalidad del formulario de clientes, incluyendo:
+ * Proveedores Form JS
+ * Maneja la funcionalidad del formulario de proveedores, incluyendo:
  * - Validación del formulario
  * - Carga de imágenes con vista previa
  * - Inicialización de Select2 para los campos de búsqueda
@@ -10,8 +10,8 @@ $(document).ready(function() {
     // Manejo de la subida de imágenes
     setupImageUpload();
     
-    // Asegurar que al menos uno de los checkboxes esté seleccionado
-    setupClientTypeCheckboxes();
+    // Asegurar que se mantenga como proveedor
+    setupProveedorTypeCheckbox();
     
     // Validación personalizada del formulario
     setupFormValidation();
@@ -99,16 +99,19 @@ function setupImageUpload() {
 }
 
 /**
- * Configurar los checkboxes de tipo de cliente/proveedor
+ * Configurar el checkbox de tipo de proveedor (asegurar que siempre se mantenga como proveedor)
  */
-function setupClientTypeCheckboxes() {
-    const esClienteCheckbox = $('#EsCliente');
+function setupProveedorTypeCheckbox() {
     const esProveedorCheckbox = $('#EsProveedor');
+    const esClienteCheckbox = $('#EsCliente');
     
-    // Al cambiar un checkbox, verificar que al menos uno esté seleccionado
-    esClienteCheckbox.add(esProveedorCheckbox).on('change', function() {
-        if (!esClienteCheckbox.prop('checked') && !esProveedorCheckbox.prop('checked')) {
-            // Si ambos están desmarcados, marcar el que se acaba de desmarcar
+    // Asegurar que siempre esté marcado como proveedor
+    esProveedorCheckbox.prop('checked', true);
+    
+    // Prevenir desmarcarlo
+    esProveedorCheckbox.on('change', function() {
+        if (!$(this).prop('checked')) {
+            // Forzar a marcado
             $(this).prop('checked', true);
         }
     });
@@ -144,6 +147,9 @@ function setupFormValidation() {
         
         // Preparar el valor del límite de crédito para envío
         prepareDecimalFieldsForSubmission();
+        
+        // Asegurar que esté marcado como proveedor
+        $('#EsProveedor').prop('checked', true);
         
         // Todo está bien, permitir el envío del formulario
         return true;
@@ -216,7 +222,7 @@ function initSelect2() {
         width: '100%',
         dropdownParent: $('body'),
         ajax: {
-            url: '/ventas/clientes/BuscarVendedores',
+            url: '/compras/proveedores/BuscarVendedores',
             dataType: 'json',
             delay: 250,
             data: function(params) {
@@ -256,7 +262,7 @@ function initSelect2() {
             if (confirm('¿Desea crear el vendedor "' + data.term + '"?')) {
                 // Crear el vendedor mediante AJAX
                 $.ajax({
-                    url: '/ventas/clientes/CrearVendedor',
+                    url: '/compras/proveedores/CrearVendedor',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ nombre: data.term }),
@@ -473,23 +479,6 @@ $(document).ready(function() {
 });
 
 /**
- * Inicializa los campos Select2 para una mejor experiencia de usuario
- */
-function initSelectFields() {
-    // Inicializar select2 para países con banderas
-    $('.select2-country').select2({
-        placeholder: "Seleccione un país",
-        allowClear: true,
-        theme: "bootstrap-5",
-        width: '100%',
-        templateResult: formatCountryOption,
-        templateSelection: formatCountrySelection
-    }).on('select2:open', function() {
-        document.querySelector('.select2-search__field').focus();
-    });
-}
-
-/**
  * Formatea la visualización de resultados de vendedores en el dropdown
  */
 function formatVendedorResult(vendedor) {
@@ -562,7 +551,7 @@ function editVendedor(id, currentName) {
     
     if (newName && newName.trim() !== '' && newName !== currentName) {
         $.ajax({
-            url: '/ventas/clientes/EditarVendedor',
+            url: '/compras/proveedores/EditarVendedor',
             method: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({ 
@@ -602,7 +591,7 @@ function editVendedor(id, currentName) {
 function deleteVendedor(id, name) {
     if (confirm('¿Está seguro de que desea eliminar al vendedor "' + name + '"?')) {
         $.ajax({
-            url: '/ventas/clientes/EliminarVendedor',
+            url: '/compras/proveedores/EliminarVendedor',
             method: 'DELETE',
             contentType: 'application/json',
             data: JSON.stringify({ id: id }),
