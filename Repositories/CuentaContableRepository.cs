@@ -5,6 +5,8 @@ using SistemaContable.Repositories.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace SistemaContable.Repositories
 {
@@ -59,19 +61,39 @@ namespace SistemaContable.Repositories
 
         public async Task<IEnumerable<CuentaContable>> BuscarPorNombreOCodigoAsync(string termino)
         {
-            if (string.IsNullOrEmpty(termino))
-            {
-                return new List<CuentaContable>();
+            // Log para depuración
+            Console.WriteLine($"Búsqueda de cuentas contables: '{termino}'");
+            
+            try {
+                // Simplificar la consulta eliminando filtros restrictivos
+                // Normalizar el término de búsqueda
+                termino = termino?.Trim().ToLower() ?? "";
+                
+                // Imprimir la cantidad total de cuentas en la base de datos para diagnóstico
+                var totalCuentas = await _context.CuentasContables.CountAsync();
+                Console.WriteLine($"Total cuentas en BD: {totalCuentas}");
+                
+                // Consulta simplificada sin filtros restrictivos
+                var resultados = await _context.CuentasContables
+                    .Where(c => EF.Functions.Like(c.Codigo.ToLower(), $"%{termino}%") || 
+                                EF.Functions.Like(c.Nombre.ToLower(), $"%{termino}%"))
+                    .OrderBy(c => c.Codigo)
+                    .Take(20)
+                    .ToListAsync();
+                
+                Console.WriteLine($"Búsqueda simplificada con término '{termino}' devolvió {resultados.Count()} cuentas contables");
+                foreach (var cuenta in resultados.Take(5))
+                {
+                    Console.WriteLine($"- {cuenta.Id}: {cuenta.Codigo} - {cuenta.Nombre} (Tipo: {cuenta.TipoCuenta}, Uso: {cuenta.UsoCuenta})");
+                }
+                
+                return resultados;
             }
-
-            termino = termino.ToLower();
-            return await _context.CuentasContables
-                .Where(c => c.Nombre.ToLower().Contains(termino) || c.Codigo.ToLower().Contains(termino))
-                .Where(c => c.TipoCuenta == "Movimiento") // Solo cuentas de movimiento
-                .Where(c => c.Activo)
-                .OrderBy(c => c.Codigo)
-                .Take(20)
-                .ToListAsync();
+            catch (Exception ex) {
+                Console.WriteLine($"Error en la consulta SQL: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<CuentaContable>> GetCuentasMovimientoAsync(int empresaId)

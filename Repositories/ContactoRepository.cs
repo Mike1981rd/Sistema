@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaContable.Data;
 using SistemaContable.Models;
 using SistemaContable.Repositories.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,19 +66,47 @@ namespace SistemaContable.Repositories
 
         public async Task<IEnumerable<Contacto>> BuscarPorNombreAsync(string termino)
         {
-            if (string.IsNullOrEmpty(termino))
-            {
-                return new List<Contacto>();
+            // Log para depuración
+            Console.WriteLine($"Búsqueda de contactos (clientes/proveedores): '{termino}'");
+            
+            try {
+                // Normalizar el término de búsqueda
+                termino = termino?.Trim().ToLower() ?? "";
+                
+                // Consultar la tabla de Clientes en lugar de Contactos
+                var clientesQuery = await _context.Clientes
+                    .Where(c => EF.Functions.Like(c.NombreRazonSocial.ToLower(), $"%{termino}%") || 
+                               (c.NumeroIdentificacion != null && 
+                                EF.Functions.Like(c.NumeroIdentificacion.ToLower(), $"%{termino}%")))
+                    .OrderBy(c => c.NombreRazonSocial)
+                    .Take(20)
+                    .ToListAsync();
+                
+                Console.WriteLine($"Búsqueda en Clientes con término '{termino}' devolvió {clientesQuery.Count} resultados");
+                
+                // Convertir los Clientes a Contactos para mantener la interfaz compatible
+                var resultados = clientesQuery.Select(c => new Contacto { 
+                    Id = c.Id,
+                    Nombre = c.NombreRazonSocial,
+                    Identificacion = c.NumeroIdentificacion,
+                    EsCliente = c.EsCliente,
+                    EsProveedor = c.EsProveedor,
+                    Activo = true // Asumimos que todos los clientes devueltos están activos
+                }).ToList();
+                
+                foreach (var contacto in resultados.Take(5))
+                {
+                    string tipo = contacto.EsCliente ? (contacto.EsProveedor ? "Cliente/Proveedor" : "Cliente") : "Proveedor";
+                    Console.WriteLine($"- {contacto.Id}: {contacto.Nombre} ({tipo}) - Identificación: {contacto.Identificacion}");
+                }
+                
+                return resultados;
             }
-
-            termino = termino.ToLower();
-            return await _context.Contactos
-                .Where(c => c.Nombre.ToLower().Contains(termino) || 
-                           (c.Identificacion != null && c.Identificacion.ToLower().Contains(termino)))
-                .Where(c => c.Activo)
-                .OrderBy(c => c.Nombre)
-                .Take(20)
-                .ToListAsync();
+            catch (Exception ex) {
+                Console.WriteLine($"Error en la consulta de contactos/clientes: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Contacto>> GetClientesAsync(int empresaId)
