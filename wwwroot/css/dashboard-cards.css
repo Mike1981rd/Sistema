@@ -1,0 +1,1160 @@
+/* Dashboard Cards - Modern UI */
+:root {
+  --card-border-radius: 8px;
+  --primary-color: #f5365c;
+  --accent-color: #5e72e4;
+  --info-color: #11cdef;
+  --success-color: #2dce89;
+  --warning-color: #fb6340;
+  --danger-color: #f5365c;
+  --secondary-color: #6c757d;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --white-color: #ffffff;
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 10px 20px rgba(50, 50, 93, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Top Statistics Cards */
+.stats-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-5px);
+}
+
+.stats-card .icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white-color);
+  font-size: 1.5rem;
+  background: linear-gradient(45deg, var(--accent-color), var(--info-color));
+}
+
+.stats-card .stats-info {
+  flex: 1;
+  padding-left: 20px;
+}
+
+.stats-card .stats-value {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--dark-color);
+}
+
+.stats-card .stats-label {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Sales Statistics Card */
+.revenue-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.revenue-card .card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.revenue-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--dark-color);
+}
+
+.revenue-card .card-body {
+  padding: 1rem;
+  position: relative;
+  flex: 1;
+}
+
+.revenue-card .revenue-info {
+  margin-bottom: 0;
+}
+
+.revenue-card .revenue-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--dark-color);
+}
+
+.revenue-card .budget-text {
+  color: var(--secondary-color);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.revenue-legend {
+  font-size: 0.85rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.earning-dot {
+  background-color: var(--danger-color);
+}
+
+.expense-dot {
+  background-color: var(--warning-color);
+}
+
+.revenue-card .year-selector {
+  background-color: #f7f8fc;
+  padding: 5px 15px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.revenue-card .year-selector.pink {
+  background-color: #ffe0e6;
+  color: var(--danger-color);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.revenue-card .revenue-sparkline {
+  width: 120px;
+  height: 28px;
+  margin-left: auto;
+}
+
+.revenue-chart {
+  position: relative;
+  height: 140px;
+  display: flex;
+  margin-top: 10px;
+}
+
+.chart-labels {
+  width: 30px;
+  font-size: 10px;
+  color: #6c757d;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-main {
+  flex: 1;
+}
+
+.chart-legend {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+/* Report Cards */
+.report-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.report-card .card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.report-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--dark-color);
+}
+
+.report-card .card-subtitle {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  margin: 5px 0 0;
+}
+
+.report-card .card-body {
+  padding: 20px;
+}
+
+.report-card .profit-chart {
+  height: 120px;
+  margin-bottom: 15px;
+}
+
+.report-card .expenses-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.report-card .circle-percent {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.report-card .leads-circle {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.report-card .total-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -70%);
+  font-weight: 600;
+  font-size: 1.4rem;
+}
+
+.report-card .leads-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 10%);
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+}
+
+.report-card .percent-change {
+  color: var(--success-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+/* Popular Products Card */
+.products-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  height: 100%;
+}
+
+.products-card .card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f1f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.products-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dark-color);
+}
+
+.products-card .visitor-text {
+  color: var(--secondary-color);
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 3px;
+}
+
+.products-card .card-body {
+  padding: 0;
+}
+
+.products-card .product-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.products-card .product-item:last-child {
+  border-bottom: none;
+}
+
+.products-card .product-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.products-card .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.products-card .product-info {
+  flex: 1;
+}
+
+.products-card .product-name {
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.products-card .product-id {
+  color: var(--secondary-color);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.products-card .product-price {
+  font-weight: 600;
+  color: var(--dark-color);
+  font-size: 0.85rem;
+}
+
+/* Orders Card */
+.orders-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  height: 100%;
+}
+
+.orders-card .card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f1f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.orders-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dark-color);
+}
+
+.orders-card .delivery-text {
+  color: var(--secondary-color);
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 3px;
+}
+
+.orders-card .tabs-container {
+  display: flex;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.orders-card .status-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  cursor: pointer;
+  color: var(--secondary-color);
+  position: relative;
+  font-size: 0.85rem;
+}
+
+.orders-card .status-tab.active {
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+.orders-card .status-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--danger-color);
+}
+
+.orders-card .card-body {
+  padding: 1.25rem;
+}
+
+.orders-card .order-item {
+  padding: 0;
+}
+
+.orders-card .divider {
+  height: 1px;
+  background-color: #f1f1f1;
+  margin: 1.25rem 0;
+}
+
+.orders-card .person-detail {
+  display: flex;
+  align-items: flex-start;
+}
+
+.orders-card .sender-badge, .orders-card .receiver-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+.orders-card .sender-badge {
+  background-color: rgba(45, 206, 137, 0.1);
+  color: var(--success-color);
+}
+
+.orders-card .receiver-badge {
+  background-color: rgba(245, 54, 92, 0.1);
+  color: var(--danger-color);
+}
+
+.orders-card .person-label {
+  font-size: 0.65rem;
+  color: var(--danger-color);
+  margin: 0;
+  font-weight: 500;
+}
+
+.orders-card .person-name {
+  font-weight: 500;
+  margin: 4px 0 2px;
+  font-size: 0.85rem;
+  color: var(--dark-color);
+}
+
+.orders-card .person-address {
+  color: var(--secondary-color);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Earnings Card */
+.earnings-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  height: 100%;
+}
+
+.earnings-card .card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f1f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.earnings-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dark-color);
+}
+
+.earnings-card .earnings-subtitle {
+  color: var(--secondary-color);
+  font-size: 0.8rem;
+  margin: 5px 0 0;
+}
+
+.earnings-card .card-body {
+  padding: 1.25rem;
+}
+
+.earnings-card .earnings-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.earnings-card .earnings-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 0.9rem;
+}
+
+.earnings-card .icon-red {
+  background-color: rgba(245, 54, 92, 0.1);
+  color: var(--danger-color);
+}
+
+.earnings-card .icon-green {
+  background-color: rgba(45, 206, 137, 0.1);
+  color: var(--success-color);
+}
+
+.earnings-card .icon-gray {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: var(--secondary-color);
+}
+
+.earnings-card .earnings-info {
+  flex: 1;
+}
+
+.earnings-card .earnings-label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.earnings-card .earnings-sublabel {
+  color: var(--secondary-color);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.earnings-card .earnings-value {
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.earnings-card .earnings-percent {
+  color: var(--success-color);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.earnings-card .earnings-percent i {
+  margin-right: 3px;
+  font-size: 0.7rem;
+}
+
+.weekly-chart {
+  height: 95px;
+}
+
+/* Transactions Card */
+.transactions-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.transactions-card .card-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.transactions-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--dark-color);
+}
+
+.transactions-card .transactions-subtitle {
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+  margin: 5px 0 0;
+}
+
+.transactions-card .card-body {
+  padding: 20px;
+}
+
+.transactions-card .transaction-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.transactions-card .transaction-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  color: var(--white-color);
+  font-size: 1rem;
+}
+
+.transactions-card .bg-red {
+  background-color: var(--danger-color);
+}
+
+.transactions-card .bg-green {
+  background-color: var(--success-color);
+}
+
+.transactions-card .bg-blue {
+  background-color: var(--accent-color);
+}
+
+.transactions-card .transaction-info {
+  flex: 1;
+}
+
+.transactions-card .transaction-name {
+  margin: 0;
+  font-weight: 500;
+}
+
+.transactions-card .transaction-desc {
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+  margin: 2px 0 0;
+}
+
+.transactions-card .transaction-amount {
+  font-weight: 600;
+}
+
+.transactions-card .amount-negative {
+  color: var(--danger-color);
+}
+
+.transactions-card .amount-positive {
+  color: var(--success-color);
+}
+
+/* Invoices Card */
+.invoices-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.invoices-card .card-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoices-card .entries-dropdown {
+  display: flex;
+  align-items: center;
+}
+
+.invoices-card .entries-select {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin-left: 5px;
+}
+
+.invoices-card .invoice-btn {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.invoices-card .invoice-btn i {
+  margin-right: 5px;
+}
+
+.invoices-card .search-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.invoices-card .search-input {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 8px 15px;
+  width: 200px;
+}
+
+.invoices-card .status-dropdown {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 8px 15px;
+}
+
+.invoices-card .card-body {
+  padding: 0;
+}
+
+.invoices-card .invoices-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoices-card .invoices-table th {
+  text-align: left;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.invoices-card .invoices-table td {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.invoices-card .invoice-number {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.invoices-card .status-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.invoices-card .complete {
+  background-color: var(--success-color);
+}
+
+.invoices-card .pending {
+  background-color: var(--info-color);
+}
+
+.invoices-card .action-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.invoices-card .action-icon {
+  color: var(--secondary-color);
+  cursor: pointer;
+}
+
+.invoices-card .card-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoices-card .showing-text {
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+}
+
+.invoices-card .pagination {
+  display: flex;
+  gap: 5px;
+}
+
+.invoices-card .page-item {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.invoices-card .page-item.active {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border-color: var(--primary-color);
+}
+
+.invoices-card .page-arrow {
+  color: var(--secondary-color);
+}
+
+/* Buttons */
+.buy-now-btn {
+  background-color: var(--danger-color);
+  color: var(--white-color);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.buy-now-btn:hover {
+  background-color: #d82f54;
+  color: var(--white-color);
+  text-decoration: none;
+}
+
+.increase-button {
+  background-color: var(--danger-color);
+  color: var(--white-color);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .stats-card {
+    margin-bottom: 15px;
+  }
+  .revenue-card,
+  .report-card,
+  .products-card,
+  .orders-card,
+  .earnings-card,
+  .transactions-card,
+  .invoices-card {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-card .icon-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+  
+  .stats-card .stats-value {
+    font-size: 1.5rem;
+  }
+  
+  .revenue-card .revenue-value {
+    font-size: 1.3rem;
+  }
+  
+  .invoices-card .search-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .invoices-card .search-input,
+  .invoices-card .status-dropdown {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .revenue-card .year-selector,
+  .products-card .visitor-text,
+  .orders-card .delivery-text {
+    margin-top: 10px;
+  }
+}
+
+/* Accounts Receivable Card (Vehicle Card) */
+.vehicle-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicle-card .card-header {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.vehicle-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dark-color);
+}
+
+.vehicle-card .card-subtitle {
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+  margin: 5px 0 0;
+}
+
+.vehicle-card .card-body {
+  padding: 15px;
+  flex: 1;
+}
+
+.vehicle-card .tabs-container {
+  display: flex;
+  padding: 0 15px;
+  border-bottom: 1px solid #eee;
+  overflow-x: auto;
+}
+
+.vehicle-card .status-tab {
+  padding: 10px 15px;
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+  position: relative;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vehicle-card .status-tab.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.vehicle-card .status-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary-color);
+}
+
+.vehicle-card .progress-bar-container {
+  margin-top: 15px;
+}
+
+.vehicle-card .progress-item {
+  margin-bottom: 15px;
+}
+
+.vehicle-card .status-label {
+  font-size: 0.85rem;
+  color: var(--dark-color);
+}
+
+.vehicle-card .status-percentage {
+  font-size: 0.85rem;
+  color: var(--dark-color);
+  font-weight: 500;
+}
+
+.vehicle-card .progress {
+  height: 8px;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.vehicle-card .progress-bar {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.vehicle-card .bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.vehicle-card .bg-danger {
+  background-color: #f5365c !important;
+}
+
+.vehicle-card .bg-info {
+  background-color: #11cdef !important;
+}
+
+.vehicle-card .bg-dark {
+  background-color: #343a40 !important;
+}
+
+.vehicle-card .status-details {
+  margin-top: 15px;
+}
+
+.vehicle-card .status-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.vehicle-card .status-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white-color);
+  font-size: 0.85rem;
+  margin-right: 10px;
+}
+
+.vehicle-card .status-info {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--dark-color);
+}
+
+.vehicle-card .status-time {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+  margin-right: 15px;
+}
+
+.vehicle-card .status-percent {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--dark-color);
+}
+
+/* Accounts Payable Card (Shipment Card) */
+.shipment-card {
+  background: var(--white-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.shipment-card .card-header {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.shipment-card .card-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dark-color);
+}
+
+.shipment-card .card-subtitle {
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+  margin: 5px 0 0;
+}
+
+.shipment-card .month-selector {
+  background-color: #f7f8fc;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.shipment-card .card-body {
+  padding: 15px;
+  flex: 1;
+}
+
+.shipment-card .chart-container {
+  height: 200px;
+  margin-top: 10px;
+}
+
+.shipment-card .chart-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.shipment-card .legend-item {
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.shipment-card .legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.shipment-card .legend-text {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+} 

@@ -47,11 +47,12 @@
 .aurora-logo-container {
   padding: 15px 10px !important;
   height: auto !important;
+  text-align: center !important;
 }
 
 /* Estilo para el logo */
 .aurora-logo {
-  height: 80px !important;
+  height: 96px !important;
   width: auto !important;
   display: block !important;
   margin: 0 auto !important;
@@ -59,30 +60,31 @@
 
 /* Asegúrate de que cuando el sidebar esté colapsado, el logo se ajuste correctamente */
 .aurora-wrapper.sidebar-collapsed .aurora-logo {
-  height: 40px !important;
+  height: 48px !important;
   margin-top: 30px !important;
 }
 
 /* Estilos específicos para el logo con mayor prioridad */
 .aurora-logo-large {
-    height: 75px !important;
+    height: 90px !important;
     width: auto !important;
-    max-height: 75px !important;
+    max-height: 90px !important;
 }
 
 /* Asegúrate de que cuando el sidebar esté colapsado, el logo también se ajuste con un tamaño adecuado */
 .aurora-wrapper.sidebar-collapsed .aurora-logo-large {
-    height: 45px !important;
-    max-height: 45px !important;
+    height: 54px !important;
+    max-height: 54px !important;
 }
 
 /* Sidebar Navigation */
 .aurora-nav {
-  padding: 10px 0;
+  padding: 15px 0;
 }
 
 .aurora-nav-item {
-  padding: 10px 20px;
+  padding: 12px 20px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   color: var(--aurora-light);
@@ -182,7 +184,7 @@
 
 /* Main Content Area */
 .aurora-main {
-  padding: 20px;
+  padding: 0 20px 20px;
   background-color: var(--aurora-gray-100);
   min-height: calc(100vh - var(--header-height));
 }
@@ -341,24 +343,24 @@
 }
 
 .aurora-submenu {
-  display: block !important;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
+  display: none;
+  padding-left: 35px;
+  background-color: rgba(0, 0, 0, 0.15);
+  margin-bottom: 6px;
 }
 
 .aurora-submenu.show {
-  max-height: 500px;
+  display: block;
 }
 
 .aurora-submenu-item {
-  padding: 8px 20px 8px 30px;
-  display: flex;
-  align-items: center;
+  padding: 10px 15px;
+  display: block;
   color: var(--aurora-light);
   text-decoration: none;
   transition: all 0.2s;
   font-size: 0.9rem;
+  margin-bottom: 2px;
 }
 
 .aurora-submenu-item:hover {
@@ -374,12 +376,11 @@
 /* Panel lateral colapsable */
 .aurora-wrapper.sidebar-collapsed .aurora-sidebar {
   width: 70px;
-  transition: width 0.3s;
+  overflow: visible;
 }
 
 .aurora-wrapper.sidebar-collapsed .aurora-content {
   margin-left: 70px;
-  transition: margin-left 0.3s;
 }
 
 .aurora-wrapper.sidebar-collapsed .aurora-logo-container span,
@@ -392,37 +393,31 @@
   left: 70px;
   top: 0;
   width: 200px;
-  background-color: var(--aurora-primary);
+  background-color: var(--aurora-dark);
+  padding: 10px 0;
   border-radius: 0 4px 4px 0;
   box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 99;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s;
+  display: none;
+  z-index: 100;
 }
 
 .aurora-wrapper.sidebar-collapsed .aurora-nav-item.has-submenu:hover + .aurora-submenu,
 .aurora-wrapper.sidebar-collapsed .aurora-submenu:hover {
-  max-height: 500px;
-  opacity: 1;
-  visibility: visible;
+  display: block;
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-nav-item {
+  text-align: center;
+  padding: 15px 0;
+  position: relative;
+  margin-bottom: 6px;
 }
 
 .aurora-wrapper.sidebar-collapsed .aurora-nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.aurora-wrapper.sidebar-collapsed .aurora-nav-item.has-submenu::after {
-  display: none;
-}
-
 /* Tooltip para menú colapsado */
-.aurora-wrapper.sidebar-collapsed .aurora-nav-item {
-  position: relative;
-  justify-content: center;
-  padding: 15px 0;
-}
-
 .aurora-wrapper.sidebar-collapsed .aurora-nav-item::before {
   content: attr(data-title);
   position: absolute;
@@ -452,9 +447,9 @@
   right: 15px;
   width: 30px;
   height: 30px;
+  border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -469,6 +464,10 @@
 
 .aurora-sidebar-toggler:hover {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.aurora-wrapper.sidebar-collapsed .aurora-sidebar-toggler i {
+  transform: rotate(180deg);
 }
 
 /* Remover negritas de los títulos del dashboard */
@@ -899,4 +898,9 @@
 .dropdown-item.text-danger:hover {
     background-color: var(--danger-light);
     color: var(--danger);
+}
+
+/* Ajuste específico para el Dashboard */
+.dashboard-container {
+  padding-top: 0 !important;
 } 

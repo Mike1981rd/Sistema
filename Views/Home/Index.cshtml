@@ -3,319 +3,810 @@
     ViewData["Title"] = "Panel de Control";
 }
 
+<!-- Agregar referencias a FontAwesome de manera local -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="~/css/dashboard-cards.css" asp-append-version="true" />
+
 <div class="dashboard-container">
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-3">
+    <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
         <div class="date-info">
             <span class="text-muted">@Model.CurrentDate.ToString("dd MMMM, yyyy")</span>
         </div>
     </div>
 
+    <!-- Top Statistics Cards Row -->
     <div class="row">
-        <!-- FACTURAS -->
-        <div class="col-md-4 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">FACTURAS</div>
-                    <div class="qb-card-action">
-                        <a href="#" class="action-link">94 por revisar <i class="fas fa-chevron-right ms-1"></i></a>
-                    </div>
-                </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@Model.FinancialSummary.Sales.ToString("N2")</div>
-                            <div class="qb-card-subtitle">Último periodo: 30 días</div>
-                        </div>
-                        <div class="qb-mini-chart">
-                            <div class="qb-bar qb-bar-1" style="height: 15px;"></div>
-                            <div class="qb-bar qb-bar-2" style="height: 30px;"></div>
-                            <div class="qb-bar qb-bar-3" style="height: 20px;"></div>
-                            <div class="qb-bar qb-bar-4" style="height: 40px;"></div>
-                            <div class="qb-bar qb-bar-5" style="height: 35px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <div class="qb-card-stats">
-                        <div class="qb-stat-item">
-                            <span class="qb-stat-label">Pendientes</span>
-                            <span class="qb-stat-value text-danger">$@((Model.FinancialSummary.PendingPayments/2m).ToString("N2"))</span>
-                        </div>
-                        <div class="qb-stat-item">
-                            <span class="qb-stat-label">Vencidas</span>
-                            <span class="qb-stat-value text-danger">$@((Model.FinancialSummary.PendingPayments/3m).ToString("N2"))</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- GASTOS -->
-        <div class="col-md-4 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">GASTOS</div>
-                    <div class="qb-card-action">
-                        <a href="#" class="action-link">Último mes <i class="fas fa-chevron-right ms-1"></i></a>
-                    </div>
-                </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@Model.FinancialSummary.Expenses.ToString("N2")</div>
-                            <div class="qb-card-subtitle">Último periodo: 30 días</div>
-                        </div>
-                        <div class="qb-donut-chart">
-                            <svg width="60" height="60" viewBox="0 0 60 60">
-                                <circle cx="30" cy="30" r="25" fill="transparent" stroke="#e9ecef" stroke-width="5" />
-                                <circle cx="30" cy="30" r="25" fill="transparent" stroke="#00a09d" stroke-width="5" stroke-dasharray="157" stroke-dashoffset="39" />
-                            </svg>
-                            <div class="qb-donut-percent">75%</div>
-                        </div>
-                    </div>
-                    <div class="qb-category-bars mt-3">
-                        <div class="qb-category-item">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="qb-category-label">Operaciones</span>
-                                <span class="qb-category-value">60%</span>
-                            </div>
-                            <div class="qb-progress">
-                                <div class="qb-progress-bar qb-color-1" style="width:60%"></div>
-                            </div>
-                        </div>
-                        <div class="qb-category-item mt-2">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="qb-category-label">Tecnología</span>
-                                <span class="qb-category-value">40%</span>
-                            </div>
-                            <div class="qb-progress">
-                                <div class="qb-progress-bar qb-color-2" style="width:40%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <div class="qb-card-stats">
-                        <div class="qb-stat-item">
-                            <span class="qb-stat-label">Total categorías</span>
-                            <span class="qb-stat-value">4 categorías</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BANCOS -->
-        <div class="col-md-4 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">BANCOS</div>
-                    <div class="qb-card-action">
-                        <a href="/banco" class="action-link">Actualizado <i class="fas fa-chevron-right ms-1"></i></a>
-                    </div>
-                </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@((Model.FinancialSummary.Sales - Model.FinancialSummary.Expenses).ToString("N2"))</div>
-                            <div class="qb-card-subtitle">Saldo disponible</div>
-                        </div>
-                        <div class="qb-stacked-bars">
-                            <div class="qb-stacked-bar">
-                                <div class="qb-stack qb-color-3" style="height: 20px;"></div>
-                                <div class="qb-stack qb-color-1" style="height: 35px;"></div>
-                            </div>
-                            <div class="qb-stacked-bar">
-                                <div class="qb-stack qb-color-3" style="height: 15px;"></div>
-                                <div class="qb-stack qb-color-1" style="height: 25px;"></div>
-                            </div>
-                            <div class="qb-stacked-bar">
-                                <div class="qb-stack qb-color-3" style="height: 10px;"></div>
-                                <div class="qb-stack qb-color-1" style="height: 30px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="qb-accounts mt-3">
-                        <div class="qb-account-item d-flex justify-content-between align-items-center">
-                            <span class="qb-account-name">Cuenta Principal</span>
-                            <span class="qb-account-balance">$@(((Model.FinancialSummary.Sales - Model.FinancialSummary.Expenses) * 0.7m).ToString("N2"))</span>
-                        </div>
-                        <div class="qb-account-item d-flex justify-content-between align-items-center mt-2">
-                            <span class="qb-account-name">Cuenta Secundaria</span>
-                            <span class="qb-account-balance">$@(((Model.FinancialSummary.Sales - Model.FinancialSummary.Expenses) * 0.3m).ToString("N2"))</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <div class="qb-card-stats">
-                        <div class="qb-stat-item">
-                            <span class="qb-stat-label">Pendiente conciliar</span>
-                            <span class="qb-stat-value">$@(((Model.FinancialSummary.Sales - Model.FinancialSummary.Expenses) * 0.15m).ToString("N2"))</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CUENTAS POR PAGAR -->
+        <!-- Sales Card -->
         <div class="col-md-3 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">CUENTAS POR PAGAR</div>
+            <div class="stats-card">
+                <div class="stats-info">
+                    <h5 class="stats-value">230k</h5>
+                    <p class="stats-label">Ventas</p>
                 </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@((Model.FinancialSummary.Expenses * 0.4m).ToString("N2"))</div>
-                            <div class="qb-card-subtitle">Pendientes de pago</div>
-                        </div>
-                        <div class="qb-circle-progress">
-                            <svg width="50" height="50" viewBox="0 0 50 50">
-                                <circle cx="25" cy="25" r="20" fill="transparent" stroke="#e9ecef" stroke-width="5" />
-                                <circle cx="25" cy="25" r="20" fill="transparent" stroke="#d02860" stroke-width="5" stroke-dasharray="125.6" stroke-dashoffset="75.4" />
-                            </svg>
-                            <div class="qb-circle-percent">40%</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <a href="#" class="qb-button-outline">Ver detalles</a>
+                <div class="icon-circle" style="background: linear-gradient(45deg, #FF6384, #FF9F40);">
+                    <i class="fas fa-chart-line"></i>
                 </div>
             </div>
         </div>
-
-        <!-- CUENTAS POR COBRAR -->
+        
+        <!-- Customers Card -->
         <div class="col-md-3 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">CUENTAS POR COBRAR</div>
+            <div class="stats-card">
+                <div class="stats-info">
+                    <h5 class="stats-value">8.549k</h5>
+                    <p class="stats-label">Clientes</p>
                 </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@(Model.FinancialSummary.PendingPayments.ToString("N2"))</div>
-                            <div class="qb-card-subtitle">Pendientes de cobro</div>
-                        </div>
-                        <div class="qb-line-chart">
-                            <svg viewBox="0 0 50 25" width="50" height="25">
-                                <polyline points="0,20 10,15 20,18 30,8 40,5 50,10" fill="none" stroke="#2ca01c" stroke-width="2" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <a href="#" class="qb-button-outline">Ver detalles</a>
+                <div class="icon-circle" style="background: linear-gradient(45deg, #36A2EB, #4BC0C0);">
+                    <i class="fas fa-users"></i>
                 </div>
             </div>
         </div>
-
-        <!-- TOTAL DE INVENTARIO -->
+        
+        <!-- Products Card -->
         <div class="col-md-3 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">TOTAL DE INVENTARIO</div>
+            <div class="stats-card">
+                <div class="stats-info">
+                    <h5 class="stats-value">1.423k</h5>
+                    <p class="stats-label">Productos</p>
                 </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@((Model.FinancialSummary.Sales * 0.35m).ToString("N2"))</div>
-                            <div class="qb-card-subtitle">Valor en stock</div>
-                        </div>
-                        <div class="qb-progress-circle">
-                            <svg width="50" height="50" viewBox="0 0 50 50">
-                                <circle cx="25" cy="25" r="20" fill="transparent" stroke="#e9ecef" stroke-width="5" />
-                                <circle cx="25" cy="25" r="20" fill="transparent" stroke="#4573d2" stroke-width="5" stroke-dasharray="125.6" stroke-dashoffset="31.4" />
-                            </svg>
-                            <div class="qb-progress-number">75%</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <a href="#" class="qb-button-outline">Ver inventario</a>
+                <div class="icon-circle" style="background: linear-gradient(45deg, #FF6384, #FF416C);">
+                    <i class="fas fa-box"></i>
                 </div>
             </div>
         </div>
-
-        <!-- TOTAL DE COMPRAS -->
+        
+        <!-- Revenue Card -->
         <div class="col-md-3 mb-4">
-            <div class="qb-card">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">TOTAL DE COMPRAS</div>
+            <div class="stats-card">
+                <div class="stats-info">
+                    <h5 class="stats-value">$9745</h5>
+                    <p class="stats-label">Ingresos</p>
                 </div>
-                <div class="qb-card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex flex-column">
-                            <div class="qb-card-amount">$@((Model.FinancialSummary.Expenses * 0.75m).ToString("N2"))</div>
-                            <div class="qb-card-subtitle">Último periodo: 30 días</div>
-                        </div>
-                        <div class="qb-bar-chart">
-                            <div class="qb-bar qb-color-4" style="height: 15px;"></div>
-                            <div class="qb-bar qb-color-4" style="height: 25px;"></div>
-                            <div class="qb-bar qb-color-4" style="height: 20px;"></div>
-                            <div class="qb-bar qb-color-4" style="height: 30px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="qb-card-footer">
-                    <a href="#" class="qb-button-outline">Ver detalles</a>
+                <div class="icon-circle" style="background: linear-gradient(45deg, #2DCE89, #2FDF84);">
+                    <i class="fas fa-dollar-sign"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-lg-8">
-            <div class="qb-card" style="height: 400px;">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">VENTAS VS. GASTOS</div>
-                    <div class="qb-card-action">
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                Este mes
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#">Esta semana</a></li>
-                                <li><a class="dropdown-item" href="#">Este mes</a></li>
-                                <li><a class="dropdown-item" href="#">Este trimestre</a></li>
-                                <li><a class="dropdown-item" href="#">Este año</a></li>
-                            </ul>
+    <!-- Main Cards Section -->
+    <div class="row">
+        <!-- Left Column: Profit, Expenses, Leads -->
+        <div class="col-md-3">
+            <!-- Profit Card -->
+            <div class="report-card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title">Profit</h6>
+                    <p class="card-subtitle">Last Month</p>
+                </div>
+                <div class="card-body">
+                    <div class="profit-chart">
+                        <svg viewBox="0 0 100 30" width="100%" height="100%">
+                            <polyline
+                                fill="none"
+                                stroke="#2DCE89"
+                                stroke-width="2"
+                                points="0,20 10,15 20,25 30,15 40,20 50,10 60,5 70,15 80,10 90,5 100,10"
+                            />
+                        </svg>
+                    </div>
+                    <h3 style="font-weight: 600; color: #343a40;">624k</h3>
+                    <span style="color: #2DCE89; font-size: 0.9rem;"><i class="fas fa-arrow-up me-1"></i>+8.24%</span>
+                </div>
+            </div>
+
+            <!-- Expenses Card -->
+            <div class="report-card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title">82.5k</h6>
+                    <p class="card-subtitle">Expenses</p>
+                </div>
+                <div class="card-body">
+                    <div class="expenses-circle">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#e9ecef" stroke-width="10" />
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#FF6384" stroke-width="10" 
+                                   stroke-dasharray="283" stroke-dashoffset="70" 
+                                   transform="rotate(-90 50 50)" />
+                        </svg>
+                        <div class="circle-percent">78%</div>
+                    </div>
+                    <p class="text-center mt-2" style="color: #6c757d; font-size: 0.85rem;">
+                        $21k Expenses more than last month
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Report Card (Middle) -->
+        <div class="col-md-3">
+            <div class="revenue-card">
+                <div class="card-body pt-3 px-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="revenue-value mb-0">$25,825</h3>
+                            <p class="budget-text">Budget: 56,800</p>
+                        </div>
+                        <div class="year-selector pink">
+                            2025 <i class="fas fa-chevron-down ms-2"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-legend d-flex mt-2">
+                        <div class="me-3"><span class="dot earning-dot"></span> Earning</div>
+                        <div><span class="dot expense-dot"></span> Expense</div>
+                    </div>
+                    
+                    <div class="revenue-chart mt-2">
+                        <div class="chart-labels small text-muted">
+                            <div>100</div>
+                            <div style="margin-top: 70px">0</div>
+                            <div style="margin-top: 25px">-100</div>
+                            <div style="margin-top: 25px">-200</div>
+                        </div>
+                        
+                        <svg class="chart-main" viewBox="0 0 340 200" width="100%" height="100%">
+                            <!-- X axis line -->
+                            <line x1="30" y1="100" x2="330" y2="100" stroke="#e9ecef" stroke-width="1"></line>
+                            
+                            <!-- Red bars (earnings) -->
+                            <rect x="40" y="25" width="18" height="75" fill="#f5365c" />
+                            <rect x="75" y="60" width="18" height="40" fill="#f5365c" />
+                            <rect x="110" y="65" width="18" height="35" fill="#f5365c" />
+                            <rect x="145" y="55" width="18" height="45" fill="#f5365c" />
+                            <rect x="180" y="35" width="18" height="65" fill="#f5365c" />
+                            <rect x="215" y="30" width="18" height="70" fill="#f5365c" />
+                            <rect x="250" y="50" width="18" height="50" fill="#f5365c" />
+                            <rect x="285" y="45" width="18" height="55" fill="#f5365c" />
+                            <rect x="320" y="60" width="18" height="40" fill="#f5365c" />
+                            
+                            <!-- Orange bars (expenses) - negative values below axis -->
+                            <rect x="40" y="100" width="18" height="15" fill="#fb6340" />
+                            <rect x="75" y="100" width="18" height="30" fill="#fb6340" />
+                            <rect x="110" y="100" width="18" height="50" fill="#fb6340" />
+                            <rect x="145" y="100" width="18" height="20" fill="#fb6340" />
+                            <rect x="180" y="100" width="18" height="15" fill="#fb6340" />
+                            <rect x="215" y="100" width="18" height="15" fill="#fb6340" />
+                            <rect x="250" y="100" width="18" height="10" fill="#fb6340" />
+                            <rect x="285" y="100" width="18" height="40" fill="#fb6340" />
+                            <rect x="320" y="100" width="18" height="10" fill="#fb6340" />
+                            
+                            <!-- Months -->
+                            <text x="49" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Jan</text>
+                            <text x="84" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Feb</text>
+                            <text x="119" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Mar</text>
+                            <text x="154" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Apr</text>
+                            <text x="189" y="160" font-size="10" text-anchor="middle" fill="#6c757d">May</text>
+                            <text x="224" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Jun</text>
+                            <text x="259" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Jul</text>
+                            <text x="294" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Aug</text>
+                            <text x="329" y="160" font-size="10" text-anchor="middle" fill="#6c757d">Sep</text>
+                        </svg>
+                    </div>
+                    
+                    <div class="revenue-sparkline mt-2">
+                        <svg viewBox="0 0 100 25" width="100%" height="100%">
+                            <polyline
+                                fill="none"
+                                stroke="#f5365c"
+                                stroke-width="2"
+                                points="0,13 10,8 20,15 30,10 40,13 50,5 60,16 70,8 80,14 90,3 100,12"
+                            />
+                        </svg>
+                    </div>
+                    
+                    <div class="text-end mt-2">
+                        <button class="increase-button">Increase Button</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts Receivable Card -->
+        <div class="col-md-3">
+            <div class="vehicle-card">
+                <div class="card-header">
+                    <div>
+                        <h6 class="card-title">Accounts Receivable</h6>
+                        <span class="card-subtitle">Total amount: $43.5k</span>
+                    </div>
+                    <div class="dropdown">
+                        <i class="fas fa-ellipsis-v" style="color: #6c757d; cursor: pointer;"></i>
+                    </div>
+                </div>
+                
+                <div class="tabs-container">
+                    <div class="status-tab active">Current</div>
+                    <div class="status-tab">Overdue</div>
+                    <div class="status-tab">Paid</div>
+                    <div class="status-tab">Draft</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="progress-bar-container">
+                        <div class="progress-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="status-label">On the way</span>
+                                <span class="status-percentage">39.7%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-light" style="width: 39.7%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="status-label">Unloading</span>
+                                <span class="status-percentage">28.3%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-danger" style="width: 28.3%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="status-label">Loading</span>
+                                <span class="status-percentage">17.4%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: 17.4%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="status-label">Waiting</span>
+                                <span class="status-percentage">14.6%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-dark" style="width: 14.6%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-details mt-4">
+                        <div class="status-row">
+                            <div class="status-icon bg-light">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="status-info">On the way</div>
+                            <div class="status-time">2hr 10min</div>
+                            <div class="status-percent">39.7%</div>
+                        </div>
+                        
+                        <div class="status-row">
+                            <div class="status-icon bg-danger">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <div class="status-info">Unloading</div>
+                            <div class="status-time">3hr 15min</div>
+                            <div class="status-percent">28.3%</div>
+                        </div>
+                        
+                        <div class="status-row">
+                            <div class="status-icon bg-info">
+                                <i class="fas fa-dolly"></i>
+                            </div>
+                            <div class="status-info">Loading</div>
+                            <div class="status-time">1hr 24min</div>
+                            <div class="status-percent">17.4%</div>
+                        </div>
+                        
+                        <div class="status-row">
+                            <div class="status-icon bg-dark">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="status-info">Waiting</div>
+                            <div class="status-time">5hr 19min</div>
+                            <div class="status-percent">14.6%</div>
                         </div>
                     </div>
                 </div>
-                <div class="qb-card-body">
-                    <!-- Aquí iría el gráfico -->
-                    <div class="d-flex justify-content-center align-items-center h-100">
-                        <p class="text-muted">Gráfico de ventas vs gastos (se implementará con Chart.js)</p>
+            </div>
+        </div>
+
+        <!-- Accounts Payable Card -->
+        <div class="col-md-3">
+            <div class="shipment-card">
+                <div class="card-header">
+                    <div>
+                        <h6 class="card-title">Accounts Payable</h6>
+                        <span class="card-subtitle">Total pending: $12.8k</span>
+                    </div>
+                    <div class="month-selector">
+                        <span>January</span>
+                        <i class="fas fa-chevron-down ms-2"></i>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="chart-container">
+                        <svg viewBox="0 0 400 200" width="100%" height="100%">
+                            <!-- Y-axis labels -->
+                            <text x="15" y="30" font-size="10" text-anchor="start" fill="#6c757d">50%</text>
+                            <text x="15" y="80" font-size="10" text-anchor="start" fill="#6c757d">37.5%</text>
+                            <text x="15" y="130" font-size="10" text-anchor="start" fill="#6c757d">25%</text>
+                            <text x="15" y="180" font-size="10" text-anchor="start" fill="#6c757d">12.5%</text>
+                            <text x="15" y="195" font-size="10" text-anchor="start" fill="#6c757d">0%</text>
+                            
+                            <!-- Bars -->
+                            <rect x="50" y="80" width="20" height="110" fill="#fd7e14" />
+                            <rect x="80" y="50" width="20" height="140" fill="#fd7e14" />
+                            <rect x="110" y="100" width="20" height="90" fill="#fd7e14" />
+                            <rect x="140" y="70" width="20" height="120" fill="#fd7e14" />
+                            <rect x="170" y="90" width="20" height="100" fill="#fd7e14" />
+                            <rect x="200" y="40" width="20" height="150" fill="#fd7e14" />
+                            <rect x="230" y="80" width="20" height="110" fill="#fd7e14" />
+                            <rect x="260" y="60" width="20" height="130" fill="#fd7e14" />
+                            <rect x="290" y="90" width="20" height="100" fill="#fd7e14" />
+                            <rect x="320" y="70" width="20" height="120" fill="#fd7e14" />
+                            
+                            <!-- Line chart -->
+                            <polyline
+                                fill="none"
+                                stroke="#f5365c"
+                                stroke-width="3"
+                                points="60,80 90,70 120,90 150,80 180,90 210,50 240,80 270,60 300,80 330,70"
+                            />
+                            
+                            <!-- Points on line -->
+                            <circle cx="60" cy="80" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="90" cy="70" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="120" cy="90" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="150" cy="80" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="180" cy="90" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="210" cy="50" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="240" cy="80" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="270" cy="60" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="300" cy="80" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            <circle cx="330" cy="70" r="4" fill="#fff" stroke="#f5365c" stroke-width="2" />
+                            
+                            <!-- X-axis labels -->
+                            <text x="60" y="210" font-size="9" text-anchor="middle" fill="#6c757d">1 Jan</text>
+                            <text x="90" y="210" font-size="9" text-anchor="middle" fill="#6c757d">2 Jan</text>
+                            <text x="120" y="210" font-size="9" text-anchor="middle" fill="#6c757d">3 Jan</text>
+                            <text x="150" y="210" font-size="9" text-anchor="middle" fill="#6c757d">4 Jan</text>
+                            <text x="180" y="210" font-size="9" text-anchor="middle" fill="#6c757d">5 Jan</text>
+                            <text x="210" y="210" font-size="9" text-anchor="middle" fill="#6c757d">6 Jan</text>
+                            <text x="240" y="210" font-size="9" text-anchor="middle" fill="#6c757d">7 Jan</text>
+                            <text x="270" y="210" font-size="9" text-anchor="middle" fill="#6c757d">8 Jan</text>
+                            <text x="300" y="210" font-size="9" text-anchor="middle" fill="#6c757d">9 Jan</text>
+                            <text x="330" y="210" font-size="9" text-anchor="middle" fill="#6c757d">10 Jan</text>
+                        </svg>
+                    </div>
+                    
+                    <div class="chart-legend d-flex justify-content-center mt-2">
+                        <div class="legend-item me-4">
+                            <span class="legend-dot" style="background-color: #fd7e14;"></span>
+                            <span class="legend-text">Shipment</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot" style="background-color: #f5365c;"></span>
+                            <span class="legend-text">Delivery</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popular Products and Orders Row -->
+    <div class="row mt-3">
+        <!-- Popular Products -->
+        <div class="col-md-6">
+            <div class="products-card">
+                <div class="card-header">
+                    <div>
+                        <h6 class="card-title">Popular Products</h6>
+                        <span class="visitor-text">Total 10.4k Visitors</span>
+                    </div>
+                    <div class="dropdown">
+                        <i class="fas fa-ellipsis-v" style="color: #6c757d; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="product-item">
+                        <div class="product-image bg-danger text-white">
+                            <span>iP</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Apple iPhone 13</h6>
+                            <p class="product-id">Item: #FXZ-4567</p>
+                        </div>
+                        <div class="product-price">$999.29</div>
+                    </div>
+                    
+                    <div class="product-item">
+                        <div class="product-image bg-info text-white">
+                            <span>N</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Nike Air Jordan</h6>
+                            <p class="product-id">Item: #FXZ-3456</p>
+                        </div>
+                        <div class="product-price">$72.40</div>
+                    </div>
+                    
+                    <div class="product-item">
+                        <div class="product-image bg-success text-white">
+                            <span>B</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Beats Studio 2</h6>
+                            <p class="product-id">Item: #FXZ-9485</p>
+                        </div>
+                        <div class="product-price">$99</div>
+                    </div>
+                    
+                    <div class="product-item">
+                        <div class="product-image bg-warning text-white">
+                            <span>AW</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Apple Watch Series 7</h6>
+                            <p class="product-id">Item: #FXZ-2345</p>
+                        </div>
+                        <div class="product-price">$249.99</div>
+                    </div>
+                    
+                    <div class="product-item">
+                        <div class="product-image bg-success text-white">
+                            <span>E</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Amazon Echo Dot</h6>
+                            <p class="product-id">Item: #FXZ-8959</p>
+                        </div>
+                        <div class="product-price">$79.40</div>
+                    </div>
+                    
+                    <div class="product-item">
+                        <div class="product-image bg-info text-white">
+                            <span>PS5</span>
+                        </div>
+                        <div class="product-info">
+                            <h6 class="product-name">Play Station Console</h6>
+                            <p class="product-id">Item: #FXZ-7892</p>
+                        </div>
+                        <div class="product-price">$129.48</div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-lg-4">
-            <div class="qb-card" style="height: 400px;">
-                <div class="qb-card-header">
-                    <div class="qb-card-title">FACTURAS PENDIENTES</div>
-                    <div class="qb-card-action">
-                        <a href="/ventas/facturas" class="action-link">Ver todas <i class="fas fa-chevron-right ms-1"></i></a>
+        <!-- Orders by Countries -->
+        <div class="col-md-6">
+            <div class="orders-card">
+                <div class="card-header">
+                    <div>
+                        <h6 class="card-title">Orders by Countries</h6>
+                        <span class="delivery-text">62 deliveries in progress</span>
+                    </div>
+                    <div class="dropdown">
+                        <i class="fas fa-ellipsis-v" style="color: #6c757d; cursor: pointer;"></i>
                     </div>
                 </div>
-                <div class="qb-card-body">
-                    <div class="pending-invoices">
-                        @foreach (var invoice in Model.PendingInvoices)
-                        {
-                            <div class="pending-invoice-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="invoice-number">Factura #@invoice.InvoiceNumber</span>
-                                    <span class="invoice-amount">$@invoice.Amount.ToString("N2")</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <span class="invoice-client">@invoice.ClientName</span>
-                                    <span class="invoice-status @(invoice.Status.Contains("hoy") ? "text-danger" : invoice.Status.Contains("3 días") ? "text-warning" : "text-muted")">
-                                        @invoice.Status
-                                    </span>
-                                </div>
+                
+                <div class="tabs-container">
+                    <div class="status-tab active">New</div>
+                    <div class="status-tab">Preparing</div>
+                    <div class="status-tab">Shipping</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="order-item">
+                        <div class="person-detail">
+                            <div class="sender-badge">
+                                <i class="fas fa-check"></i>
                             </div>
-                        }
+                            <div>
+                                <p class="person-label">SENDER</p>
+                                <h6 class="person-name">Myrtle Ullrich</h6>
+                                <p class="person-address">101 Boulder, California(CA), 95959</p>
+                            </div>
+                        </div>
+                        
+                        <div class="person-detail mt-4">
+                            <div class="receiver-badge">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <p class="person-label">RECEIVER</p>
+                                <h6 class="person-name">Barry Schowalter</h6>
+                                <p class="person-address">939 Orange, California(CA), 92118</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="order-item">
+                        <div class="person-detail">
+                            <div class="sender-badge">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div>
+                                <p class="person-label">SENDER</p>
+                                <h6 class="person-name">Veronica Herman</h6>
+                                <p class="person-address">162 Windsor, California(CA), 95492</p>
+                            </div>
+                        </div>
+                        
+                        <div class="person-detail mt-4">
+                            <div class="receiver-badge">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <p class="person-label">RECEIVER</p>
+                                <h6 class="person-name">Helen Jacobs</h6>
+                                <p class="person-address">487 Sunset, California(CA), 94043</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transactions and Invoices Row -->
+    <div class="row mt-4">
+        <!-- Transactions -->
+        <div class="col-md-4">
+            <div class="transactions-card">
+                <div class="card-header">
+                    <h6 class="card-title">Transacciones</h6>
+                    <p class="transactions-subtitle">58 Transacciones realizadas este mes</p>
+                </div>
+                <div class="card-body">
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-red">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Billetera</h6>
+                            <p class="transaction-desc">Starbucks</p>
+                        </div>
+                        <div class="transaction-amount amount-negative">-$75</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-green">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Transferencia</h6>
+                            <p class="transaction-desc">Agregar Dinero</p>
+                        </div>
+                        <div class="transaction-amount amount-positive">+$480</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-blue">
+                            <i class="fab fa-paypal"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Paypal</h6>
+                            <p class="transaction-desc">Pago de Cliente</p>
+                        </div>
+                        <div class="transaction-amount amount-positive">+$268</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-red">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Tarjeta Master</h6>
+                            <p class="transaction-desc">iPhone 13 Pedido</p>
+                        </div>
+                        <div class="transaction-amount amount-negative">-$699</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-green">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Transacciones Bancarias</h6>
+                            <p class="transaction-desc">Reembolso</p>
+                        </div>
+                        <div class="transaction-amount amount-positive">+$98</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-blue">
+                            <i class="fab fa-paypal"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Paypal</h6>
+                            <p class="transaction-desc">Pago de Cliente</p>
+                        </div>
+                        <div class="transaction-amount amount-positive">+$126</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-red">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="transaction-info">
+                            <h6 class="transaction-name">Transferencia</h6>
+                            <p class="transaction-desc">Pago de Alquiler</p>
+                        </div>
+                        <div class="transaction-amount amount-negative">-$1290</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoices -->
+        <div class="col-md-8">
+            <div class="invoices-card">
+                <div class="card-header">
+                    <div class="entries-dropdown">
+                        <span>Mostrar</span>
+                        <select class="entries-select">
+                            <option>6</option>
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <button class="invoice-btn">
+                        <i class="fas fa-plus"></i> Crear Factura
+                    </button>
+                    <div class="search-filter">
+                        <input type="text" class="search-input" placeholder="Buscar Factura">
+                        <select class="status-dropdown">
+                            <option>Estado de Factura</option>
+                            <option>Pagada</option>
+                            <option>Pendiente</option>
+                            <option>Descargada</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <table class="invoices-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </th>
+                                <th>#</th>
+                                <th>ESTADO</th>
+                                <th>TOTAL</th>
+                                <th>FECHA EMISIÓN</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#5089</td>
+                                <td>
+                                    <span class="status-circle complete"></span>
+                                </td>
+                                <td>$3077</td>
+                                <td>09 May 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#5041</td>
+                                <td>
+                                    <span class="status-circle complete"></span>
+                                </td>
+                                <td>$2230</td>
+                                <td>19 Nov 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#5027</td>
+                                <td>
+                                    <span class="status-circle complete"></span>
+                                </td>
+                                <td>$2787</td>
+                                <td>25 Sept 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#5024</td>
+                                <td>
+                                    <span class="status-circle complete"></span>
+                                </td>
+                                <td>$5285</td>
+                                <td>02 Ago 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#5020</td>
+                                <td>
+                                    <span class="status-circle pending"></span>
+                                </td>
+                                <td>$5219</td>
+                                <td>15 Dic 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </td>
+                                <td class="invoice-number">#4995</td>
+                                <td>
+                                    <span class="status-circle complete"></span>
+                                </td>
+                                <td>$3313</td>
+                                <td>09 Jun 2020</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <i class="fas fa-trash action-icon"></i>
+                                        <i class="fas fa-eye action-icon"></i>
+                                        <i class="fas fa-ellipsis-v action-icon"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-footer">
+                    <span class="showing-text">Mostrando 1 a 6 de 50 entradas</span>
+                    <div class="pagination">
+                        <span class="page-arrow">«</span>
+                        <span class="page-arrow">‹</span>
+                        <span class="page-item active">1</span>
+                        <span class="page-item">2</span>
+                        <span class="page-item">3</span>
+                        <span class="page-item">4</span>
+                        <span class="page-item">5</span>
+                        <span class="page-item">...</span>
+                        <span class="page-item">9</span>
+                        <span class="page-arrow">›</span>
+                        <span class="page-arrow">»</span>
                     </div>
                 </div>
             </div>
@@ -624,5 +1115,4 @@
         width: 50px;
     }
 </style>
-</div>
 
