@@ -247,26 +247,13 @@ dt {
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    padding-bottom: 5px; /* Añadir espacio para el scrollbar */
+    scrollbar-width: none; /* Ocultar scrollbar para Firefox */
+    padding-bottom: 5px;
+    position: relative;
 }
 
 .nav-tabs-underline::-webkit-scrollbar {
-    height: 4px;
-    display: block;
-}
-
-.nav-tabs-underline::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.nav-tabs-underline::-webkit-scrollbar-track {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.nav-tabs-underline {
-    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+    display: none; /* Ocultar scrollbar para Chrome, Safari y Opera */
 }
 
 .nav-tabs-underline .nav-item {
@@ -293,6 +280,64 @@ dt {
     color: #0d6efd;
     border-bottom: 2px solid #0d6efd;
     background-color: transparent;
+}
+
+/* Estilos para las flechas de navegación de pestañas */
+.tabs-arrows-container {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 100; /* Mayor z-index para asegurar que esté por encima */
+    display: flex;
+    align-items: center;
+    pointer-events: none; /* Evita que el contenedor bloquee clics */
+    background-color: #fff; /* Fondo blanco para separar visualmente */
+    padding-left: 20px; /* Espacio a la izquierda para separar de la última pestaña */
+    margin-right: 5px; /* Margen a la derecha */
+    box-shadow: -15px 0 15px -5px rgba(255, 255, 255, 0.95); /* Sombra suave a la izquierda más pronunciada */
+}
+
+.tab-arrow {
+    width: 32px; /* Ligeramente más grande */
+    height: 32px; /* Ligeramente más grande */
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    margin-left: 8px; /* Más separación entre flechas */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tab-arrow.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tab-arrow:hover {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    border-color: #0d6efd;
+    transform: translateY(-1px); /* Ligero efecto de elevación al hover */
+}
+
+.tab-arrow i {
+    font-size: 14px; /* Icono ligeramente más grande */
+}
+
+/* Posiciones específicas para cada flecha */
+.tab-arrow-prev {
+    right: 45px; /* Más separación */
+}
+
+.tab-arrow-next {
+    right: 5px;
 }
 
 /* Estilos para la subida de imágenes */
@@ -449,37 +494,6 @@ select.form-select-sm::-ms-expand {
     position: relative;
 }
 
-/* Indicadores de scroll para las pestañas */
-.nav-tabs-underline.has-more-tabs {
-    position: relative;
-}
-
-.nav-tabs-underline.has-more-tabs::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 30px;
-    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
-    pointer-events: none;
-    opacity: 0.8;
-    z-index: 1;
-}
-
-.nav-tabs-underline.scrolled-right::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 30px;
-    background: linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1));
-    pointer-events: none;
-    opacity: 0.8;
-    z-index: 1;
-}
-
 /* Estilos para vendedores en select2 */
 .select2-result-vendedor {
     padding: 6px 0;
@@ -523,4 +537,21 @@ select.form-select-sm::-ms-expand {
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     display: flex !important;
     align-items: center;
+}
+
+/* Ocultar el botón "x" del select2 */
+.select2-selection__clear {
+    display: none !important;
+}
+
+/* Asegurar que los iconos de acción sean visibles */
+.edit-vendedor,
+.delete-vendedor {
+    z-index: 100;
+    position: relative;
+}
+
+/* Ajustes para los iconos en la selección */
+.select2-container--default .select2-selection--single {
+    padding-right: 60px !important; /* Dar espacio para los botones de acción */
 } 

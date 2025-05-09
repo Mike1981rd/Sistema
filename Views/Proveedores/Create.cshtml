@@ -363,33 +363,5 @@
             separadorDecimal: '@ViewBag.SeparadorDecimal',
             precisionDecimal: @ViewBag.PrecisionDecimal
         };
-        
-        $(document).ready(function() {
-            // Inicializar Select2 para las cuentas contables
-            initSelect2();
-            // Inicializar pestañas
-            initTabs();
-            // Inicializar subida de imágenes
-            initImageUpload();
-            // Inicializar formateadores de campos
-            initFormatters();
-            
-            // Inicializar select2 con banderas (igual que en el módulo de empresas)
-            $('.select2-flags').select2({
-                theme: 'bootstrap-5',
-                templateResult: formatOption,
-                templateSelection: formatOption
-            });
-            
-            // Función para formatear opciones con banderas
-            function formatOption(option) {
-                if (!option.id) return option.text;
-                
-                const flagCode = $(option.element).data('flag');
-                if (!flagCode) return option.text;
-                
-                return $(`<span><img src="https://flagcdn.com/24x18/${flagCode}.png" alt="${option.text} flag" class="me-2" /> ${option.text}</span>`);
-            }
-        });
     </script>
 } 

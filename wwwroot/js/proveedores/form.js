@@ -268,38 +268,33 @@ function initSelect2() {
             // Eliminar la selección actual
             $(this).val(null).trigger('change');
             
-            // Mostrar modal de confirmación
-            if (confirm('¿Desea crear el vendedor "' + data.term + '"?')) {
-                console.log("Creando vendedor:", data.term);
-                // Crear el vendedor mediante AJAX
-                $.ajax({
-                    url: window.location.origin + '/Proveedores/CrearVendedor',
-                    method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ 
-                        nombre: data.term 
-                    }),
-                    success: function(response) {
-                        console.log("Respuesta del servidor:", response);
-                        if (response.success) {
-                            // Añadir el nuevo vendedor a las opciones
-                            var newOption = new Option(response.vendedor.text, response.vendedor.id, true, true);
-                            $('#VendedorId').append(newOption).trigger('change');
-                            
-                            // Mostrar notificación de éxito
-                            alert('Vendedor creado exitosamente');
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error al crear vendedor:", error);
-                        console.error("Estado:", status);
-                        console.error("Respuesta:", xhr.responseText);
-                        alert('Error al crear el vendedor: ' + error);
+            // Crear el vendedor directamente sin confirmación
+            console.log("Creando vendedor:", data.term);
+            // Crear el vendedor mediante AJAX
+            $.ajax({
+                url: window.location.origin + '/Proveedores/CrearVendedor',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 
+                    nombre: data.term 
+                }),
+                success: function(response) {
+                    console.log("Respuesta del servidor:", response);
+                    if (response.success) {
+                        // Añadir el nuevo vendedor a las opciones
+                        var newOption = new Option(response.vendedor.text, response.vendedor.id, true, true);
+                        $('#VendedorId').append(newOption).trigger('change');
+                    } else {
+                        alert('Error: ' + response.message);
                     }
-                });
-            }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al crear vendedor:", error);
+                    console.error("Estado:", status);
+                    console.error("Respuesta:", xhr.responseText);
+                    alert('Error al crear el vendedor: ' + error);
+                }
+            });
         }
     });
     
@@ -441,48 +436,89 @@ function initTabs() {
 }
 
 /**
- * Añade indicadores visuales para el scroll horizontal de pestañas
+ * Añade navegación con flechas elegantes para las pestañas 
  */
 function setupTabsScroll() {
     // Seleccionar el contenedor de pestañas
     const tabsContainer = $('.nav-tabs-underline');
     
-    // Verificar si se necesita scroll
-    function checkScroll() {
-        if (tabsContainer.length === 0) return;
+    if (tabsContainer.length === 0) return;
+    
+    // Quitar eventos de scroll anteriores
+    tabsContainer.off('scroll');
+    
+    // Agregar contenedor de flechas si no existe
+    if ($('.tabs-arrows-container').length === 0) {
+        const arrowsContainer = `
+            <div class="tabs-arrows-container">
+                <button type="button" class="tab-arrow tab-arrow-prev">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button type="button" class="tab-arrow tab-arrow-next">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        `;
         
+        // Añadir un margen derecho al contenedor de pestañas para dejar espacio a las flechas
+        tabsContainer.css({
+            'padding-right': '80px',  // Espacio amplio para las flechas
+            'position': 'relative'    // Asegurar que el posicionamiento relativo está aplicado
+        });
+        
+        tabsContainer.parent().css('position', 'relative');
+        tabsContainer.parent().append(arrowsContainer);
+    }
+    
+    // Función para actualizar la visibilidad de las flechas
+    function updateArrowsVisibility() {
         const scrollWidth = tabsContainer[0].scrollWidth;
         const clientWidth = tabsContainer[0].clientWidth;
+        const scrollLeft = tabsContainer.scrollLeft();
         
-        // Si hay scroll disponible, agregar clase para mostrar indicador
-        if (scrollWidth > clientWidth) {
-            tabsContainer.addClass('has-more-tabs');
-            
-            // Verificar posición de scroll
-            if (tabsContainer.scrollLeft() > 10) {
-                tabsContainer.addClass('scrolled-right');
-            } else {
-                tabsContainer.removeClass('scrolled-right');
-            }
-            
-            if (tabsContainer.scrollLeft() + clientWidth < scrollWidth - 10) {
-                tabsContainer.addClass('scrolled-left');
-            } else {
-                tabsContainer.removeClass('scrolled-left');
-            }
+        // Mostrar/ocultar flecha izquierda
+        if (scrollLeft > 10) {
+            $('.tab-arrow-prev').addClass('visible');
         } else {
-            tabsContainer.removeClass('has-more-tabs scrolled-right scrolled-left');
+            $('.tab-arrow-prev').removeClass('visible');
+        }
+        
+        // Mostrar/ocultar flecha derecha
+        if (scrollLeft + clientWidth < scrollWidth - 10) {
+            $('.tab-arrow-next').addClass('visible');
+        } else {
+            $('.tab-arrow-next').removeClass('visible');
         }
     }
     
-    // Ejecutar en la carga inicial
-    checkScroll();
+    // Inicializar visibilidad de flechas
+    updateArrowsVisibility();
     
-    // Ejecutar cuando cambie el tamaño de la ventana
-    $(window).on('resize', checkScroll);
+    // Event listener para flecha izquierda
+    $('.tab-arrow-prev').on('click', function() {
+        const currentScroll = tabsContainer.scrollLeft();
+        tabsContainer.animate({
+            scrollLeft: currentScroll - 200
+        }, 300, function() {
+            updateArrowsVisibility();
+        });
+    });
     
-    // Ejecutar cuando se haga scroll en las pestañas
-    tabsContainer.on('scroll', checkScroll);
+    // Event listener para flecha derecha
+    $('.tab-arrow-next').on('click', function() {
+        const currentScroll = tabsContainer.scrollLeft();
+        tabsContainer.animate({
+            scrollLeft: currentScroll + 200
+        }, 300, function() {
+            updateArrowsVisibility();
+        });
+    });
+    
+    // Actualizar al redimensionar la ventana
+    $(window).on('resize', updateArrowsVisibility);
+    
+    // Actualizar cuando se haga scroll manualmente en las pestañas
+    tabsContainer.on('scroll', updateArrowsVisibility);
 }
 
 /**
@@ -542,23 +578,46 @@ function formatVendedorSelection(vendedor) {
     $container.append($vendedorName);
     $container.append($actions);
     
-    // Manejar eventos de botones
+    // Ocultar el botón "x" del Select2 (Clear)
     setTimeout(function() {
-        $('.edit-vendedor').off('click').on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            editVendedor($(this).data('id'), $(this).data('name'));
-        });
-        
-        $('.delete-vendedor').off('click').on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            deleteVendedor($(this).data('id'), $(this).data('name'));
-        });
+        $('.select2-selection__clear').hide();
     }, 100);
+    
+    // Manejar eventos de botones - Asignación de eventos inmediata
+    $editBtn.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editVendedor(vendedor.id, vendedor.text);
+        return false;
+    });
+    
+    $deleteBtn.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteVendedor(vendedor.id, vendedor.text);
+        return false;
+    });
     
     return $container;
 }
+
+// Asignar eventos globales para los botones de edición y eliminación
+$(document).ready(function() {
+    // Delegación de eventos a nivel de documento para capturar clicks futuros
+    $(document).on('click', '.edit-vendedor', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editVendedor($(this).data('id'), $(this).data('name'));
+        return false;
+    });
+    
+    $(document).on('click', '.delete-vendedor', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteVendedor($(this).data('id'), $(this).data('name'));
+        return false;
+    });
+});
 
 /**
  * Edita un vendedor existente
@@ -569,7 +628,7 @@ function editVendedor(id, currentName) {
     if (newName && newName.trim() !== '' && newName !== currentName) {
         $.ajax({
             url: window.location.origin + '/Proveedores/EditarVendedor',
-            method: 'PUT',
+            method: 'POST',  // Cambiado de PUT a POST para asegurar compatibilidad
             contentType: 'application/json',
             data: JSON.stringify({ 
                 id: id,
@@ -579,24 +638,64 @@ function editVendedor(id, currentName) {
                 if (response.success) {
                     // Actualizar opción en el select
                     var $option = $('#VendedorId option[value="' + id + '"]');
-                    $option.text(response.vendedor.text);
+                    $option.text(newName);
                     
-                    // Si está seleccionado, actualizar la visualización
+                    // Si está seleccionado, actualizar la visualización sin recargar
                     if ($('#VendedorId').val() == id) {
-                        $('#VendedorId').trigger('change');
+                        // Mantener el control abierto si ya estaba abierto
+                        var isOpen = $('#VendedorId').data('select2').isOpen();
+                        
+                        // Actualizar texto pero mantener la selección
+                        var selectedData = $('#VendedorId').select2('data');
+                        if (selectedData && selectedData.length > 0) {
+                            selectedData[0].text = newName;
+                            // Force refresh
+                            $('#VendedorId').trigger('change');
+                        }
+                        
+                        // Reabrir si estaba abierto
+                        if (isOpen) {
+                            setTimeout(function() {
+                                $('#VendedorId').select2('open');
+                            }, 10);
+                        }
+                    } else {
+                        // Actualizar en caché para futuros renders
+                        var cache = $('#VendedorId').data('select2').dataAdapter.ajaxOptions.cache;
+                        if (cache) {
+                            try {
+                                Object.values(cache).forEach(function(value) {
+                                    if (value && value.results) {
+                                        value.results.forEach(function(item) {
+                                            if (item.id == id) {
+                                                item.text = newName;
+                                            }
+                                        });
+                                    }
+                                });
+                            } catch (e) {
+                                console.warn('No se pudo actualizar la caché', e);
+                            }
+                        }
                     }
                     
-                    alert('Vendedor actualizado correctamente');
+                    console.log('Vendedor actualizado correctamente');
+                    
+                    // Mostrar notificación visual temporal
+                    showToast('Vendedor actualizado correctamente', 'success');
                 } else {
-                    alert('Error: ' + response.message);
+                    showToast('Error: ' + (response.message || 'No se pudo actualizar el vendedor'), 'error');
                 }
             },
-            error: function(xhr) {
+            error: function(xhr, status, error) {
+                console.error("Error al actualizar vendedor:", error);
+                console.error("Estado:", status);
+                console.error("Respuesta:", xhr.responseText);
                 var errorMsg = 'Error al actualizar el vendedor';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMsg = xhr.responseJSON.message;
                 }
-                alert(errorMsg);
+                showToast(errorMsg, 'error');
             }
         });
     }
@@ -606,34 +705,108 @@ function editVendedor(id, currentName) {
  * Elimina un vendedor existente
  */
 function deleteVendedor(id, name) {
-    if (confirm('¿Está seguro de que desea eliminar al vendedor "' + name + '"?')) {
-        $.ajax({
-            url: window.location.origin + '/Proveedores/EliminarVendedor',
-            method: 'DELETE',
-            contentType: 'application/json',
-            data: JSON.stringify({ id: id }),
-            success: function(response) {
-                if (response.success) {
-                    // Quitar el vendedor de la lista
-                    var $select = $('#VendedorId');
-                    var currentVal = $select.val();
-                    
-                    // Remover la opción
-                    $select.find('option[value="' + id + '"]').remove();
-                    
-                    // Si era el vendedor seleccionado, limpiar selección
-                    if (currentVal == id) {
-                        $select.val(null).trigger('change');
-                    }
-                    
-                    alert(response.message);
-                } else {
-                    alert('Error: ' + response.message);
+    // Eliminar directamente sin confirmación
+    $.ajax({
+        url: window.location.origin + '/Proveedores/EliminarVendedor',
+        method: 'POST', // Cambiado de DELETE a POST para asegurar compatibilidad
+        contentType: 'application/json',
+        data: JSON.stringify({ id: id }),
+        success: function(response) {
+            if (response.success) {
+                // Quitar el vendedor de la lista
+                var $select = $('#VendedorId');
+                var currentVal = $select.val();
+                
+                // Remover la opción del DOM
+                $select.find('option[value="' + id + '"]').remove();
+                
+                // Si era el vendedor seleccionado, limpiar selección
+                if (currentVal == id) {
+                    $select.val(null).trigger('change');
                 }
-            },
-            error: function() {
-                alert('Error al eliminar el vendedor');
+                
+                // Limpiar caché de resultados para futuras búsquedas
+                var dataAdapter = $select.data('select2').dataAdapter;
+                if (dataAdapter && dataAdapter.ajaxOptions && dataAdapter.ajaxOptions.cache) {
+                    try {
+                        dataAdapter.ajaxOptions.cache = {};
+                    } catch (e) {
+                        console.warn('No se pudo limpiar la caché', e);
+                    }
+                }
+                
+                // Mostrar notificación visual temporal
+                showToast(response.message || 'Vendedor eliminado correctamente', 'success');
+                
+                console.log(response.message || 'Vendedor eliminado correctamente');
+            } else {
+                showToast('Error: ' + (response.message || 'No se pudo eliminar el vendedor'), 'error');
             }
-        });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al eliminar vendedor:", error);
+            console.error("Estado:", status);
+            console.error("Respuesta:", xhr.responseText);
+            showToast('Error al eliminar el vendedor', 'error');
+        }
+    });
+}
+
+/**
+ * Muestra una notificación toast temporal
+ */
+function showToast(message, type) {
+    // Verificar si existe el contenedor de toast
+    var $toastContainer = $('.toast-container');
+    if ($toastContainer.length === 0) {
+        $toastContainer = $('<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+        $('body').append($toastContainer);
     }
+    
+    // Crear ID único para este toast
+    var toastId = 'toast-' + Date.now();
+    
+    // Determinar clase de color según el tipo
+    var bgClass = 'bg-primary';
+    if (type === 'success') bgClass = 'bg-success';
+    if (type === 'error') bgClass = 'bg-danger';
+    if (type === 'warning') bgClass = 'bg-warning';
+    
+    // Crear el elemento toast
+    var $toast = $(`
+        <div id="${toastId}" class="toast align-items-center ${bgClass} text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `);
+    
+    // Añadir el toast al contenedor
+    $toastContainer.append($toast);
+    
+    // Inicializar y mostrar el toast
+    var toastElement = new bootstrap.Toast($toast[0], {
+        autohide: true,
+        delay: 3000
+    });
+    
+    toastElement.show();
+    
+    // Eliminar el elemento del DOM después de ocultarse
+    $toast.on('hidden.bs.toast', function() {
+        $(this).remove();
+    });
+}
+
+// Función para formatear opciones con banderas
+function formatOption(option) {
+    if (!option.id) return option.text;
+    
+    const flagCode = $(option.element).data('flag');
+    if (!flagCode) return option.text;
+    
+    return $(`<span><img src="/images/flags/${flagCode.toUpperCase()}.png" alt="${option.text} flag" class="me-2" style="width: 24px; height: 18px;" /> ${option.text}</span>`);
 } 

@@ -537,8 +537,9 @@ namespace SistemaContable.Controllers
             }
         }
 
-        // PUT: Proveedores/EditarVendedor
+        // PUT o POST: Proveedores/EditarVendedor
         [HttpPut]
+        [HttpPost]
         public async Task<IActionResult> EditarVendedor([FromBody] Dictionary<string, string> datos)
         {
             if (datos == null || !datos.ContainsKey("id") || !datos.ContainsKey("nombre") || 
@@ -586,8 +587,9 @@ namespace SistemaContable.Controllers
             });
         }
 
-        // DELETE: Proveedores/EliminarVendedor
+        // DELETE o POST: Proveedores/EliminarVendedor
         [HttpDelete]
+        [HttpPost]
         public async Task<IActionResult> EliminarVendedor([FromBody] Dictionary<string, string> datos)
         {
             if (datos == null || !datos.ContainsKey("id") || string.IsNullOrWhiteSpace(datos["id"]))
