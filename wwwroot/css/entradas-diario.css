@@ -1,0 +1,118 @@
+/* Estilos para el módulo de Entradas de Diario */
+
+/* Colores de botones */
+.btn-guardar {
+    background-color: #007848 !important;
+    border-color: #007848 !important;
+    color: white !important;
+}
+
+.btn-cancelar {
+    background-color: #787276 !important;
+    border-color: #787276 !important;
+    color: white !important;
+}
+
+/* Estilos para indicadores de tipo de contacto */
+.tipo-contacto-cliente {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+.tipo-contacto-proveedor {
+    background-color: #0d6efd;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+/* Estilos para Select2 personalizado */
+.select2-container--default .select2-selection--single {
+    height: 38px;
+    padding: 5px;
+    border: 1px solid #ced4da;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #007848;
+}
+
+/* Estilos para la tabla de movimientos */
+#tablaMovimientos th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+#tablaMovimientos tfoot {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+#tablaMovimientos .numero-fila {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    background-color: #6c757d;
+    color: white;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+/* Estilos para validación */
+.field-validation-error {
+    font-size: 0.8rem;
+}
+
+/* Animación para totales cuando cambian */
+@keyframes highlight {
+    0% { background-color: transparent; }
+    30% { background-color: rgba(0, 120, 72, 0.1); }
+    100% { background-color: transparent; }
+}
+
+.highlight-change {
+    animation: highlight 1s ease;
+}
+
+/* Estilos para badges de estado */
+.badge-estado-abierto {
+    background-color: #007848;
+    color: white;
+}
+
+.badge-estado-anulado {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Estilos responsivos */
+@media (max-width: 992px) {
+    #tablaMovimientos {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .select2-container {
+        width: 100% !important;
+    }
+} 

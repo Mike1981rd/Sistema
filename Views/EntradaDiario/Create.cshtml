@@ -1,0 +1,706 @@
+@model SistemaContable.ViewModels.EntradaDiarioViewModel
+
+@{
+    ViewData["Title"] = "Nueva entrada de diario";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Nueva entrada de diario</h1>
+    
+    <form asp-action="Create" id="formEntradaDiario">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i>
+                Datos básicos
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="Fecha" class="form-label"></label>
+                            <input asp-for="Fecha" class="form-control" type="date" />
+                            <span asp-validation-for="Fecha" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="TipoEntradaId" class="form-label"></label>
+                            <div class="input-group">
+                                <select asp-for="TipoEntradaId" asp-items="Model.TiposEntrada" class="form-select" id="tipoEntradaSelect">
+                                    <option value="">-- Seleccionar --</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalNuevoTipo">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="TipoEntradaId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="NumeracionId" class="form-label"></label>
+                            <div class="input-group">
+                                <select asp-for="NumeracionId" class="form-select" id="numeracionSelect">
+                                    <option value="">-- Seleccionar tipo primero --</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalNuevaNumeracion">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="NumeracionId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="Codigo" class="form-label"></label>
+                            <input asp-for="Codigo" class="form-control" readonly />
+                            <span asp-validation-for="Codigo" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label asp-for="Observaciones" class="form-label"></label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Observaciones" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-exchange-alt me-1"></i>
+                Movimientos
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="tablaMovimientos">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="25%">Cuenta contable</th>
+                                <th width="20%">Contacto</th>
+                                <th width="10%">Nº de documento</th>
+                                <th width="20%">Descripción</th>
+                                <th width="10%">Débito</th>
+                                <th width="10%">Crédito</th>
+                                <th width="5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Movimientos.Count; i++)
+                            {
+                                <tr data-row="@i">
+                                    <td class="align-middle">
+                                        <span class="numero-fila">@(i + 1)</span>
+                                        <input type="hidden" asp-for="Movimientos[i].Id" />
+                                    </td>
+                                    <td>
+                                        <select asp-for="Movimientos[i].CuentaContableId" class="form-control select-cuenta"></select>
+                                        <span asp-validation-for="Movimientos[i].CuentaContableId" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <select asp-for="Movimientos[i].ContactoId" class="form-control select-contacto"></select>
+                                        <input type="hidden" asp-for="Movimientos[i].TipoContacto" />
+                                        <span asp-validation-for="Movimientos[i].ContactoId" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Movimientos[i].NumeroDocumento" class="form-control" />
+                                        <span asp-validation-for="Movimientos[i].NumeroDocumento" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Movimientos[i].Descripcion" class="form-control" />
+                                        <span asp-validation-for="Movimientos[i].Descripcion" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Movimientos[i].Debito" class="form-control monto-debito" data-val="true" data-val-number="El campo Débito debe ser un número." />
+                                        <span asp-validation-for="Movimientos[i].Debito" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Movimientos[i].Credito" class="form-control monto-credito" data-val="true" data-val-number="El campo Crédito debe ser un número." />
+                                        <span asp-validation-for="Movimientos[i].Credito" class="text-danger"></span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-danger btn-remove-row">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end">
+                                    <strong>Total:</strong>
+                                </td>
+                                <td>
+                                    <span id="totalDebito">$0.00</span>
+                                </td>
+                                <td>
+                                    <span id="totalCredito">$0.00</span>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end">
+                                    <strong>Diferencia:</strong>
+                                </td>
+                                <td colspan="2" class="text-center">
+                                    <span id="diferencia" class="text-danger">$0.00</span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="button" id="btnAgregarLinea" class="btn text-white" style="background-color: #3944BC;">
+                        <i class="fas fa-plus me-1"></i> Agregar línea
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4 text-end">
+            <a asp-action="Index" class="btn btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn btn-guardar">Guardar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Nuevo Tipo de Entrada -->
+<div class="modal fade" id="modalNuevoTipo" tabindex="-1" aria-labelledby="modalNuevoTipoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNuevoTipoLabel">Nuevo tipo de entrada de diario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoTipo">
+                    <div class="mb-3">
+                        <label for="codigoTipo" class="form-label">Código</label>
+                        <input type="text" class="form-control" id="codigoTipo" name="Codigo" required maxlength="10" placeholder="Ejemplo: AP-1" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="nombreTipo" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombreTipo" name="Nombre" required maxlength="100" placeholder="Ejemplo: Nómina Administrativa" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarTipo">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Numeración -->
+<div class="modal fade" id="modalNuevaNumeracion" tabindex="-1" aria-labelledby="modalNuevaNumeracionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNuevaNumeracionLabel">Nueva numeración</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaNumeracion">
+                    <div class="mb-3">
+                        <label for="tipoEntradaIdNumeracion" class="form-label">Tipo de entrada de diario</label>
+                        <select class="form-select" id="tipoEntradaIdNumeracion" name="TipoEntradaDiarioId" required>
+                            <option value="">-- Seleccionar --</option>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nombreNumeracion" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombreNumeracion" name="Nombre" required maxlength="100" placeholder="Por ejemplo: Depreciaciones" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="prefijoNumeracion" class="form-label">Prefijo</label>
+                        <input type="text" class="form-control" id="prefijoNumeracion" name="Prefijo" required maxlength="10" placeholder="Por ejemplo: DP" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="numeroInicialNumeracion" class="form-label">Número Inicial</label>
+                        <input type="number" class="form-control" id="numeroInicialNumeracion" name="NumeroActual" required min="1" value="1" placeholder="Por ejemplo: 12" />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="esPreferidaNumeracion" name="EsPreferida" value="true">
+                        <label class="form-check-label" for="esPreferidaNumeracion">Numeración preferida</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarNumeracion">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para nuevas filas -->
+<template id="template-row">
+    <tr data-row="__INDEX__">
+        <td class="align-middle">
+            <span class="numero-fila">__NUMERO__</span>
+            <input type="hidden" name="Movimientos[__INDEX__].Id" value="0" />
+        </td>
+        <td>
+            <select name="Movimientos[__INDEX__].CuentaContableId" class="form-control select-cuenta" data-val="true" data-val-required="La cuenta contable es obligatoria."></select>
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].CuentaContableId" data-valmsg-replace="true"></span>
+        </td>
+        <td>
+            <select name="Movimientos[__INDEX__].ContactoId" class="form-control select-contacto"></select>
+            <input type="hidden" name="Movimientos[__INDEX__].TipoContacto" />
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].ContactoId" data-valmsg-replace="true"></span>
+        </td>
+        <td>
+            <input name="Movimientos[__INDEX__].NumeroDocumento" class="form-control" maxlength="30" />
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].NumeroDocumento" data-valmsg-replace="true"></span>
+        </td>
+        <td>
+            <input name="Movimientos[__INDEX__].Descripcion" class="form-control" maxlength="200" />
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].Descripcion" data-valmsg-replace="true"></span>
+        </td>
+        <td>
+            <input name="Movimientos[__INDEX__].Debito" class="form-control monto-debito" value="0.00" data-val="true" data-val-number="El campo Débito debe ser un número." data-val-required="El débito es obligatorio." />
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].Debito" data-valmsg-replace="true"></span>
+        </td>
+        <td>
+            <input name="Movimientos[__INDEX__].Credito" class="form-control monto-credito" value="0.00" data-val="true" data-val-number="El campo Crédito debe ser un número." data-val-required="El crédito es obligatorio." />
+            <span class="text-danger field-validation-valid" data-valmsg-for="Movimientos[__INDEX__].Credito" data-valmsg-replace="true"></span>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger btn-remove-row">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            // Inicializar Select2 para cuentas contables
+            initializeSelect2ForCuentas();
+            
+            // Inicializar Select2 para contactos
+            initializeSelect2ForContactos();
+            
+            // Evento para tipo de entrada
+            $("#tipoEntradaSelect").change(function () {
+                var tipoId = $(this).val();
+                if (tipoId) {
+                    cargarNumeraciones(tipoId);
+                } else {
+                    // Limpiar select de numeraciones
+                    $("#numeracionSelect").empty().append('<option value="">-- Seleccionar tipo primero --</option>');
+                }
+            });
+            
+            // Botón para agregar nueva fila
+            $("#btnAgregarLinea").click(function () {
+                agregarNuevaFila();
+            });
+            
+            // Evento para eliminar fila
+            $(document).on('click', '.btn-remove-row', function () {
+                if ($("#tablaMovimientos tbody tr").length > 1) {
+                    $(this).closest('tr').remove();
+                    renumerarFilas();
+                    calcularTotales();
+                } else {
+                    // No permitir eliminar la última fila
+                    alert("Debe mantener al menos una línea en la entrada.");
+                }
+            });
+            
+            // Evento para calcular totales cuando cambian los montos
+            $(document).on('input', '.monto-debito, .monto-credito', function () {
+                calcularTotales();
+            });
+            
+            // Guardar nuevo tipo de entrada
+            $("#btnGuardarTipo").click(function () {
+                var formData = $("#formNuevoTipo").serialize();
+                
+                $.ajax({
+                    url: '@Url.Action("Create", "TipoEntradaDiario")',
+                    type: 'POST',
+                    data: formData,
+                    success: function (result) {
+                        if (result.success) {
+                            // Agregar nueva opción al select
+                            $("#tipoEntradaSelect").append(new Option(result.nombre, result.id, true, true)).trigger('change');
+                            $("#tipoEntradaIdNumeracion").append(new Option(result.nombre, result.id));
+                            
+                            // Cerrar modal y limpiar formulario
+                            $("#modalNuevoTipo").modal('hide');
+                            $("#formNuevoTipo")[0].reset();
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Ocurrió un error al guardar el tipo de entrada.");
+                    }
+                });
+            });
+            
+            // Cargar tipos de entrada en el modal de numeraciones
+            $("#modalNuevaNumeracion").on('show.bs.modal', function () {
+                $("#tipoEntradaIdNumeracion").empty();
+                $("#tipoEntradaIdNumeracion").append('<option value="">-- Seleccionar --</option>');
+                
+                // Copiar opciones del select principal
+                $("#tipoEntradaSelect option").each(function () {
+                    if ($(this).val()) {
+                        $("#tipoEntradaIdNumeracion").append(new Option($(this).text(), $(this).val()));
+                    }
+                });
+            });
+            
+            // Guardar nueva numeración
+            $("#btnGuardarNumeracion").click(function () {
+                var formData = $("#formNuevaNumeracion").serialize();
+                
+                $.ajax({
+                    url: '@Url.Action("Create", "NumeracionEntradaDiario")',
+                    type: 'POST',
+                    data: formData,
+                    success: function (result) {
+                        if (result.success) {
+                            // Cargar numeraciones si el tipo seleccionado coincide
+                            var tipoIdModal = $("#tipoEntradaIdNumeracion").val();
+                            var tipoIdForm = $("#tipoEntradaSelect").val();
+                            
+                            if (tipoIdModal === tipoIdForm) {
+                                $("#numeracionSelect").append(new Option(result.nombre, result.id, true, true)).trigger('change');
+                            }
+                            
+                            // Cerrar modal y limpiar formulario
+                            $("#modalNuevaNumeracion").modal('hide');
+                            $("#formNuevaNumeracion")[0].reset();
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Ocurrió un error al guardar la numeración.");
+                    }
+                });
+            });
+            
+            // Validación del formulario antes de enviar
+            $("#formEntradaDiario").submit(function (e) {
+                if (!validarFormulario()) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Asegurarse de que haya al menos un movimiento
+                if ($("#tablaMovimientos tbody tr").length < 1) {
+                    alert("Debe agregar al menos un movimiento.");
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Verificar que débitos = créditos
+                var totalDebito = parseFloat($("#totalDebito").text().replace('$', '').replace(',', ''));
+                var totalCredito = parseFloat($("#totalCredito").text().replace('$', '').replace(',', ''));
+                
+                if (Math.abs(totalDebito - totalCredito) > 0.001) {
+                    alert("El total de débitos debe ser igual al total de créditos.");
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Inicialización
+            calcularTotales();
+        });
+        
+        // Función para inicializar Select2 para cuentas contables
+        function initializeSelect2ForCuentas() {
+            // Cargar datos de cuentas contables
+            var cuentasContablesData = @Html.Raw(ViewBag.CuentasContablesJson ?? "[]");
+            
+            $('.select-cuenta').each(function() {
+                if (!$(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        placeholder: "Seleccionar cuenta",
+                        allowClear: true,
+                        data: cuentasContablesData,
+                        width: '100%',
+                        matcher: function(params, data) {
+                            // Si no hay búsqueda, mostrar todo
+                            if ($.trim(params.term) === '') {
+                                return data;
+                            }
+                            
+                            // Convertir a minúsculas para búsqueda insensible a mayúsculas/minúsculas
+                            var term = params.term.toLowerCase();
+                            var text = data.text.toLowerCase();
+                            var codigo = data.codigo ? data.codigo.toLowerCase() : '';
+                            var nombre = data.nombre ? data.nombre.toLowerCase() : '';
+                            
+                            // Buscar en código y nombre
+                            if (text.indexOf(term) > -1 || codigo.indexOf(term) > -1 || nombre.indexOf(term) > -1) {
+                                return data;
+                            }
+                            
+                            return null;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Función para inicializar Select2 para contactos
+        function initializeSelect2ForContactos() {
+            // Cargar datos de contactos
+            var contactosData = @Html.Raw(ViewBag.ContactosJson ?? "[]");
+            
+            $('.select-contacto').each(function() {
+                if (!$(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        placeholder: "Seleccionar contacto",
+                        allowClear: true,
+                        data: contactosData,
+                        width: '100%',
+                        templateResult: formatContacto,
+                        templateSelection: formatContactoSelection,
+                        matcher: function(params, data) {
+                            // Si no hay búsqueda, mostrar todo
+                            if ($.trim(params.term) === '') {
+                                return data;
+                            }
+                            
+                            // Convertir a minúsculas para búsqueda insensible a mayúsculas/minúsculas
+                            var term = params.term.toLowerCase();
+                            var text = data.text.toLowerCase();
+                            var identificacion = data.identificacion ? data.identificacion.toLowerCase() : '';
+                            
+                            // Buscar en nombre e identificación
+                            if (text.indexOf(term) > -1 || identificacion.indexOf(term) > -1) {
+                                return data;
+                            }
+                            
+                            return null;
+                        }
+                    });
+                    
+                    // Evento al seleccionar contacto
+                    $(this).on('select2:select', function (e) {
+                        var data = e.params.data;
+                        var tipoContactoInput = $(this).closest('tr').find('input[name$=".TipoContacto"]');
+                        tipoContactoInput.val(data.tipo);
+                    });
+                    
+                    // Evento al limpiar selección
+                    $(this).on('select2:clear', function () {
+                        var tipoContactoInput = $(this).closest('tr').find('input[name$=".TipoContacto"]');
+                        tipoContactoInput.val('');
+                    });
+                }
+            });
+        }
+        
+        // Formateo de contactos en el dropdown
+        function formatContacto(contacto) {
+            if (!contacto.id) {
+                return contacto.text;
+            }
+            
+            var tipoLabel = '';
+            var tipoClass = '';
+            
+            if (contacto.tipo === 'C') {
+                tipoLabel = 'C';
+                tipoClass = 'bg-danger';
+            } else if (contacto.tipo === 'P') {
+                tipoLabel = 'P';
+                tipoClass = 'bg-primary';
+            }
+            
+            var $container = $(
+                '<div class="d-flex align-items-center">' +
+                    '<span class="' + tipoClass + ' text-white rounded-1 me-2 p-1 d-inline-block" style="width: 24px; text-align: center;">' + tipoLabel + '</span>' +
+                    '<span>' + contacto.text + '</span>' +
+                '</div>'
+            );
+            
+            return $container;
+        }
+        
+        // Formateo de contactos seleccionados
+        function formatContactoSelection(contacto) {
+            if (!contacto.id) {
+                return contacto.text;
+            }
+            
+            var tipoLabel = '';
+            var tipoClass = '';
+            
+            if (contacto.tipo === 'C') {
+                tipoLabel = 'C';
+                tipoClass = 'bg-danger';
+            } else if (contacto.tipo === 'P') {
+                tipoLabel = 'P';
+                tipoClass = 'bg-primary';
+            }
+            
+            var $container = $(
+                '<div class="d-flex align-items-center">' +
+                    '<span class="' + tipoClass + ' text-white rounded-1 me-2 p-1 d-inline-block" style="width: 20px; text-align: center; font-size: 0.8em;">' + tipoLabel + '</span>' +
+                    '<span>' + contacto.text + '</span>' +
+                '</div>'
+            );
+            
+            return $container;
+        }
+        
+        // Función para cargar numeraciones según el tipo seleccionado
+        function cargarNumeraciones(tipoId) {
+            $.ajax({
+                url: '@Url.Action("GetNumeraciones", "EntradaDiario")',
+                type: 'GET',
+                data: { tipoEntradaId: tipoId },
+                success: function (data) {
+                    var select = $("#numeracionSelect");
+                    select.empty();
+                    select.append('<option value="">-- Seleccionar --</option>');
+                    
+                    $.each(data, function (index, item) {
+                        select.append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                    });
+                },
+                error: function () {
+                    alert("Error al cargar las numeraciones.");
+                }
+            });
+        }
+        
+        // Función para agregar nueva fila de movimiento
+        function agregarNuevaFila() {
+            var index = $("#tablaMovimientos tbody tr").length;
+            var template = $("#template-row").html();
+            var newRow = template.replace(/__INDEX__/g, index).replace(/__NUMERO__/g, index + 1);
+            
+            $("#tablaMovimientos tbody").append(newRow);
+            
+            // Inicializar Select2 en la nueva fila
+            initializeSelect2ForCuentas();
+            initializeSelect2ForContactos();
+            
+            // Agregar validación a los nuevos campos
+            $('form').data('validator').settings.rules["Movimientos[" + index + "].CuentaContableId"] = { required: true };
+            $('form').data('validator').settings.rules["Movimientos[" + index + "].Debito"] = { required: true, number: true };
+            $('form').data('validator').settings.rules["Movimientos[" + index + "].Credito"] = { required: true, number: true };
+            
+            $('form').data('validator').settings.messages["Movimientos[" + index + "].CuentaContableId"] = { required: "La cuenta contable es obligatoria" };
+            $('form').data('validator').settings.messages["Movimientos[" + index + "].Debito"] = { required: "El débito es obligatorio", number: "Debe ser un número" };
+            $('form').data('validator').settings.messages["Movimientos[" + index + "].Credito"] = { required: "El crédito es obligatorio", number: "Debe ser un número" };
+            
+            // Actualizar el índice para próximas filas
+            calcularTotales();
+        }
+        
+        // Función para renumerar las filas
+        function renumerarFilas() {
+            $("#tablaMovimientos tbody tr").each(function (index) {
+                $(this).attr('data-row', index);
+                $(this).find('.numero-fila').text(index + 1);
+                
+                // Actualizar nombres de campos para mantener el array indexado correctamente
+                $(this).find('input, select').each(function () {
+                    var name = $(this).attr('name');
+                    if (name) {
+                        var newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                        $(this).attr('name', newName);
+                    }
+                    
+                    var id = $(this).attr('id');
+                    if (id) {
+                        var newId = id.replace(/\_\d+\_/, '_' + index + '_');
+                        $(this).attr('id', newId);
+                    }
+                });
+            });
+        }
+        
+        // Función para calcular los totales
+        function calcularTotales() {
+            var totalDebito = 0;
+            var totalCredito = 0;
+            
+            $('.monto-debito').each(function () {
+                var valor = parseFloat($(this).val()) || 0;
+                totalDebito += valor;
+            });
+            
+            $('.monto-credito').each(function () {
+                var valor = parseFloat($(this).val()) || 0;
+                totalCredito += valor;
+            });
+            
+            // Formatear y mostrar totales
+            $("#totalDebito").text('$' + totalDebito.toFixed(2));
+            $("#totalCredito").text('$' + totalCredito.toFixed(2));
+            
+            // Calcular diferencia
+            var diferencia = totalDebito - totalCredito;
+            $("#diferencia").text('$' + Math.abs(diferencia).toFixed(2));
+            
+            // Cambiar color según el balance
+            if (Math.abs(diferencia) < 0.001) {
+                $("#diferencia").removeClass('text-danger').addClass('text-success');
+            } else {
+                $("#diferencia").removeClass('text-success').addClass('text-danger');
+            }
+        }
+        
+        // Validación del formulario
+        function validarFormulario() {
+            // Validar que se haya seleccionado tipo y numeración
+            if (!$("#tipoEntradaSelect").val()) {
+                alert("Debe seleccionar un tipo de entrada.");
+                return false;
+            }
+            
+            if (!$("#numeracionSelect").val()) {
+                alert("Debe seleccionar una numeración.");
+                return false;
+            }
+            
+            // Validar que cada movimiento tenga cuenta contable
+            var isValid = true;
+            $("#tablaMovimientos tbody tr").each(function () {
+                var cuentaId = $(this).find('select[name$=".CuentaContableId"]').val();
+                if (!cuentaId) {
+                    alert("Todos los movimientos deben tener una cuenta contable seleccionada.");
+                    isValid = false;
+                    return false; // romper el bucle each
+                }
+            });
+            
+            return isValid;
+        }
+    </script>
+} 

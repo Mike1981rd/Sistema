@@ -49,6 +49,12 @@ namespace SistemaContable.Data
         public DbSet<TipoNcf> TiposNcf { get; set; }
         public DbSet<ListaPrecio> ListasPrecios { get; set; }
         public DbSet<Vendedor> Vendedores { get; set; }
+        
+        // Entradas de Diario module
+        public DbSet<EntradaDiario> EntradasDiario { get; set; }
+        public DbSet<MovimientoContable> MovimientosContables { get; set; }
+        public DbSet<TipoEntradaDiario> TiposEntradaDiario { get; set; }
+        public DbSet<NumeracionEntradaDiario> NumeracionesEntradaDiario { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -431,13 +437,123 @@ namespace SistemaContable.Data
                     new Pais { Id = 5, Nombre = "Colombia", Codigo = "CO", Bandera = "/images/flags/CO.png" }
                 );
             });
+
+            // Configuraciones para el módulo de Entradas de Diario
+            // Relación uno a muchos entre TipoEntradaDiario y EntradaDiario
+            builder.Entity<TipoEntradaDiario>(entity => 
+            {
+                entity.ToTable("TiposEntradaDiario");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Codigo).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                
+                // Relación uno a muchos con EntradaDiario
+                entity.HasMany(t => t.EntradasDiario)
+                      .WithOne(e => e.TipoEntrada)
+                      .HasForeignKey(e => e.TipoEntradaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación uno a muchos con NumeracionEntradaDiario
+                entity.HasMany(t => t.Numeraciones)
+                      .WithOne(n => n.TipoEntradaDiario)
+                      .HasForeignKey(n => n.TipoEntradaDiarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Datos semilla para TipoEntradaDiario
+                entity.HasData(
+                    new TipoEntradaDiario { Id = 1, Codigo = "AC", Nombre = "Ajuste contable" },
+                    new TipoEntradaDiario { Id = 2, Codigo = "CA", Nombre = "Cierre de periodos contables" },
+                    new TipoEntradaDiario { Id = 3, Codigo = "CPC", Nombre = "Cuentas por cobrar" },
+                    new TipoEntradaDiario { Id = 4, Codigo = "CPP", Nombre = "Cuentas por pagar" },
+                    new TipoEntradaDiario { Id = 5, Codigo = "D", Nombre = "Depreciaciones" },
+                    new TipoEntradaDiario { Id = 6, Codigo = "IMP", Nombre = "Impuestos" }
+                );
+            });
+
+            // Relación uno a muchos entre NumeracionEntradaDiario y EntradaDiario
+            builder.Entity<NumeracionEntradaDiario>(entity => 
+            {
+                entity.ToTable("NumeracionesEntradaDiario");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Prefijo).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.NumeroActual).IsRequired();
+                
+                // Relación uno a muchos con EntradaDiario
+                entity.HasMany(n => n.EntradasDiario)
+                      .WithOne(e => e.Numeracion)
+                      .HasForeignKey(e => e.NumeracionId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Datos semilla para NumeracionEntradaDiario
+                entity.HasData(
+                    new NumeracionEntradaDiario { Id = 1, TipoEntradaDiarioId = 1, Nombre = "Ajuste contable", Prefijo = "AC", NumeroActual = 1, EsPreferida = true },
+                    new NumeracionEntradaDiario { Id = 2, TipoEntradaDiarioId = 2, Nombre = "Cierre contable", Prefijo = "CA", NumeroActual = 1, EsPreferida = true },
+                    new NumeracionEntradaDiario { Id = 3, TipoEntradaDiarioId = 3, Nombre = "Cuentas por cobrar", Prefijo = "CPC", NumeroActual = 1, EsPreferida = true },
+                    new NumeracionEntradaDiario { Id = 4, TipoEntradaDiarioId = 4, Nombre = "Cuentas por pagar", Prefijo = "CPP", NumeroActual = 1, EsPreferida = true },
+                    new NumeracionEntradaDiario { Id = 5, TipoEntradaDiarioId = 5, Nombre = "Depreciaciones", Prefijo = "D", NumeroActual = 1, EsPreferida = true },
+                    new NumeracionEntradaDiario { Id = 6, TipoEntradaDiarioId = 6, Nombre = "Impuestos", Prefijo = "IMP", NumeroActual = 1, EsPreferida = true }
+                );
+            });
+
+            // Configuración para EntradaDiario
+            builder.Entity<EntradaDiario>(entity => 
+            {
+                entity.ToTable("EntradasDiario");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Fecha).IsRequired();
+                entity.Property(e => e.Codigo).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Observaciones).HasMaxLength(500);
+                entity.Property(e => e.Estado).IsRequired();
+                entity.Property(e => e.FechaCreacion).IsRequired();
+                
+                // La relación con TipoEntrada ya está configurada en TipoEntradaDiario
+                // La relación con Numeracion ya está configurada en NumeracionEntradaDiario
+                
+                // Relación uno a muchos con MovimientoContable
+                entity.HasMany(e => e.Movimientos)
+                      .WithOne(m => m.EntradaDiario)
+                      .HasForeignKey(m => m.EntradaDiarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuración para MovimientoContable
+            builder.Entity<MovimientoContable>(entity => 
+            {
+                entity.ToTable("MovimientosContables");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Debito).HasPrecision(18, 2).IsRequired();
+                entity.Property(e => e.Credito).HasPrecision(18, 2).IsRequired();
+                entity.Property(e => e.TipoContacto).HasMaxLength(1);
+                entity.Property(e => e.NumeroDocumento).HasMaxLength(30);
+                entity.Property(e => e.Descripcion).HasMaxLength(200);
+                
+                // La relación con EntradaDiario ya está configurada en EntradaDiario
+                
+                // Relación con CuentaContable
+                entity.HasOne(m => m.CuentaContable)
+                      .WithMany()
+                      .HasForeignKey(m => m.CuentaContableId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación con Contacto (Cliente/Proveedor)
+                entity.HasOne(m => m.Contacto)
+                      .WithMany()
+                      .HasForeignKey(m => m.ContactoId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
         }
 
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries()
                 .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
-                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal) && 
+                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal ||
+                            e.Entity is EntradaDiario) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -520,6 +636,18 @@ namespace SistemaContable.Data
                     }
                     comprobanteFiscal.UltimaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is EntradaDiario entradaDiario)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        entradaDiario.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    entradaDiario.FechaModificacion = DateTime.UtcNow;
+                }
             }
 
             // Convertir las fechas a UTC
@@ -533,7 +661,8 @@ namespace SistemaContable.Data
             ConvertDatesToUtc();
             
             var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || e.Entity is PlazoPago) && 
+                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
+                            e.Entity is PlazoPago || e.Entity is EntradaDiario) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -585,6 +714,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     plazoPago.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is EntradaDiario entradaDiario)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        entradaDiario.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    entradaDiario.FechaModificacion = DateTime.UtcNow;
                 }
             }
             

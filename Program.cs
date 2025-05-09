@@ -2,6 +2,9 @@ using SistemaContable.Data;
 using Microsoft.EntityFrameworkCore;
 using SistemaContable.Services;
 using Microsoft.Extensions.Logging;
+using SistemaContable.Repositories;
+using SistemaContable.Repositories.Interfaces;
+using SistemaContable.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +28,16 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
 builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
+
+// Registro de repositorios para Cuenta Contable y Contacto
+builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+builder.Services.AddScoped<IContactoRepository, ContactoRepository>();
+
+// Registro de repositorios y servicios para el módulo de Entradas de Diario
+builder.Services.AddScoped<IEntradaDiarioRepository, EntradaDiarioRepository>();
+builder.Services.AddScoped<ITipoEntradaDiarioRepository, TipoEntradaDiarioRepository>();
+builder.Services.AddScoped<INumeracionEntradaDiarioRepository, NumeracionEntradaDiarioRepository>();
+builder.Services.AddScoped<IEntradaDiarioService, EntradaDiarioService>();
 
 // Configura logging para EntityFramework en entorno de desarrollo
 if (builder.Environment.IsDevelopment())
@@ -105,6 +118,22 @@ app.MapControllerRoute(
     name: "comprasProveedores",
     pattern: "compras/proveedores/{action=Index}/{id?}",
     defaults: new { controller = "Proveedores" });
+
+// Rutas para el módulo de Entradas de Diario
+app.MapControllerRoute(
+    name: "entradaDiario",
+    pattern: "contabilidad/entradas-diario/{action=Index}/{id?}",
+    defaults: new { controller = "EntradaDiario" });
+
+app.MapControllerRoute(
+    name: "tipoEntradaDiario",
+    pattern: "contabilidad/tipos-entrada-diario/{action=Index}/{id?}",
+    defaults: new { controller = "TipoEntradaDiario" });
+
+app.MapControllerRoute(
+    name: "numeracionEntradaDiario",
+    pattern: "contabilidad/numeraciones-entrada-diario/{action=Index}/{id?}",
+    defaults: new { controller = "NumeracionEntradaDiario" });
 
 app.MapControllerRoute(
     name: "default",

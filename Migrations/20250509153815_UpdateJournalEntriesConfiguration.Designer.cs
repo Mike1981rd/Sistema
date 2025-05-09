@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SistemaContable.Data;
@@ -11,9 +12,11 @@ using SistemaContable.Data;
 namespace SistemaContable.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250509153815_UpdateJournalEntriesConfiguration")]
+    partial class UpdateJournalEntriesConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1005,62 +1008,6 @@ namespace SistemaContable.Migrations
                     b.HasIndex("TipoEntradaDiarioId");
 
                     b.ToTable("NumeracionesEntradaDiario", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            EsPreferida = true,
-                            Nombre = "Ajuste contable",
-                            NumeroActual = 1,
-                            Prefijo = "AC",
-                            TipoEntradaDiarioId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            EsPreferida = true,
-                            Nombre = "Cierre contable",
-                            NumeroActual = 1,
-                            Prefijo = "CA",
-                            TipoEntradaDiarioId = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            EsPreferida = true,
-                            Nombre = "Cuentas por cobrar",
-                            NumeroActual = 1,
-                            Prefijo = "CPC",
-                            TipoEntradaDiarioId = 3
-                        },
-                        new
-                        {
-                            Id = 4,
-                            EsPreferida = true,
-                            Nombre = "Cuentas por pagar",
-                            NumeroActual = 1,
-                            Prefijo = "CPP",
-                            TipoEntradaDiarioId = 4
-                        },
-                        new
-                        {
-                            Id = 5,
-                            EsPreferida = true,
-                            Nombre = "Depreciaciones",
-                            NumeroActual = 1,
-                            Prefijo = "D",
-                            TipoEntradaDiarioId = 5
-                        },
-                        new
-                        {
-                            Id = 6,
-                            EsPreferida = true,
-                            Nombre = "Impuestos",
-                            NumeroActual = 1,
-                            Prefijo = "IMP",
-                            TipoEntradaDiarioId = 6
-                        });
                 });
 
             modelBuilder.Entity("SistemaContable.Models.Pais", b =>
@@ -1169,7 +1116,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5562),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9349),
                             Nombre = "De contado"
                         },
                         new
@@ -1179,7 +1126,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5565),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9353),
                             Nombre = "8 días"
                         },
                         new
@@ -1189,7 +1136,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5567),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9355),
                             Nombre = "15 días"
                         },
                         new
@@ -1199,7 +1146,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5568),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9358),
                             Nombre = "30 días"
                         },
                         new
@@ -1209,7 +1156,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5570),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9360),
                             Nombre = "60 días"
                         },
                         new
@@ -1218,7 +1165,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = true,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(5572),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 796, DateTimeKind.Utc).AddTicks(9363),
                             Nombre = "Vencimiento manual"
                         });
                 });
@@ -1315,8 +1262,8 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Impuesto Sobre la Renta al 10%",
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(7144),
-                            FechaModificacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(7145),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 797, DateTimeKind.Utc).AddTicks(2263),
+                            FechaModificacion = new DateTime(2025, 5, 9, 15, 38, 14, 797, DateTimeKind.Utc).AddTicks(2266),
                             Nombre = "ISR 10%",
                             Porcentaje = 10.00m,
                             Tipo = "ISR"
@@ -1326,8 +1273,8 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Retención del IVA al 15%",
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(7148),
-                            FechaModificacion = new DateTime(2025, 5, 9, 16, 30, 27, 221, DateTimeKind.Utc).AddTicks(7148),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 797, DateTimeKind.Utc).AddTicks(2272),
+                            FechaModificacion = new DateTime(2025, 5, 9, 15, 38, 14, 797, DateTimeKind.Utc).AddTicks(2273),
                             Nombre = "IVA Retenido 15%",
                             Porcentaje = 15.00m,
                             Tipo = "IVA"
@@ -1389,44 +1336,6 @@ namespace SistemaContable.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TiposEntradaDiario", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Codigo = "AC",
-                            Nombre = "Ajuste contable"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Codigo = "CA",
-                            Nombre = "Cierre de periodos contables"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Codigo = "CPC",
-                            Nombre = "Cuentas por cobrar"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Codigo = "CPP",
-                            Nombre = "Cuentas por pagar"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Codigo = "D",
-                            Nombre = "Depreciaciones"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Codigo = "IMP",
-                            Nombre = "Impuestos"
-                        });
                 });
 
             modelBuilder.Entity("SistemaContable.Models.TipoIdentificacion", b =>
@@ -1648,7 +1557,7 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Email = "juan@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 224, DateTimeKind.Utc).AddTicks(2336),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 803, DateTimeKind.Utc).AddTicks(7566),
                             Nombre = "Juan Pérez",
                             PorcentajeComision = 5m,
                             Telefono = "809-555-1234"
@@ -1658,7 +1567,7 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Email = "maria@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 9, 16, 30, 27, 224, DateTimeKind.Utc).AddTicks(2342),
+                            FechaCreacion = new DateTime(2025, 5, 9, 15, 38, 14, 803, DateTimeKind.Utc).AddTicks(7575),
                             Nombre = "María González",
                             PorcentajeComision = 7m,
                             Telefono = "809-555-5678"
