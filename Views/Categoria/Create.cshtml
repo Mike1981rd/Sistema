@@ -1,0 +1,209 @@
+@model SistemaContable.ViewModels.CategoriaViewModel
+@{
+    ViewData["Title"] = "Crear Categoría";
+}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2" style="font-weight:normal">Nueva Categoría</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item">Configuración</li>
+                    <li class="breadcrumb-item"><a href="/Categoria">Categorías</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Nueva Categoría</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div>
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    </div>
+    <form asp-action="Create" method="post" id="formCategoria">
+        <input type="hidden" asp-for="EmpresaId" />
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Nombre" class="form-label">Nombre de la categoría *</label>
+                        <input asp-for="Nombre" class="form-control" required />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="FamiliaId" class="form-label">Familia *</label>
+                        <select asp-for="FamiliaId" class="form-select select-familia"
+                                asp-items="@Model.FamiliasDisponibles" required>
+                            <option value="">-- Elegir familia --</option>
+                        </select>
+                        <span asp-validation-for="FamiliaId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Estado" class="form-label">Estado</label>
+                        <select asp-for="Estado" class="form-select">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Nota" class="form-label">Nota</label>
+                    <textarea asp-for="Nota" class="form-control" rows="2" placeholder="Introducir texto aquí"></textarea>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Impuestos" class="form-label">Impuestos</label>
+                        <select asp-for="Impuestos" class="form-select select-impuestos" multiple
+                                asp-items="@Model.ImpuestosDisponibles">
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="PropinaImpuestoId" class="form-label">Propina</label>
+                        <select asp-for="PropinaImpuestoId" class="form-select select-propina"
+                                asp-items="@Model.PropinasDisponibles">
+                            <option value="">-- Seleccionar propina --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="CanalesImpresora" class="form-label">Canales de impresora</label>
+                        <input asp-for="CanalesImpresora" class="form-control" />
+                    </div>
+                </div>
+                
+                <!-- Cuentas Contables -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Cuentas Contables</h5>
+                        <small class="text-muted">Selecciona las cuentas contables para cada categoría (se heredan de la familia pero pueden modificarse)</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaVentasId" class="form-label"></label>
+                                <select asp-for="CuentaVentasId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasVentasDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaComprasInventariosId" class="form-label"></label>
+                                <select asp-for="CuentaComprasInventariosId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasComprasInventariosDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaCostoVentasGastosId" class="form-label"></label>
+                                <select asp-for="CuentaCostoVentasGastosId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasCostoVentasGastosDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaDescuentosId" class="form-label"></label>
+                                <select asp-for="CuentaDescuentosId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasDescuentosDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaDevolucionesId" class="form-label"></label>
+                                <select asp-for="CuentaDevolucionesId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasDevolucionesDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaAjustesId" class="form-label"></label>
+                                <select asp-for="CuentaAjustesId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasAjustesDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CuentaCostoMateriaPrimaId" class="form-label"></label>
+                                <select asp-for="CuentaCostoMateriaPrimaId" class="form-select select-cuenta"
+                                        asp-items="@Model.CuentasCostoMateriaPrimaDisponibles">
+                                    <option value="">-- Seleccionar cuenta --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4 text-end">
+            <a href="/Categoria" class="btn" style="background:#787276;color:#FFFFFF;">Cancelar</a>
+            <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Guardar</button>
+        </div>
+    </form>
+    <div id="errorLog" class="alert alert-danger mt-3" style="display:none;"></div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for Familia, Impuestos y Cuentas
+            $('.select-familia, .select-cuenta').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar...',
+                allowClear: true
+            });
+            
+            $('.select-impuestos').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccionar impuestos',
+                allowClear: true
+            });
+
+            $('.select-propina').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccionar propina',
+                allowClear: true
+            });
+
+            // Cargar cuentas contables de la familia seleccionada
+            $('#FamiliaId').change(function() {
+                var familiaId = $(this).val();
+                if (familiaId) {
+                    $.ajax({
+                        url: '/Categoria/ObtenerCuentasContablesFamilia',
+                        type: 'GET',
+                        data: { familiaId: familiaId },
+                        success: function(data) {
+                            // Asignar valores a los selectores de cuentas contables
+                            if (data.cuentaVentasId) $('#CuentaVentasId').val(data.cuentaVentasId).trigger('change');
+                            if (data.cuentaComprasInventariosId) $('#CuentaComprasInventariosId').val(data.cuentaComprasInventariosId).trigger('change');
+                            if (data.cuentaCostoVentasGastosId) $('#CuentaCostoVentasGastosId').val(data.cuentaCostoVentasGastosId).trigger('change');
+                            if (data.cuentaDescuentosId) $('#CuentaDescuentosId').val(data.cuentaDescuentosId).trigger('change');
+                            if (data.cuentaDevolucionesId) $('#CuentaDevolucionesId').val(data.cuentaDevolucionesId).trigger('change');
+                            if (data.cuentaAjustesId) $('#CuentaAjustesId').val(data.cuentaAjustesId).trigger('change');
+                            if (data.cuentaCostoMateriaPrimaId) $('#CuentaCostoMateriaPrimaId').val(data.cuentaCostoMateriaPrimaId).trigger('change');
+                        }
+                    });
+                }
+            });
+
+            // Form submission monitoring
+            $('#formCategoria').on('submit', function(e) {
+                // Disable submit button to prevent double submission
+                $('button[type="submit"]').prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+            });
+            
+            // Display any validation errors or success messages
+            if ($('.validation-summary-errors').length > 0 || $('.field-validation-error').length > 0) {
+                $('#errorLog').text('Se detectaron errores de validación. Por favor, revise el formulario.').show();
+            }
+        });
+    </script>
+} 

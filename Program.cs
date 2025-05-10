@@ -142,6 +142,11 @@ app.MapControllerRoute(
     defaults: new { controller = "NumeracionEntradaDiario" });
 
 app.MapControllerRoute(
+    name: "categoria",
+    pattern: "Categoria/{action=Index}/{id?}",
+    defaults: new { controller = "Categoria" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

@@ -1,0 +1,208 @@
+@model IEnumerable<SistemaContable.Models.Categoria>
+@{
+    ViewData["Title"] = "Categorías";
+    var tab = ViewBag.Tab ?? "Activos";
+}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2" style="font-weight:normal">Lista de categoría</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item">Configuración</li>
+                    <li class="breadcrumb-item active" aria-current="page">Categorías</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn" style="background:#3944BC;color:#FFFFFF;">
+                <i class="fas fa-plus me-1"></i> Add Category
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex">
+                <ul class="nav border-0">
+                    <li class="nav-item">
+                        <a class="nav-link @(tab == "Activos" ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Activos">
+                            Activos
+                            @if (tab == "Activos")
+                            {
+                                <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                            }
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(tab == "Inactivos" ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Inactivos">
+                            Inactivos
+                            @if (tab == "Inactivos")
+                            {
+                                <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                            }
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="tablaCategorias">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th>NOMBRE</th>
+                                <th>FAMILIA</th>
+                                <th>PROPINA</th>
+                                <th>ESTADO</th>
+                                <th style="text-align:right;">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Nombre</td>
+                                    <td>@(item.Familia?.Nombre ?? "No asignado")</td>
+                                    <td>@(item.PropinaImpuesto?.Nombre ?? "No definido")</td>
+                                    <td>
+                                        <span class="badge @(item.Estado ? "bg-success" : "bg-danger")">
+                                            @(item.Estado ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm" style="background:#007848;color:#fff;">Editar</a>
+                                        <form asp-action="ToggleEstado" method="post" style="display:inline">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm ms-1" style="background:@(item.Estado ? "#787276" : "#007848");color:#fff;">
+                                                @(item.Estado ? "Desactivar" : "Activar")
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    No hay categorías @(tab == "Activos" ? "activas" : "inactivas") para mostrar.
+                    @if (ViewBag.SugerirCambiarPestana == true)
+                    {
+                        <span>Hay categorías <a asp-action="Index" asp-route-tab="@ViewBag.HayCategoriaEnOtraPestana">@ViewBag.HayCategoriaEnOtraPestana.ToLower()</a>.</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para cambio de estado -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="mensajeConfirmacion"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
+                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
+                    <input type="hidden" id="categoriaId" name="id" />
+                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#tablaCategorias').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+                    lengthMenu: 'Mostrar _MENU_ registros'
+                },
+                pageLength: 50,
+                order: [[1, 'asc']],
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                initComplete: function() {
+                    fixDatatablesUI();
+                },
+                drawCallback: function() {
+                    fixDatatablesUI();
+                }
+            });
+
+            function fixDatatablesUI() {
+                $('.dataTables_length label').each(function() {
+                    const html = $(this).html();
+                    if (html.indexOf('_MENU_') >= 0 || html.indexOf('select') >= 0) {
+                        const select = $(this).find('select').detach();
+                        select.addClass('form-select form-select-sm mx-2');
+                        $(this).html('Mostrar ');
+                        $(this).after(select);
+                        select.after(' registros');
+                    }
+                });
+            }
+        });
+
+        function confirmarCambioEstado(id, nombre, estado) {
+            document.getElementById('categoriaId').value = id;
+            var accion = estado ? 'desactivar' : 'activar';
+            document.getElementById('mensajeConfirmacion').textContent = 
+                `¿Está seguro que desea ${accion} la categoría "${nombre}"?`;
+            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            modal.show();
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .nav-link.active {
+            border-bottom: 2px solid #007bff !important;
+            font-weight: 500;
+        }
+        .nav-link {
+            padding-bottom: 10px;
+            margin-bottom: -1px;
+        }
+        /* Aumentar el ancho del selector para evitar que la flecha tape el número */
+        .dataTables_length select {
+            width: 70px !important;
+            padding-right: 25px !important;
+            text-align: center !important;
+        }
+        
+        /* Ajustar el texto para que no se superponga con la flecha */
+        .dataTables_length select option {
+            text-align: center;
+        }
+        
+        /* Agregar espacio a la izquierda del selector */
+        .dataTables_length {
+            margin-right: 10px;
+        }
+    </style>
+} 

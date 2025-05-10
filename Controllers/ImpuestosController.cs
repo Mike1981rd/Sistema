@@ -7,6 +7,7 @@ using SistemaContable.Services;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
+using System;
 
 namespace SistemaContable.Controllers
 {
@@ -139,6 +140,7 @@ namespace SistemaContable.Controllers
             {
                 try
                 {
+                    impuesto.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
                     _context.Update(impuesto);
                     await _context.SaveChangesAsync();
                 }

@@ -58,6 +58,7 @@ namespace SistemaContable.Data
 
         // Familias
         public DbSet<Familia> Familias { get; set; }
+        public DbSet<Categoria> Categorias { get; set; }
         #pragma warning disable CS0618 // Suprimir advertencia sobre tipo obsoleto
         public DbSet<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }
         #pragma warning restore CS0618
@@ -630,343 +631,179 @@ namespace SistemaContable.Data
                       .HasForeignKey(m => m.ContactoId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
-        }
 
-        public override int SaveChanges()
-        {
-            var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
-                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal ||
-                            e.Entity is EntradaDiario || e.Entity is Familia) && 
-                           (e.State == EntityState.Added || e.State == EntityState.Modified));
-
-            foreach (var entityEntry in entries)
+            // Configuración para Categoria
+            builder.Entity<Categoria>(entity =>
             {
-                if (entityEntry.Entity is CuentaContable cuentaContable)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        cuentaContable.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    cuentaContable.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Contacto contacto)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        contacto.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    contacto.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Impuesto impuesto)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        impuesto.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    impuesto.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is PlazoPago plazoPago)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        plazoPago.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    plazoPago.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Retencion retencion)
-                {
-                    // Manejo de fechas para Retenciones
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        // Solo establecer fecha de creación para entidades nuevas
-                        if (!entityEntry.Property("FechaCreacion").IsModified)
-                        {
-                            retencion.FechaCreacion = DateTime.UtcNow;
-                        }
-                    }
-                    else
-                    {
-                        // No modificar la fecha de creación para entidades existentes
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    retencion.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is ComprobanteFiscal comprobanteFiscal)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        comprobanteFiscal.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    comprobanteFiscal.UltimaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is EntradaDiario entradaDiario)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        entradaDiario.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    entradaDiario.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Familia familia)
-                {
-                    // Manejo especial para Familia
-                    Console.WriteLine($"SaveChanges: Procesando entidad Familia {familia.Nombre}, Estado={entityEntry.State}");
-                    
-                    try {
-                        if (entityEntry.State == EntityState.Added)
-                        {
-                            Console.WriteLine($"Estableciendo FechaCreacion para nueva familia: {DateTime.UtcNow}");
-                            familia.FechaCreacion = DateTime.UtcNow;
-                            // Asegurarse de que FechaModificacion sea nula para una nueva entidad
-                            familia.FechaModificacion = null; 
-                        }
-                        else
-                        {
-                            // No modificar la fecha de creación para entidades existentes
-                            Console.WriteLine("No modificando FechaCreacion para familia existente");
-                            entityEntry.Property("FechaCreacion").IsModified = false;
-                            
-                            // Solo establecer FechaModificacion para actualizaciones
-                            Console.WriteLine($"Estableciendo FechaModificacion: {DateTime.UtcNow}");
-                            familia.FechaModificacion = DateTime.UtcNow;
-                        }
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine($"ERROR en SaveChanges procesando Familia: {ex.Message}");
-                        if (ex.InnerException != null) {
-                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                        }
-                    }
-                }
-            }
-
-            // Convertir las fechas a UTC
-            ConvertDatesToUtc();
-
-            try {
-                Console.WriteLine("Iniciando SaveChanges de base en ApplicationDbContext...");
-                var result = base.SaveChanges();
-                Console.WriteLine($"SaveChanges de base completado con {result} cambios");
-                return result;
-            }
-            catch (Exception ex) {
-                Console.WriteLine($"ERROR EN base.SaveChanges: {ex.Message}");
-                if (ex.InnerException != null) {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                throw; // Relanzar para mantener el comportamiento original
-            }
-        }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            ConvertDatesToUtc();
-            
-            var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
-                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal ||
-                            e.Entity is EntradaDiario || e.Entity is Familia) && 
-                           (e.State == EntityState.Added || e.State == EntityState.Modified));
-
-            foreach (var entityEntry in entries)
-            {
-                if (entityEntry.Entity is CuentaContable cuentaContable)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        cuentaContable.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    cuentaContable.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Contacto contacto)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        contacto.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    contacto.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Impuesto impuesto)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        impuesto.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    impuesto.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is PlazoPago plazoPago)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        plazoPago.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    plazoPago.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Retencion retencion)
-                {
-                    // Manejo de fechas para Retenciones
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        // Solo establecer fecha de creación para entidades nuevas
-                        if (!entityEntry.Property("FechaCreacion").IsModified)
-                        {
-                            retencion.FechaCreacion = DateTime.UtcNow;
-                        }
-                    }
-                    else
-                    {
-                        // No modificar la fecha de creación para entidades existentes
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    retencion.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is ComprobanteFiscal comprobanteFiscal)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        comprobanteFiscal.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    comprobanteFiscal.UltimaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is EntradaDiario entradaDiario)
-                {
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        entradaDiario.FechaCreacion = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        entityEntry.Property("FechaCreacion").IsModified = false;
-                    }
-                    entradaDiario.FechaModificacion = DateTime.UtcNow;
-                }
-                else if (entityEntry.Entity is Familia familia)
-                {
-                    // Manejo especial para Familia
-                    Console.WriteLine($"ApplicationDbContext: Procesando entidad Familia {familia.Nombre}, Estado={entityEntry.State}");
-                    
-                    try {
-                        if (entityEntry.State == EntityState.Added)
-                        {
-                            Console.WriteLine($"Estableciendo FechaCreacion para nueva familia: {DateTime.UtcNow}");
-                            familia.FechaCreacion = DateTime.UtcNow;
-                            // Asegurarse de que FechaModificacion sea nula para una nueva entidad
-                            familia.FechaModificacion = null; 
-                        }
-                        else
-                        {
-                            // No modificar la fecha de creación para entidades existentes
-                            Console.WriteLine("No modificando FechaCreacion para familia existente");
-                            entityEntry.Property("FechaCreacion").IsModified = false;
-                            
-                            // Solo establecer FechaModificacion para actualizaciones
-                            Console.WriteLine($"Estableciendo FechaModificacion: {DateTime.UtcNow}");
-                            familia.FechaModificacion = DateTime.UtcNow;
-                        }
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine($"ERROR en SaveChangesAsync procesando Familia: {ex.Message}");
-                        if (ex.InnerException != null) {
-                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                        }
-                    }
-                }
-            }
-
-            try {
-                Console.WriteLine("Iniciando SaveChangesAsync de base en ApplicationDbContext...");
-                var result = await base.SaveChangesAsync(cancellationToken);
-                Console.WriteLine($"SaveChangesAsync de base completado con {result} cambios");
-                return result;
-            }
-            catch (Exception ex) {
-                Console.WriteLine($"ERROR EN base.SaveChangesAsync: {ex.Message}");
-                if (ex.InnerException != null) {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                throw; // Relanzar para mantener el comportamiento original
-            }
+                entity.ToTable("Categorias");
+                entity.HasKey(e => e.Id);
+                
+                // Relación con Empresa
+                entity.HasOne(f => f.Empresa)
+                      .WithMany()
+                      .HasForeignKey(f => f.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación con Familia
+                entity.HasOne(f => f.Familia)
+                      .WithMany()
+                      .HasForeignKey(f => f.FamiliaId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
 
         private void ConvertDatesToUtc()
         {
-            var entities = ChangeTracker.Entries()
+            var entries = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
-            foreach (var entity in entities)
+            foreach (var entityEntry in entries)
             {
-                var dateProperties = entity.Entity.GetType().GetProperties()
+                var dateProperties = entityEntry.Entity.GetType().GetProperties()
                     .Where(p => p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?));
 
                 foreach (var property in dateProperties)
                 {
                     if (property.PropertyType == typeof(DateTime))
                     {
-                        var rawValue = property.GetValue(entity.Entity);
+                        var rawValue = property.GetValue(entityEntry.Entity);
                         if (rawValue != null)
                         {
                             var value = (DateTime)rawValue;
                             if (value.Kind != DateTimeKind.Utc)
                             {
-                                property.SetValue(entity.Entity, DateTime.SpecifyKind(value, DateTimeKind.Utc));
+                                property.SetValue(entityEntry.Entity, DateTime.SpecifyKind(value, DateTimeKind.Utc));
                             }
                         }
                     }
                     else if (property.PropertyType == typeof(DateTime?))
                     {
-                        var value = (DateTime?)property.GetValue(entity.Entity);
+                        var value = (DateTime?)property.GetValue(entityEntry.Entity);
                         if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
                         {
-                            property.SetValue(entity.Entity, DateTime.SpecifyKind(value.Value, DateTimeKind.Utc));
+                            property.SetValue(entityEntry.Entity, DateTime.SpecifyKind(value.Value, DateTimeKind.Utc));
                         }
                     }
                 }
             }
+        }
+
+        public override int SaveChanges()
+        {
+            ConvertDatesToUtc();
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entityEntry in entries)
+            {
+                var entity = (BaseEntity)entityEntry.Entity;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    entity.FechaCreacion = DateTime.UtcNow;
+                }
+                else
+                {
+                    entityEntry.Property("FechaCreacion").IsModified = false;
+                }
+
+                entity.FechaModificacion = DateTime.UtcNow;
+            }
+
+            // Manejo específico para entidades que no heredan de BaseEntity
+            var otherEntries = ChangeTracker
+                .Entries()
+                .Where(e => !(e.Entity is BaseEntity) && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entityEntry in otherEntries)
+            {
+                if (entityEntry.Entity is Familia familia)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        familia.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    familia.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Categoria categoria)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        categoria.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    categoria.FechaModificacion = DateTime.UtcNow;
+                }
+            }
+
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ConvertDatesToUtc();
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entityEntry in entries)
+            {
+                var entity = (BaseEntity)entityEntry.Entity;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    entity.FechaCreacion = DateTime.UtcNow;
+                }
+                else
+                {
+                    entityEntry.Property("FechaCreacion").IsModified = false;
+                }
+
+                entity.FechaModificacion = DateTime.UtcNow;
+            }
+
+            // Manejo específico para entidades que no heredan de BaseEntity
+            var otherEntries = ChangeTracker
+                .Entries()
+                .Where(e => !(e.Entity is BaseEntity) && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entityEntry in otherEntries)
+            {
+                if (entityEntry.Entity is Familia familia)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        familia.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    familia.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Categoria categoria)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        categoria.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    categoria.FechaModificacion = DateTime.UtcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 } 
