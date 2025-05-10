@@ -63,6 +63,9 @@ namespace SistemaContable.Data
         public DbSet<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }
         #pragma warning restore CS0618
 
+        // Almacenes
+        public DbSet<Almacen> Almacenes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -650,6 +653,19 @@ namespace SistemaContable.Data
                       .HasForeignKey(f => f.FamiliaId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // Configuración para Almacen
+            builder.Entity<Almacen>(entity =>
+            {
+                entity.ToTable("Almacenes");
+                entity.HasKey(e => e.Id);
+                
+                // Relación con Empresa
+                entity.HasOne(a => a.Empresa)
+                      .WithMany()
+                      .HasForeignKey(a => a.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         private void ConvertDatesToUtc()
@@ -742,6 +758,18 @@ namespace SistemaContable.Data
                     }
                     categoria.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Almacen almacen)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        almacen.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    almacen.FechaModificacion = DateTime.UtcNow;
+                }
             }
 
             return base.SaveChanges();
@@ -800,6 +828,18 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     categoria.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Almacen almacen)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        almacen.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    almacen.FechaModificacion = DateTime.UtcNow;
                 }
             }
 

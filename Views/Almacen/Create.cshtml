@@ -1,0 +1,78 @@
+@model SistemaContable.ViewModels.AlmacenViewModel
+@{
+    ViewData["Title"] = "Crear Almacén";
+}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2" style="font-weight:normal">Nuevo Almacén</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item">Inventario</li>
+                    <li class="breadcrumb-item"><a href="/Almacen">Almacenes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Nuevo Almacén</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div>
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    </div>
+    <form asp-action="Create" method="post" id="formAlmacen">
+        <input type="hidden" asp-for="EmpresaId" />
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Nombre" class="form-label">Nombre del almacén *</label>
+                        <input asp-for="Nombre" class="form-control" required />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Estado" class="form-label">Estado</label>
+                        <select asp-for="Estado" class="form-select">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="CorreoElectronico" class="form-label">Correo electrónico *</label>
+                        <input asp-for="CorreoElectronico" class="form-control" type="email" required />
+                        <span asp-validation-for="CorreoElectronico" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Telefono" class="form-label">Teléfono *</label>
+                        <input asp-for="Telefono" class="form-control" required />
+                        <span asp-validation-for="Telefono" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4 text-end">
+            <a href="/Almacen" class="btn" style="background:#787276;color:#FFFFFF;">Cancelar</a>
+            <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Guardar</button>
+        </div>
+    </form>
+    <div id="errorLog" class="alert alert-danger mt-3" style="display:none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Form submission monitoring
+            $('#formAlmacen').on('submit', function(e) {
+                // Disable submit button to prevent double submission
+                $('button[type="submit"]').prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+            });
+            
+            // Display any validation errors or success messages
+            if ($('.validation-summary-errors').length > 0 || $('.field-validation-error').length > 0) {
+                $('#errorLog').text('Se detectaron errores de validación. Por favor, revise el formulario.').show();
+            }
+        });
+    </script>
+} 

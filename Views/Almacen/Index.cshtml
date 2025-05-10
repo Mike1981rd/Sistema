@@ -1,0 +1,175 @@
+@model IEnumerable<SistemaContable.Models.Almacen>
+@{
+    ViewData["Title"] = "Almacenes";
+    var tab = ViewBag.Tab ?? "Activos";
+}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2" style="font-weight:normal">Lista de almacenes</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item">Inventario</li>
+                    <li class="breadcrumb-item active" aria-current="page">Almacenes</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn" style="background:#3944BC;color:#FFFFFF;">
+                <i class="fas fa-plus me-1"></i> Nuevo Almacén
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <ul class="nav border-0">
+                <li class="nav-item">
+                    <a class="nav-link @(tab == "Activos" ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Activos">
+                        Activos
+                        @if (tab == "Activos")
+                        {
+                            <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(tab == "Inactivos" ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Inactivos">
+                        Inactivos
+                        @if (tab == "Inactivos")
+                        {
+                            <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                        }
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="tablaAlmacenes">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th>NOMBRE</th>
+                                <th>CORREO ELECTRÓNICO</th>
+                                <th>TELÉFONO</th>
+                                <th>ESTADO</th>
+                                <th>ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Nombre</td>
+                                    <td>@item.CorreoElectronico</td>
+                                    <td>@item.Telefono</td>
+                                    <td>
+                                        <span class="badge @(item.Estado ? "bg-success" : "bg-danger")">
+                                            @(item.Estado ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn" style="background:#EC5800;color:#FFFFFF;">Editar</a>
+                                        <button type="button" class="btn @(item.Estado ? "btn-secondary" : "btn-primary")" 
+                                                onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', @item.Estado.ToString().ToLower())">
+                                            @(item.Estado ? "Desactivar" : "Activar")
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    No hay almacenes @(tab == "Activos" ? "activos" : "inactivos") para mostrar.
+                    @if (ViewBag.SugerirCambiarPestana == true)
+                    {
+                        <span>Hay almacenes <a asp-action="Index" asp-route-tab="@ViewBag.HayAlmacenesEnOtraPestana">@ViewBag.HayAlmacenesEnOtraPestana.ToLower()</a>.</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para cambio de estado -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="mensajeConfirmacion"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
+                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
+                    <input type="hidden" id="almacenId" name="id" />
+                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .nav-link.active {
+            border-bottom: 2px solid #007bff !important;
+            font-weight: 500;
+        }
+        .nav-link {
+            padding-bottom: 10px;
+            margin-bottom: -1px;
+        }
+        
+        /* Aumentar el ancho del selector para evitar que la flecha tape el número */
+        .dataTables_length select {
+            width: 70px !important;
+            padding-right: 25px !important;
+            text-align: center !important;
+        }
+    </style>
+    
+    <script>
+        $(document).ready(function () {
+            $('#tablaAlmacenes').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+                    lengthMenu: 'Mostrar _MENU_ registros'
+                },
+                pageLength: 50,
+                order: [[1, 'asc']], // Ordenar por nombre (columna 1) de forma ascendente
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    ['10', '25', '50', '100', 'Todos']
+                ]
+            });
+        });
+
+        function confirmarCambioEstado(id, nombre, estado) {
+            document.getElementById('almacenId').value = id;
+            var accion = estado ? 'desactivar' : 'activar';
+            document.getElementById('mensajeConfirmacion').textContent = 
+                `¿Está seguro que desea ${accion} el almacén "${nombre}"?`;
+            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            modal.show();
+        }
+    </script>
+} 
