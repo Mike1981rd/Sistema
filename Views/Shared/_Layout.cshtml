@@ -40,6 +40,10 @@
             width: 100% !important;
             margin-bottom: 0 !important;
         }
+        .aurora-submenu {
+            max-height: none !important;
+            overflow: visible !important;
+        }
     </style>
     @RenderSection("Styles", required: false)
 </head>
@@ -128,48 +132,54 @@
                 </div>
                 
                 <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Punto de Venta">
-                    <span class="aurora-nav-icon"><i class="fas fa-cash-register" style="color:#fff;"></i></span>
+                    <span class="aurora-nav-icon"><i class="fas fa-cash-register"></i></span>
                     <span>Punto de Venta</span>
                 </a>
                 <div class="aurora-submenu">
                     <a href="/pos/tamanos" class="aurora-submenu-item" data-title="Tamaños">
-                        <i class="fas fa-ruler-combined me-2" style="color:#fff;"></i>Tamaños
+                        <i class="fas fa-ruler-combined me-2"></i>Tamaños
                     </a>
                     <a href="/pos/productos" class="aurora-submenu-item" data-title="Productos">
-                        <i class="fas fa-box-open me-2" style="color:#fff;"></i>Productos
+                        <i class="fas fa-box-open me-2"></i>Productos
                     </a>
                     <a href="/pos/menu" class="aurora-submenu-item" data-title="Menu">
-                        <i class="fas fa-list-alt me-2" style="color:#fff;"></i>Menu
+                        <i class="fas fa-list-alt me-2"></i>Menu
                     </a>
                     <a href="/pos/areas" class="aurora-submenu-item" data-title="Areas">
-                        <i class="fas fa-th-large me-2" style="color:#fff;"></i>Areas
+                        <i class="fas fa-th-large me-2"></i>Areas
                     </a>
                     <a href="/pos/promociones" class="aurora-submenu-item" data-title="Promociones">
-                        <i class="fas fa-tags me-2" style="color:#fff;"></i>Promociones
+                        <i class="fas fa-tags me-2"></i>Promociones
                     </a>
                     <a href="/pos/terminales" class="aurora-submenu-item" data-title="Terminales">
-                        <i class="fas fa-tablet-alt me-2" style="color:#fff;"></i>Terminales
+                        <i class="fas fa-tablet-alt me-2"></i>Terminales
                     </a>
                     <a href="/pos/descuentos" class="aurora-submenu-item" data-title="Descuentos">
-                        <i class="fas fa-percent me-2" style="color:#fff;"></i>Descuentos
+                        <i class="fas fa-percent me-2"></i>Descuentos
                     </a>
                     <a href="/pos/kitchen-display" class="aurora-submenu-item" data-title="Kitchen Display">
-                        <i class="fas fa-tv me-2" style="color:#fff;"></i>Kitchen Display
+                        <i class="fas fa-tv me-2"></i>Kitchen Display
                     </a>
                     <a href="/pos/motivos-anulacion" class="aurora-submenu-item" data-title="Motivos de Anulacion">
-                        <i class="fas fa-ban me-2" style="color:#fff;"></i>Motivos de Anulacion
+                        <i class="fas fa-ban me-2"></i>Motivos de Anulacion
                     </a>
                     <a href="/pos/reservaciones" class="aurora-submenu-item" data-title="Reservaciones">
-                        <i class="fas fa-calendar-check me-2" style="color:#fff;"></i>Reservaciones
+                        <i class="fas fa-calendar-check me-2"></i>Reservaciones
                     </a>
                     <a href="/pos/tipos-ordenes" class="aurora-submenu-item" data-title="Tipos de Ordenes">
-                        <i class="fas fa-receipt me-2" style="color:#fff;"></i>Tipos de Ordenes
+                        <i class="fas fa-receipt me-2"></i>Tipos de Ordenes
                     </a>
                     <a href="/pos/repartidores" class="aurora-submenu-item" data-title="Repartidores">
-                        <i class="fas fa-motorcycle me-2" style="color:#fff;"></i>Repartidores
+                        <i class="fas fa-motorcycle me-2"></i>Repartidores
                     </a>
                     <a href="/pos/zonas-domicilio" class="aurora-submenu-item" data-title="Zonas de Domicilio">
-                        <i class="fas fa-map-marked-alt me-2" style="color:#fff;"></i>Zonas de Domicilio
+                        <i class="fas fa-map-marked-alt me-2"></i>Zonas de Domicilio
+                    </a>
+                    <a href="/pos/impresoras" class="aurora-submenu-item" data-title="Impresoras">
+                        <i class="fas fa-print me-2"></i>Impresoras
+                    </a>
+                    <a href="/pos/rutas-impresion" class="aurora-submenu-item" data-title="Rutas de Impresion">
+                        <i class="fas fa-route me-2"></i>Rutas de Impresion
                     </a>
                 </div>
                 
@@ -321,47 +331,68 @@
                 }
             });
 
-            // Mejorar la visualización en páginas específicas
-            const currentPath = window.location.pathname.toLowerCase();
-            if (currentPath.includes('/plazopago') || currentPath.includes('/retenciones') || currentPath.includes('/comprobantes') || currentPath.includes('/comprobantes-fiscales')) {
-                // Forzar apertura del menú de configuración
-                const configMenuItem = document.querySelector('.aurora-nav-item[data-title="Configuración"]');
-                const configSubmenu = document.querySelector('.aurora-nav-item[data-title="Configuración"] + .aurora-submenu');
-                
-                if (configMenuItem && configSubmenu) {
-                    configMenuItem.classList.add('expanded');
-                    configSubmenu.classList.add('show');
-                    
-                    // Activar el elemento específico
-                    if (currentPath.includes('/plazopago')) {
-                        const plazoPagoItem = configSubmenu.querySelector('a[href*="/PlazoPago"]');
-                        if (plazoPagoItem) plazoPagoItem.classList.add('active');
-                    } else if (currentPath.includes('/retenciones')) {
-                        const retencionesItem = configSubmenu.querySelector('a[href*="/Retenciones"]');
-                        if (retencionesItem) retencionesItem.classList.add('active');
-                    } else if (currentPath.includes('/comprobantes') || currentPath.includes('/comprobantes-fiscales')) {
-                        const comprobantesItem = configSubmenu.querySelector('a[href*="/comprobantes"]');
-                        if (comprobantesItem) comprobantesItem.classList.add('active');
-                    }
-                }
-            }
-
-            // Inicializar select2 con banderas
-            $('.select2-flags').select2({
-                theme: 'bootstrap-5',
-                templateResult: formatOption,
-                templateSelection: formatOption
+            // Paso 1: Cerrar todos los submenús inicialmente
+            document.querySelectorAll('.aurora-submenu').forEach(function(submenu) {
+                submenu.classList.remove('show');
+                submenu.style.display = 'none';
             });
             
-            // Función para formatear opciones con banderas
-            function formatOption(option) {
-                if (!option.id) return option.text;
+            // Paso 2: Restaurar todos los menús a estado cerrado
+            document.querySelectorAll('.aurora-nav-item.has-submenu').forEach(function(item) {
+                item.classList.remove('expanded');
+            });
+            
+            // Paso 3: Eliminar y reemplazar todos los event listeners actuales
+            document.querySelectorAll('.aurora-nav-item.has-submenu').forEach(function(menuItem) {
+                // Crear una copia limpia
+                const newItem = menuItem.cloneNode(true);
+                menuItem.parentNode.replaceChild(newItem, menuItem);
                 
-                const flagCode = $(option.element).data('flag');
-                if (!flagCode) return option.text;
-                
-                return $(`<span><img src="https://flagcdn.com/24x18/${flagCode}.png" alt="${option.text} flag" /> ${option.text}</span>`);
-            }
+                // Agregar nuevo listener unificado
+                newItem.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Toggle estado expanded
+                    this.classList.toggle('expanded');
+                    
+                    // Encontrar y alternar el submenú correspondiente
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('aurora-submenu')) {
+                        // Para soporte de animación CSS
+                        if (submenu.style.display === 'none' || !submenu.classList.contains('show')) {
+                            submenu.classList.add('show');
+                            submenu.style.display = 'block';
+                        } else {
+                            submenu.classList.remove('show');
+                            submenu.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
+            // Paso 4: Auto-expandir el menú activo
+            const currentPath = window.location.pathname.toLowerCase();
+            document.querySelectorAll('.aurora-submenu .aurora-submenu-item').forEach(function(item) {
+                const href = item.getAttribute('href');
+                if (href && currentPath.includes(href.toLowerCase())) {
+                    // Este es el elemento activo, expandir su menú padre
+                    const parentMenu = item.closest('.aurora-submenu');
+                    if (parentMenu) {
+                        parentMenu.classList.add('show');
+                        parentMenu.style.display = 'block';
+                        
+                        // También activar el elemento padre
+                        const parentItem = parentMenu.previousElementSibling;
+                        if (parentItem && parentItem.classList.contains('aurora-nav-item')) {
+                            parentItem.classList.add('expanded');
+                        }
+                        
+                        // Marcar este elemento como activo
+                        item.classList.add('active');
+                    }
+                }
+            });
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
