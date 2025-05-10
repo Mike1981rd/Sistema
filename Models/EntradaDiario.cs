@@ -42,6 +42,12 @@ namespace SistemaContable.Models
 
         [Display(Name = "Fecha de Modificación")]
         public DateTime? FechaModificacion { get; set; }
+        
+        [Display(Name = "Fecha de Cierre")]
+        public DateTime? FechaCierre { get; set; }
+        
+        [Display(Name = "Fecha de Anulación")]
+        public DateTime? FechaAnulacion { get; set; }
 
         // Propiedades de navegación
         [ForeignKey("TipoEntradaId")]
@@ -56,6 +62,7 @@ namespace SistemaContable.Models
     public enum EstadoEntradaDiario
     {
         Abierto,
+        Cerrado,
         Anulado
     }
 } 

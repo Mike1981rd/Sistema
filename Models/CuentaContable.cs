@@ -7,6 +7,8 @@ namespace SistemaContable.Models
 {
     public class CuentaContable
     {
+        public ICollection<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }
+        
         public int Id { get; set; }
         
         [Required]

@@ -1,26 +1,27 @@
 @model SistemaContable.ViewModels.EntradaDiarioViewModel
 
 @{
-    ViewData["Title"] = "Nueva entrada de diario";
+    ViewData["Title"] = "Editar entrada de diario";
 }
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h3 class="mt-4 mb-2">Nueva entrada de diario</h3>
+            <h3 class="mt-4 mb-2">Editar entrada de diario</h3>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
                     <li class="breadcrumb-item">Contabilidad</li>
                     <li class="breadcrumb-item"><a href="/contabilidad/entradas-diario">Entradas de diario</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Nueva entrada</li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar entrada</li>
                 </ol>
             </nav>
         </div>
     </div>
     
-    <form asp-action="Create" id="formEntradaDiario">
+    <form asp-action="Edit" id="formEntradaDiario">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
         
         <div class="card mb-4">
             <div class="card-header">
@@ -40,10 +41,10 @@
                         <div class="mb-3">
                             <label asp-for="TipoEntradaId" class="form-label"></label>
                             <div class="input-group">
-                                <select asp-for="TipoEntradaId" asp-items="Model.TiposEntrada" class="form-select" id="tipoEntradaSelect">
+                                <select asp-for="TipoEntradaId" asp-items="Model.TiposEntrada" class="form-select" id="tipoEntradaSelect" disabled>
                                     <option value="">-- Seleccionar --</option>
                                 </select>
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalNuevoTipo">
+                                <button type="button" class="btn btn-outline-secondary" disabled>
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
@@ -54,10 +55,10 @@
                         <div class="mb-3">
                             <label asp-for="NumeracionId" class="form-label"></label>
                             <div class="input-group">
-                                <select asp-for="NumeracionId" class="form-select" id="numeracionSelect">
+                                <select asp-for="NumeracionId" class="form-select" id="numeracionSelect" disabled>
                                     <option value="">-- Seleccionar tipo primero --</option>
                                 </select>
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalNuevaNumeracion">
+                                <button type="button" class="btn btn-outline-secondary" disabled>
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
@@ -69,7 +70,7 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label asp-for="Codigo" class="form-label"></label>
-                            <input asp-for="Codigo" class="form-control" readonly id="codigoEntrada" placeholder="Se generará al seleccionar tipo y numeración" />
+                            <input asp-for="Codigo" class="form-control" readonly id="codigoEntrada" />
                         </div>
                     </div>
                     <div class="col-md-8">
@@ -109,6 +110,7 @@
                                     <td class="align-middle">
                                         <span class="numero-fila">@(i + 1)</span>
                                         <input type="hidden" asp-for="Movimientos[i].Id" />
+                                        <input type="hidden" asp-for="Movimientos[i].EntradaDiarioId" />
                                     </td>
                                     <td>
                                         <select asp-for="Movimientos[i].CuentaContableId" class="form-control select-cuenta"></select>
@@ -124,15 +126,15 @@
                                         <span asp-validation-for="Movimientos[i].NumeroDocumento" class="text-danger"></span>
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control" name="Movimientos[i].Descripcion" id="Movimientos[i].Descripcion" placeholder="Opcional" />
+                                        <input type="text" asp-for="Movimientos[i].Descripcion" class="form-control" placeholder="Opcional" />
                                     </td>
                                     <td style="min-width: 120px;">
-                                        <input type="text" class="form-control text-end monto-debito" name="Movimientos[@i].DebitoStr" id="Movimientos_@(i)_DebitoStr" placeholder="0.00" />
-                                        <input type="hidden" name="Movimientos[@i].Debito" id="Movimientos_@(i)_Debito" value="0" />
+                                        <input type="text" class="form-control text-end monto-debito" name="Movimientos[@i].DebitoStr" id="Movimientos_@(i)_DebitoStr" placeholder="0.00" value="@Model.Movimientos[i].Debito.ToString("0.00")" />
+                                        <input type="hidden" name="Movimientos[@i].Debito" id="Movimientos_@(i)_Debito" value="@Model.Movimientos[i].Debito" />
                                     </td>
                                     <td style="min-width: 120px;">
-                                        <input type="text" class="form-control text-end monto-credito" name="Movimientos[@i].CreditoStr" id="Movimientos_@(i)_CreditoStr" placeholder="0.00" />
-                                        <input type="hidden" name="Movimientos[@i].Credito" id="Movimientos_@(i)_Credito" value="0" />
+                                        <input type="text" class="form-control text-end monto-credito" name="Movimientos[@i].CreditoStr" id="Movimientos_@(i)_CreditoStr" placeholder="0.00" value="@Model.Movimientos[i].Credito.ToString("0.00")" />
+                                        <input type="hidden" name="Movimientos[@i].Credito" id="Movimientos_@(i)_Credito" value="@Model.Movimientos[i].Credito" />
                                     </td>
                                     <td class="text-center">
                                         <a href="javascript:void(0)" class="text-danger btn-remove-row" data-bs-toggle="tooltip" title="Eliminar línea">
@@ -178,80 +180,9 @@
         
         <div class="mb-4 text-end">
             <a asp-action="Index" class="btn btn-cancelar">Cancelar</a>
-            <button type="submit" class="btn btn-guardar">Guardar</button>
+            <button type="submit" class="btn btn-guardar">Guardar cambios</button>
         </div>
     </form>
-</div>
-
-<!-- Modal Nuevo Tipo de Entrada -->
-<div class="modal fade" id="modalNuevoTipo" tabindex="-1" aria-labelledby="modalNuevoTipoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalNuevoTipoLabel">Nuevo tipo de entrada de diario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formNuevoTipo">
-                    <div class="mb-3">
-                        <label for="codigoTipo" class="form-label">Código</label>
-                        <input type="text" class="form-control" id="codigoTipo" name="Codigo" required maxlength="10" placeholder="Ejemplo: AP-1" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="nombreTipo" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombreTipo" name="Nombre" required maxlength="100" placeholder="Ejemplo: Nómina Administrativa" />
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnGuardarTipo">Guardar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Nueva Numeración -->
-<div class="modal fade" id="modalNuevaNumeracion" tabindex="-1" aria-labelledby="modalNuevaNumeracionLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalNuevaNumeracionLabel">Nueva numeración</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formNuevaNumeracion">
-                    <div class="mb-3">
-                        <label for="tipoEntradaIdNumeracion" class="form-label">Tipo de entrada de diario</label>
-                        <select class="form-select" id="tipoEntradaIdNumeracion" name="TipoEntradaDiarioId" required>
-                            <option value="">-- Seleccionar --</option>
-                            <!-- Se llenará dinámicamente -->
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nombreNumeracion" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombreNumeracion" name="Nombre" required maxlength="100" placeholder="Por ejemplo: Depreciaciones" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="prefijoNumeracion" class="form-label">Prefijo</label>
-                        <input type="text" class="form-control" id="prefijoNumeracion" name="Prefijo" required maxlength="10" placeholder="Por ejemplo: DP" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="numeroInicialNumeracion" class="form-label">Número Inicial</label>
-                        <input type="number" class="form-control" id="numeroInicialNumeracion" name="NumeroActual" required min="1" value="1" placeholder="Por ejemplo: 12" />
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="esPreferidaNumeracion" name="EsPreferida" value="true">
-                        <label class="form-check-label" for="esPreferidaNumeracion">Numeración preferida</label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnGuardarNumeracion">Guardar</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {
@@ -302,41 +233,4 @@
     </script>
     
     <script src="~/js/entrada-diario.js"></script>
-    
-    <!-- Template para fila de movimiento -->
-    <script type="text/template" id="template-row">
-        <tr data-row="__INDEX__">
-            <td class="text-center numero-fila">__NUMERO__</td>
-            <td>
-                <select class="form-select select-cuenta" name="Movimientos[__INDEX__].CuentaContableId" id="Movimientos___INDEX___CuentaContableId" required>
-                    <option value=""></option>
-                </select>
-            </td>
-            <td>
-                <select class="form-select select-contacto" name="Movimientos[__INDEX__].ContactoId" id="Movimientos___INDEX___ContactoId">
-                    <option value=""></option>
-                </select>
-                <input type="hidden" name="Movimientos[__INDEX__].TipoContacto" class="tipo-contacto" />
-            </td>
-            <td class="d-none">
-                <input type="text" class="form-control" name="Movimientos[__INDEX__].NumeroDocumento" id="Movimientos___INDEX___NumeroDocumento" />
-            </td>
-            <td>
-                <input type="text" class="form-control" name="Movimientos[__INDEX__].Descripcion" id="Movimientos___INDEX___Descripcion" placeholder="Opcional" />
-            </td>
-            <td style="min-width: 120px;">
-                <input type="text" class="form-control text-end monto-debito" name="Movimientos[__INDEX__].DebitoStr" id="Movimientos___INDEX___DebitoStr" placeholder="0.00" />
-                <input type="hidden" name="Movimientos[__INDEX__].Debito" id="Movimientos___INDEX___Debito" value="0" />
-            </td>
-            <td style="min-width: 120px;">
-                <input type="text" class="form-control text-end monto-credito" name="Movimientos[__INDEX__].CreditoStr" id="Movimientos___INDEX___CreditoStr" placeholder="0.00" />
-                <input type="hidden" name="Movimientos[__INDEX__].Credito" id="Movimientos___INDEX___Credito" value="0" />
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" data-bs-toggle="tooltip" title="Eliminar fila">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        </tr>
-    </script>
 } 

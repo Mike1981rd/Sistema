@@ -5,22 +5,54 @@
 }
 
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Entradas de diario</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2">Entradas de diario</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item">Contabilidad</li>
+                    <li class="breadcrumb-item active" aria-current="page">Entradas de diario</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
     
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
-                <i class="fas fa-book me-1"></i>
+                <i class="fas fa-journal-whills me-1"></i>
                 Listado de entradas de diario
             </div>
-            <a asp-action="Create" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> Nueva entrada
-            </a>
+            <div>
+                <a asp-action="Exportar" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-file-export me-1"></i> Exportar
+                </a>
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i> Nueva entrada
+                </a>
+            </div>
         </div>
         <div class="card-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
             <table id="datatablesSimple" class="table table-striped table-hover">
-                <thead>
-                    <tr>
+                <thead class="bg-light">
+                    <tr class="text-muted fw-normal">
                         <th>Código</th>
                         <th>Fecha</th>
                         <th>Tipo</th>
@@ -44,6 +76,10 @@
                                 {
                                     <span class="badge bg-success">Abierto</span>
                                 }
+                                else if (item.Estado == SistemaContable.Models.EstadoEntradaDiario.Cerrado)
+                                {
+                                    <span class="badge bg-primary">Cerrado</span>
+                                }
                                 else
                                 {
                                     <span class="badge bg-danger">Anulado</span>
@@ -51,15 +87,17 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-pen"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                    @if (item.Estado == SistemaContable.Models.EstadoEntradaDiario.Abierto) {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="far fa-trash-alt"></i>
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -68,4 +106,70 @@
             </table>
         </div>
     </div>
-</div> 
+</div>
+
+@section Scripts {
+    <style>
+        /* Estilos para corregir el problema del dropdown de registros */
+        .dataTables_length select {
+            min-width: 70px !important;
+            padding-right: 25px !important;
+        }
+        
+        /* Asegurar que el texto no quede tapado por la flecha */
+        .form-select {
+            text-overflow: ellipsis;
+        }
+    </style>
+    
+    <script>
+        $(document).ready(function () {
+            // Inicializar DataTables
+            $('#datatablesSimple').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+                },
+                responsive: true,
+                order: [[1, 'desc']], // Ordenar por fecha descendente
+                initComplete: function() {
+                    // Aplicar estilos a los elementos de DataTables
+                    $('.dataTables_length select').addClass('form-select form-select-sm');
+                    $('.dataTables_info').addClass('text-muted small');
+                    
+                    // Fix para la longitud de menú
+                    fixDatatablesUI();
+                },
+                drawCallback: function() {
+                    // Aplicar arreglos visuales cada vez que se redibuja la tabla
+                    fixDatatablesUI();
+                }
+            });
+            
+            // Nueva función para corregir problemas de UI en DataTables
+            function fixDatatablesUI() {
+                // Corregir la etiqueta "Mostrar X registros"
+                $('.dataTables_length label').each(function() {
+                    const html = $(this).html();
+                    // Solo reemplazar si no se ha modificado ya
+                    if (html.indexOf('_MENU_') >= 0 || html.indexOf('select') >= 0) {
+                        const select = $(this).find('select').detach();
+                        select.addClass('form-select form-select-sm mx-2');
+                        // Mover el select fuera del label para evitar problemas de z-index
+                        $(this).html('Mostrar ');
+                        $(this).after(select);
+                        select.after(' registros');
+                    }
+                });
+                
+                // Asegurar que los controles de paginación tengan los estilos correctos
+                $('.paginate_button').addClass('page-link');
+                
+                // Asegurar que la información tenga el estilo correcto
+                $('.dataTables_info').addClass('text-muted small');
+                
+                // Corregir z-index para evitar problemas de superposición
+                $('.dataTables_length select').css('z-index', '999');
+            }
+        });
+    </script>
+} 

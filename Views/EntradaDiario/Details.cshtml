@@ -1,0 +1,155 @@
+@model SistemaContable.ViewModels.EntradaDiarioViewModel
+
+@{
+    ViewData["Title"] = "Detalle de Entrada de Diario";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2">Detalle de Entrada de Diario</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item">Contabilidad</li>
+                    <li class="breadcrumb-item"><a href="/contabilidad/entradas-diario">Entradas de diario</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+            @if (Model.Estado == "Abierto") {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-primary me-2">
+                    <i class="fas fa-edit me-1"></i> Editar
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash-alt me-1"></i> Eliminar
+                </a>
+            }
+            <a href="#" onclick="printPage()" class="btn btn-sm btn-info ms-2">
+                <i class="fas fa-print me-1"></i> Imprimir
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-info-circle me-1"></i>
+            Información General
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="fw-bold">Código:</label>
+                        <div>@Model.Codigo</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="fw-bold">Fecha:</label>
+                        <div>@Model.Fecha.ToShortDateString()</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="fw-bold">Tipo:</label>
+                        <div>@ViewBag.TipoEntradaNombre</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="fw-bold">Estado:</label>
+                        <div>
+                            @if (Model.Estado == "Abierto")
+                            {
+                                <span class="badge bg-success">@Model.Estado</span>
+                            }
+                            else if (Model.Estado == "Cerrado")
+                            {
+                                <span class="badge bg-primary">@Model.Estado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@Model.Estado</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label class="fw-bold">Observaciones:</label>
+                        <div>@(string.IsNullOrEmpty(Model.Observaciones) ? "Sin observaciones" : Model.Observaciones)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-exchange-alt me-1"></i>
+            Movimientos
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Cuenta contable</th>
+                            <th>Contacto</th>
+                            <th>Descripción</th>
+                            <th class="text-end">Débito</th>
+                            <th class="text-end">Crédito</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var totalDebito = 0m;
+                            var totalCredito = 0m;
+                            var contador = 1;
+                        }
+                        
+                        @foreach (var movimiento in Model.Movimientos)
+                        {
+                            totalDebito += movimiento.Debito;
+                            totalCredito += movimiento.Credito;
+                            
+                            <tr>
+                                <td>@contador</td>
+                                <td>@movimiento.CuentaContableNombre</td>
+                                <td>@(movimiento.ContactoNombre ?? "N/A")</td>
+                                <td>@(string.IsNullOrEmpty(movimiento.Descripcion) ? "Sin descripción" : movimiento.Descripcion)</td>
+                                <td class="text-end">@movimiento.Debito.ToString("C2")</td>
+                                <td class="text-end">@movimiento.Credito.ToString("C2")</td>
+                            </tr>
+                            
+                            contador++;
+                        }
+                    </tbody>
+                    <tfoot class="fw-bold">
+                        <tr>
+                            <td colspan="4" class="text-end">Total:</td>
+                            <td class="text-end">@totalDebito.ToString("C2")</td>
+                            <td class="text-end">@totalCredito.ToString("C2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printPage() {
+            window.print();
+        }
+    </script>
+} 

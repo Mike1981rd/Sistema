@@ -29,7 +29,7 @@ namespace SistemaContable.ViewModels
         
         [DisplayName("Observaciones")]
         [StringLength(500)]
-        public string Observaciones { get; set; }
+        public string? Observaciones { get; set; }
         
         [DisplayName("Estado")]
         public string Estado { get; set; }

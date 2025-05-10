@@ -14,5 +14,7 @@ namespace SistemaContable.Repositories.Interfaces
         Task DeleteAsync(int id);
         Task<bool> ExisteCodigoAsync(string codigo);
         Task<IEnumerable<EntradaDiario>> BuscarPorFechasAsync(DateTime fechaInicio, DateTime fechaFin);
+        Task<EntradaDiario> GetByIdWithDetailsAsync(int id);
+        Task<IEnumerable<EntradaDiario>> GetAllWithDetailsAsync();
     }
 } 

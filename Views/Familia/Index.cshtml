@@ -1,0 +1,111 @@
+@model IEnumerable<SistemaContable.Models.Familia>
+@{
+    ViewData["Title"] = "Familias";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2" style="font-weight:normal">Familias</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item">Configuración</li>
+                    <li class="breadcrumb-item active" aria-current="page">Familias</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="/Familia/Create" class="btn" style="background:#3944BC;color:#FFFFFF;">Nueva Familia</a>
+    </div>
+    <div class="aurora-tabs mb-3">
+        <ul class="nav nav-tabs" style="border:none;">
+    <li class="nav-item">
+        <a class="nav-link @(ViewBag.Tab == null || ViewBag.Tab == "Activos" ? "active" : "")" href="/Familia?tab=Activos" style="border:none;border-bottom:2px solid #007848;background:none;color:#007848;font-weight:normal;">Activos</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "")" href="/Familia?tab=Inactivos" style="border:none;border-bottom:2px solid #787276;background:none;color:#787276;font-weight:normal;">Inactivos</a>
+    </li>
+</ul>
+<style>
+    .nav-tabs .nav-link {
+        border: none !important;
+        border-radius: 0 !important;
+        background: none !important;
+        color: #787276 !important;
+        font-weight: normal !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: #007848 !important;
+        border-bottom: 2px solid #007848 !important;
+        background: none !important;
+    }
+    .nav-tabs {
+        border-bottom: 1px solid #e9ecef !important;
+    }
+</style>
+    </div>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mb-3 alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (ViewBag.SugerirCambiarPestana == true)
+    {
+        <div class="alert alert-info mb-3">
+            No hay familias @(ViewBag.Tab == "Activos" ? "activas" : "inactivas") para mostrar, pero existen familias @(ViewBag.Tab == "Activos" ? "inactivas" : "activas") en la otra pestaña. 
+            <a href="/Familia?tab=@ViewBag.HayFamiliasEnOtraPestana" class="alert-link">Haga clic aquí para ver familias @ViewBag.HayFamiliasEnOtraPestana.ToLower()</a>.
+        </div>
+    }
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="font-weight:normal;">Nombre</th>
+<th style="font-weight:normal;">Cuentas Contables</th>
+<th style="font-weight:normal;">Nota</th>
+<th style="font-weight:normal;">Estado</th>
+<th style="font-weight:normal;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var item in Model) {
+                            <tr>
+                                <td>@item.Nombre</td>
+                                <td>
+    @{
+        var cuentas = new List<string>();
+        if (item.CuentaVentas != null) cuentas.Add(item.CuentaVentas.Nombre);
+        if (item.CuentaComprasInventarios != null) cuentas.Add(item.CuentaComprasInventarios.Nombre);
+        if (item.CuentaCostoVentasGastos != null) cuentas.Add(item.CuentaCostoVentasGastos.Nombre);
+        if (item.CuentaDescuentos != null) cuentas.Add(item.CuentaDescuentos.Nombre);
+        if (item.CuentaDevoluciones != null) cuentas.Add(item.CuentaDevoluciones.Nombre);
+        if (item.CuentaAjustes != null) cuentas.Add(item.CuentaAjustes.Nombre);
+        if (item.CuentaCostoMateriaPrima != null) cuentas.Add(item.CuentaCostoMateriaPrima.Nombre);
+    }
+    @(cuentas.Any() ? string.Join(", ", cuentas) : "-")
+</td>
+                                <td>@item.Nota</td>
+                                <td>@(item.Estado ? "Activo" : "Inactivo")</td>
+                                <td>
+    <a href="/Familia/Edit/@item.Id" class="btn btn-sm" style="background:#007848;color:#fff;">Editar</a>
+    <form asp-action="ToggleEstado" asp-controller="Familia" method="post" style="display:inline">
+        <input type="hidden" name="id" value="@item.Id" />
+        <button type="submit" class="btn btn-sm ms-1" style="background:@(item.Estado ? "#787276" : "#007848");color:#fff;">
+            @(item.Estado ? "Desactivar" : "Activar")
+        </button>
+    </form>
+</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -56,9 +56,93 @@ namespace SistemaContable.Data
         public DbSet<TipoEntradaDiario> TiposEntradaDiario { get; set; }
         public DbSet<NumeracionEntradaDiario> NumeracionesEntradaDiario { get; set; }
 
+        // Familias
+        public DbSet<Familia> Familias { get; set; }
+        #pragma warning disable CS0618 // Suprimir advertencia sobre tipo obsoleto
+        public DbSet<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }
+        #pragma warning restore CS0618
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Configuración para Familia
+            builder.Entity<Familia>(entity =>
+            {
+                entity.ToTable("Familias");
+                entity.HasKey(e => e.Id);
+                
+                // Propiedades requeridas
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Nota).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.FechaCreacion).IsRequired();
+                entity.Property(e => e.FechaModificacion).IsRequired(false);
+                
+                // Relación con Empresa
+                entity.HasOne(f => f.Empresa)
+                      .WithMany()
+                      .HasForeignKey(f => f.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Configuración explícita de relaciones con CuentaContable
+                entity.HasOne(f => f.CuentaVentas)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaVentasId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaComprasInventarios)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaComprasInventariosId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaCostoVentasGastos)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaCostoVentasGastosId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaDescuentos)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaDescuentosId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaDevoluciones)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaDevolucionesId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaAjustes)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaAjustesId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                entity.HasOne(f => f.CuentaCostoMateriaPrima)
+                      .WithMany()
+                      .HasForeignKey(f => f.CuentaCostoMateriaPrimaId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+            });
+            
+            // Configuración obsoleta pero necesaria para compatibilidad con migraciones previas
+            #pragma warning disable CS0618 // Suprimir advertencia sobre tipo obsoleto
+            builder.Entity<FamiliaCuentaContable>(entity =>
+            {
+                entity.HasKey(e => new { e.FamiliaId, e.CuentaContableId });
+                
+                entity.HasOne(fc => fc.Familia)
+                     .WithMany(f => f.FamiliaCuentasContables)
+                     .HasForeignKey(fc => fc.FamiliaId);
+                     
+                entity.HasOne(fc => fc.CuentaContable)
+                     .WithMany(c => c.FamiliaCuentasContables)
+                     .HasForeignKey(fc => fc.CuentaContableId);
+            });
+            #pragma warning restore CS0618
 
             // NOTA: La siguiente configuración es para evitar la advertencia de EmpresaId1
             // que ocurre debido a una relación inversa no deseada entre Empresa y CuentaContable
@@ -553,7 +637,7 @@ namespace SistemaContable.Data
             var entries = ChangeTracker.Entries()
                 .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
                             e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal ||
-                            e.Entity is EntradaDiario) && 
+                            e.Entity is EntradaDiario || e.Entity is Familia) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -648,12 +732,55 @@ namespace SistemaContable.Data
                     }
                     entradaDiario.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Familia familia)
+                {
+                    // Manejo especial para Familia
+                    Console.WriteLine($"SaveChanges: Procesando entidad Familia {familia.Nombre}, Estado={entityEntry.State}");
+                    
+                    try {
+                        if (entityEntry.State == EntityState.Added)
+                        {
+                            Console.WriteLine($"Estableciendo FechaCreacion para nueva familia: {DateTime.UtcNow}");
+                            familia.FechaCreacion = DateTime.UtcNow;
+                            // Asegurarse de que FechaModificacion sea nula para una nueva entidad
+                            familia.FechaModificacion = null; 
+                        }
+                        else
+                        {
+                            // No modificar la fecha de creación para entidades existentes
+                            Console.WriteLine("No modificando FechaCreacion para familia existente");
+                            entityEntry.Property("FechaCreacion").IsModified = false;
+                            
+                            // Solo establecer FechaModificacion para actualizaciones
+                            Console.WriteLine($"Estableciendo FechaModificacion: {DateTime.UtcNow}");
+                            familia.FechaModificacion = DateTime.UtcNow;
+                        }
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine($"ERROR en SaveChanges procesando Familia: {ex.Message}");
+                        if (ex.InnerException != null) {
+                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                        }
+                    }
+                }
             }
 
             // Convertir las fechas a UTC
             ConvertDatesToUtc();
 
-            return base.SaveChanges();
+            try {
+                Console.WriteLine("Iniciando SaveChanges de base en ApplicationDbContext...");
+                var result = base.SaveChanges();
+                Console.WriteLine($"SaveChanges de base completado con {result} cambios");
+                return result;
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"ERROR EN base.SaveChanges: {ex.Message}");
+                if (ex.InnerException != null) {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                throw; // Relanzar para mantener el comportamiento original
+            }
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -662,7 +789,8 @@ namespace SistemaContable.Data
             
             var entries = ChangeTracker.Entries()
                 .Where(e => (e.Entity is CuentaContable || e.Entity is Contacto || e.Entity is Impuesto || 
-                            e.Entity is PlazoPago || e.Entity is EntradaDiario) && 
+                            e.Entity is PlazoPago || e.Entity is Retencion || e.Entity is ComprobanteFiscal ||
+                            e.Entity is EntradaDiario || e.Entity is Familia) && 
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
@@ -715,6 +843,36 @@ namespace SistemaContable.Data
                     }
                     plazoPago.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Retencion retencion)
+                {
+                    // Manejo de fechas para Retenciones
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        // Solo establecer fecha de creación para entidades nuevas
+                        if (!entityEntry.Property("FechaCreacion").IsModified)
+                        {
+                            retencion.FechaCreacion = DateTime.UtcNow;
+                        }
+                    }
+                    else
+                    {
+                        // No modificar la fecha de creación para entidades existentes
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    retencion.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is ComprobanteFiscal comprobanteFiscal)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        comprobanteFiscal.FechaCreacion = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    comprobanteFiscal.UltimaModificacion = DateTime.UtcNow;
+                }
                 else if (entityEntry.Entity is EntradaDiario entradaDiario)
                 {
                     if (entityEntry.State == EntityState.Added)
@@ -727,9 +885,52 @@ namespace SistemaContable.Data
                     }
                     entradaDiario.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Familia familia)
+                {
+                    // Manejo especial para Familia
+                    Console.WriteLine($"ApplicationDbContext: Procesando entidad Familia {familia.Nombre}, Estado={entityEntry.State}");
+                    
+                    try {
+                        if (entityEntry.State == EntityState.Added)
+                        {
+                            Console.WriteLine($"Estableciendo FechaCreacion para nueva familia: {DateTime.UtcNow}");
+                            familia.FechaCreacion = DateTime.UtcNow;
+                            // Asegurarse de que FechaModificacion sea nula para una nueva entidad
+                            familia.FechaModificacion = null; 
+                        }
+                        else
+                        {
+                            // No modificar la fecha de creación para entidades existentes
+                            Console.WriteLine("No modificando FechaCreacion para familia existente");
+                            entityEntry.Property("FechaCreacion").IsModified = false;
+                            
+                            // Solo establecer FechaModificacion para actualizaciones
+                            Console.WriteLine($"Estableciendo FechaModificacion: {DateTime.UtcNow}");
+                            familia.FechaModificacion = DateTime.UtcNow;
+                        }
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine($"ERROR en SaveChangesAsync procesando Familia: {ex.Message}");
+                        if (ex.InnerException != null) {
+                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                        }
+                    }
+                }
             }
-            
-            return await base.SaveChangesAsync(cancellationToken);
+
+            try {
+                Console.WriteLine("Iniciando SaveChangesAsync de base en ApplicationDbContext...");
+                var result = await base.SaveChangesAsync(cancellationToken);
+                Console.WriteLine($"SaveChangesAsync de base completado con {result} cambios");
+                return result;
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"ERROR EN base.SaveChangesAsync: {ex.Message}");
+                if (ex.InnerException != null) {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                throw; // Relanzar para mantener el comportamiento original
+            }
         }
 
         private void ConvertDatesToUtc()

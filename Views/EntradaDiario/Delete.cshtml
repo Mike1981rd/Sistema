@@ -1,0 +1,90 @@
+@model SistemaContable.ViewModels.EntradaDiarioViewModel
+
+@{
+    ViewData["Title"] = "Eliminar Entrada de Diario";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mt-4 mb-2">Eliminar Entrada de Diario</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item">Contabilidad</li>
+                    <li class="breadcrumb-item"><a href="/contabilidad/entradas-diario">Entradas de diario</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            ¿Está seguro de que desea eliminar esta entrada de diario?
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                <strong>Advertencia:</strong> Esta acción no se puede deshacer. Se eliminarán todos los movimientos asociados a esta entrada.
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h5>Información General</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Código:</dt>
+                        <dd class="col-sm-8">@Model.Codigo</dd>
+                        
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.Fecha.ToShortDateString()</dd>
+                        
+                        <dt class="col-sm-4">Tipo:</dt>
+                        <dd class="col-sm-8">@ViewBag.TipoEntradaNombre</dd>
+                        
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Estado == "Abierto")
+                            {
+                                <span class="badge bg-success">@Model.Estado</span>
+                            }
+                            else if (Model.Estado == "Cerrado")
+                            {
+                                <span class="badge bg-primary">@Model.Estado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@Model.Estado</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-4">Observaciones:</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Observaciones) ? "Sin observaciones" : Model.Observaciones)</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h5>Resumen de Movimientos</h5>
+                    <dl class="row">
+                        <dt class="col-sm-6">Cantidad de movimientos:</dt>
+                        <dd class="col-sm-6">@Model.Movimientos.Count</dd>
+                        
+                        <dt class="col-sm-6">Total de débitos:</dt>
+                        <dd class="col-sm-6">@Model.Movimientos.Sum(m => m.Debito).ToString("C2")</dd>
+                        
+                        <dt class="col-sm-6">Total de créditos:</dt>
+                        <dd class="col-sm-6">@Model.Movimientos.Sum(m => m.Credito).ToString("C2")</dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex justify-content-end">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

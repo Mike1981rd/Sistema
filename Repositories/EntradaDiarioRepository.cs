@@ -148,5 +148,32 @@ namespace SistemaContable.Repositories
                 .OrderByDescending(e => e.Fecha)
                 .ToListAsync();
         }
+
+        // Método para obtener una entrada de diario con todos sus detalles
+        public async Task<EntradaDiario> GetByIdWithDetailsAsync(int id)
+        {
+            return await _context.EntradasDiario
+                .Include(e => e.TipoEntrada)
+                .Include(e => e.Numeracion)
+                .Include(e => e.Movimientos)
+                    .ThenInclude(m => m.CuentaContable)
+                .Include(e => e.Movimientos)
+                    .ThenInclude(m => m.Contacto)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        // Método para obtener todas las entradas con detalles
+        public async Task<IEnumerable<EntradaDiario>> GetAllWithDetailsAsync()
+        {
+            return await _context.EntradasDiario
+                .Include(e => e.TipoEntrada)
+                .Include(e => e.Numeracion)
+                .Include(e => e.Movimientos)
+                    .ThenInclude(m => m.CuentaContable)
+                .Include(e => e.Movimientos)
+                    .ThenInclude(m => m.Contacto)
+                .OrderByDescending(e => e.Fecha)
+                .ToListAsync();
+        }
     }
 } 

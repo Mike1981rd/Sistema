@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using SistemaContable.Repositories;
 using SistemaContable.Repositories.Interfaces;
 using SistemaContable.Services.Interfaces;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,9 @@ builder.Services.AddSession(options =>
 
 // Configure database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .EnableSensitiveDataLogging()
+           .LogTo(Console.WriteLine, LogLevel.Information));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
@@ -38,6 +41,9 @@ builder.Services.AddScoped<IEntradaDiarioRepository, EntradaDiarioRepository>();
 builder.Services.AddScoped<ITipoEntradaDiarioRepository, TipoEntradaDiarioRepository>();
 builder.Services.AddScoped<INumeracionEntradaDiarioRepository, NumeracionEntradaDiarioRepository>();
 builder.Services.AddScoped<IEntradaDiarioService, EntradaDiarioService>();
+
+// Configurar EPPlus para la licencia no comercial
+ExcelPackage.License.SetNonCommercialPersonal("SistemaContable");
 
 // Configura logging para EntityFramework en entorno de desarrollo
 if (builder.Environment.IsDevelopment())

@@ -23,6 +23,18 @@ $(document).ready(function() {
         } else {
             // Limpiar select de numeraciones
             $("#numeracionSelect").empty().append('<option value="">-- Seleccionar tipo primero --</option>');
+            // Limpiar previsualización de código
+            $("#codigoEntrada").val('');
+        }
+    });
+    
+    // Evento para numeración
+    $("#numeracionSelect").change(function() {
+        var numeracionId = $(this).val();
+        if (numeracionId) {
+            previsualizarCodigo(numeracionId);
+        } else {
+            $("#codigoEntrada").val('');
         }
     });
     
@@ -50,10 +62,35 @@ $(document).ready(function() {
     calcularTotales();
     
     // Validación del formulario
-    $("form").submit(function(e) {
+    $("#formEntradaDiario").submit(function(e) {
+        // Actualizar todos los campos ocultos antes de enviar
+        $('.monto-debito, .monto-credito').each(function() {
+            actualizarCampoOculto(this);
+        });
+        
         // Verificar balance
         var totalDebito = calcularTotalDebito();
         var totalCredito = calcularTotalCredito();
+        
+        console.log("Verificando balances antes de enviar:");
+        console.log(`Total Débito: ${totalDebito}`);
+        console.log(`Total Crédito: ${totalCredito}`);
+        console.log(`Diferencia: ${Math.abs(totalDebito - totalCredito)}`);
+        
+        // Verificar que al menos una línea tenga valores
+        var hayValores = false;
+        $('.monto-debito, .monto-credito').each(function() {
+            const valor = parseFloat($(this).val().replace(/,/g, '')) || 0;
+            if (valor > 0) {
+                hayValores = true;
+            }
+        });
+        
+        if (!hayValores) {
+            alert("Debe ingresar al menos un valor en Débito o Crédito");
+            e.preventDefault();
+            return false;
+        }
         
         if (Math.abs(totalDebito - totalCredito) > 0.001) {
             alert("El total de débitos debe ser igual al total de créditos");
@@ -101,7 +138,7 @@ $(document).ready(function() {
                 $("#modalNuevaNumeracion").modal('hide');
                 
                 // Agregar nueva numeración al select
-                $("#numeracionSelect").append(new Option(result.nombre, result.id, true, true));
+                $("#numeracionSelect").append(new Option(result.nombre, result.id, true, true)).trigger('change');
                 
                 // Limpiar form
                 $("#formNuevaNumeracion")[0].reset();
@@ -236,7 +273,7 @@ function formatContacto(contacto) {
     
     var $container = $(
         '<div class="d-flex align-items-center">' +
-            '<span class="' + tipoClass + ' text-white rounded-1 me-2 p-1 d-inline-block" style="width: 24px; text-align: center;">' + tipoLabel + '</span>' +
+            '<span class="' + tipoClass + ' text-white rounded-1 me-2 p-1 d-inline-block" style="width: 18px; height: 18px; text-align: center; font-size: 0.7em; line-height: 1.1;">' + tipoLabel + '</span>' +
             '<span>' + contacto.text + '</span>' +
         '</div>'
     );
@@ -265,7 +302,7 @@ function formatContactoSelection(contacto) {
     
     var $container = $(
         '<div class="d-flex align-items-center">' +
-            '<span class="' + tipoClass + ' text-white rounded-1 me-2 p-1 d-inline-block" style="width: 20px; text-align: center; font-size: 0.8em;">' + tipoLabel + '</span>' +
+            '<span class="' + tipoClass + ' text-white rounded-1 me-1 p-1 d-inline-block" style="width: 16px; height: 16px; text-align: center; font-size: 0.7em; line-height: 1;">' + tipoLabel + '</span>' +
             '<span>' + contacto.text + '</span>' +
         '</div>'
     );
@@ -300,21 +337,44 @@ function cargarNumeraciones(tipoId) {
  * Inicializa los formateadores de campos monetarios usando Cleave.js
  */
 function initMoneyInputs() {
-    // Configuración de formato de moneda con coma como separador decimal
+    // Obtener el separador decimal de la configuración global
+    const separadorDecimal = '.'; // Forzar punto como separador decimal para ingreso
+    const precisionDecimal = window.appConfig?.precisionDecimal || 2;
+    
+    console.log(`Inicializando campos monetarios con separador decimal '${separadorDecimal}' y precisión ${precisionDecimal}`);
+    
+    // Configuración de formato de moneda según la configuración de la empresa
     $('.monto-debito, .monto-credito').each(function() {
-        // Quitar el valor inicial de "0.00"
+        // Quitar el valor inicial
         $(this).val('');
         
-        // Crear instancia de Cleave.js con configuración fija para coma decimal
+        // Determinar el delimitador de miles
+        const delimiter = ','; // Usar coma como separador de miles para formato americano
+        
+        // Crear instancia de Cleave.js con configuración dinámica
         new Cleave(this, {
             numeral: true,
             numeralThousandsGroupStyle: 'thousand',
-            numeralDecimalMark: ',',
-            numeralDecimalScale: 2,
-            delimiter: '.',
-            numeralPositiveOnly: true
+            numeralDecimalMark: separadorDecimal,
+            numeralDecimalScale: precisionDecimal,
+            delimiter: delimiter,
+            numeralPositiveOnly: true,
+            // Actualizar el campo oculto con el valor para el modelo
+            onValueChanged: function(e) {
+                actualizarCampoOculto(e.target);
+            }
         });
     });
+    
+    // Agregar eventos change directos para asegurar la actualización
+    $('.monto-debito, .monto-credito').on('blur', function() {
+        actualizarCampoOculto(this);
+    });
+    
+    // Asegurar que haya al menos una línea activa
+    if ($("#tablaMovimientos tbody tr").length === 0) {
+        agregarNuevaFila();
+    }
 }
 
 /**
@@ -341,26 +401,11 @@ function agregarNuevaFila() {
             dataType: 'json',
             delay: 250,
             data: function(params) {
-                console.log("Enviando búsqueda de cuentas:", params.term);
                 return {
                     term: params.term || ''
                 };
             },
             processResults: function(data) {
-                console.log("Respuesta cuentas contables (tipo):", typeof data);
-                console.log("Respuesta cuentas contables:", data);
-                console.log("Propiedades:", Object.keys(data));
-                
-                if (data.results) {
-                    console.log("Número de resultados:", data.results.length);
-                    if (data.results.length > 0) {
-                        console.log("Primer resultado:", data.results[0]);
-                    }
-                } else {
-                    console.error("No se encontró propiedad 'results' en la respuesta");
-                }
-                
-                // SOLUCIÓN: Usar data directamente si ya viene con formato correcto
                 return data;
             },
             cache: true
@@ -378,26 +423,11 @@ function agregarNuevaFila() {
             dataType: 'json',
             delay: 250,
             data: function(params) {
-                console.log("Enviando búsqueda de contactos:", params.term);
                 return {
                     term: params.term || ''
                 };
             },
             processResults: function(data) {
-                console.log("Respuesta contactos (tipo):", typeof data);
-                console.log("Respuesta contactos:", data);
-                console.log("Propiedades:", Object.keys(data));
-                
-                if (data.results) {
-                    console.log("Número de contactos:", data.results.length);
-                    if (data.results.length > 0) {
-                        console.log("Primer contacto:", data.results[0]);
-                    }
-                } else {
-                    console.error("No se encontró propiedad 'results' en la respuesta");
-                }
-                
-                // SOLUCIÓN: Usar data directamente si ya viene con formato correcto
                 return data;
             },
             cache: true
@@ -423,27 +453,38 @@ function agregarNuevaFila() {
     var nuevoDebitoInput = $("#tablaMovimientos tbody tr:last-child .monto-debito");
     var nuevoCreditoInput = $("#tablaMovimientos tbody tr:last-child .monto-credito");
     
-    // Quitar el valor inicial de "0.00"
+    // Quitar el valor inicial
     nuevoDebitoInput.val('');
     nuevoCreditoInput.val('');
     
-    // Inicializar Cleave.js para los nuevos campos con configuración fija para coma decimal
+    // Obtener el separador decimal de la configuración global
+    const separadorDecimal = window.appConfig?.separadorDecimal || ',';
+    const precisionDecimal = window.appConfig?.precisionDecimal || 2;
+    const delimiter = separadorDecimal === ',' ? '.' : ',';
+    
+    // Inicializar Cleave.js para los nuevos campos con la configuración de la empresa
     new Cleave(nuevoDebitoInput[0], {
         numeral: true,
         numeralThousandsGroupStyle: 'thousand',
-        numeralDecimalMark: ',',
-        numeralDecimalScale: 2,
-        delimiter: '.',
-        numeralPositiveOnly: true
+        numeralDecimalMark: '.',
+        numeralDecimalScale: precisionDecimal,
+        delimiter: ',',
+        numeralPositiveOnly: true,
+        onValueChanged: function(e) {
+            actualizarCampoOculto(e.target);
+        }
     });
     
     new Cleave(nuevoCreditoInput[0], {
         numeral: true,
         numeralThousandsGroupStyle: 'thousand',
-        numeralDecimalMark: ',',
-        numeralDecimalScale: 2,
-        delimiter: '.',
-        numeralPositiveOnly: true
+        numeralDecimalMark: '.',
+        numeralDecimalScale: precisionDecimal,
+        delimiter: ',',
+        numeralPositiveOnly: true,
+        onValueChanged: function(e) {
+            actualizarCampoOculto(e.target);
+        }
     });
     
     // Calcular totales
@@ -480,14 +521,15 @@ function renumerarFilas() {
  */
 function calcularTotalDebito() {
     var total = 0;
+    
     $('.monto-debito').each(function() {
         // Obtener el valor sin formato y convertirlo correctamente
         var valor = 0;
         var input = this.value;
         if (input) {
-            // Reemplazar puntos de miles por nada y coma decimal por punto para parsear
-            input = input.replace(/\./g, '').replace(',', '.');
-            valor = parseFloat(input) || 0;
+            // Convertir de formato americano (1,234.56) a formato para cálculos (1234.56)
+            const valorLimpio = input.replace(/,/g, '');
+            valor = parseFloat(valorLimpio) || 0;
         }
         total += valor;
     });
@@ -499,14 +541,15 @@ function calcularTotalDebito() {
  */
 function calcularTotalCredito() {
     var total = 0;
+    
     $('.monto-credito').each(function() {
         // Obtener el valor sin formato y convertirlo correctamente
         var valor = 0;
         var input = this.value;
         if (input) {
-            // Reemplazar puntos de miles por nada y coma decimal por punto para parsear
-            input = input.replace(/\./g, '').replace(',', '.');
-            valor = parseFloat(input) || 0;
+            // Convertir de formato americano (1,234.56) a formato para cálculos (1234.56)
+            const valorLimpio = input.replace(/,/g, '');
+            valor = parseFloat(valorLimpio) || 0;
         }
         total += valor;
     });
@@ -520,18 +563,98 @@ function calcularTotales() {
     var totalDebito = calcularTotalDebito();
     var totalCredito = calcularTotalCredito();
     
-    // Formatear y mostrar totales
-    $("#totalDebito").text('$' + totalDebito.toFixed(2));
-    $("#totalCredito").text('$' + totalCredito.toFixed(2));
+    const separadorDecimal = window.appConfig?.separadorDecimal || ',';
+    const precisionDecimal = window.appConfig?.precisionDecimal || 2;
     
-    // Calcular diferencia
-    var diferencia = totalDebito - totalCredito;
-    $("#diferencia").text('$' + Math.abs(diferencia).toFixed(2));
+    // Formatear y mostrar totales según la configuración de la empresa
+    if (separadorDecimal === ',') {
+        // Formato europeo (1.234,56)
+        $("#totalDebito").text(formatearNumero(totalDebito, separadorDecimal, precisionDecimal));
+        $("#totalCredito").text(formatearNumero(totalCredito, separadorDecimal, precisionDecimal));
+        
+        // Calcular diferencia
+        var diferencia = Math.abs(totalDebito - totalCredito);
+        $("#diferencia").text(formatearNumero(diferencia, separadorDecimal, precisionDecimal));
+    } else {
+        // Formato americano (1,234.56)
+        $("#totalDebito").text(formatearNumero(totalDebito, separadorDecimal, precisionDecimal));
+        $("#totalCredito").text(formatearNumero(totalCredito, separadorDecimal, precisionDecimal));
+        
+        // Calcular diferencia
+        var diferencia = Math.abs(totalDebito - totalCredito);
+        $("#diferencia").text(formatearNumero(diferencia, separadorDecimal, precisionDecimal));
+    }
     
     // Cambiar color según el balance
-    if (Math.abs(diferencia) < 0.001) {
+    if (Math.abs(totalDebito - totalCredito) < 0.001) {
         $("#diferencia").removeClass('text-danger').addClass('text-success');
     } else {
         $("#diferencia").removeClass('text-success').addClass('text-danger');
     }
+}
+
+/**
+ * Función auxiliar para formatear números según la configuración
+ */
+function formatearNumero(valor, separadorDecimal, precision) {
+    // Formato con el separador decimal correcto
+    let resultado = '$';
+    
+    try {
+        console.log(`Formateando número: ${valor} con separador ${separadorDecimal} y precisión ${precision}`);
+        
+        // Convertir a formato americano por defecto (1,234.56)
+        resultado += valor.toFixed(precision)
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
+        console.log(`Número formateado: ${resultado}`);
+    } catch (error) {
+        console.error(`Error al formatear número: ${error.message}`);
+        // En caso de error, devolver un valor por defecto
+        resultado += '0.00';
+    }
+    
+    return resultado;
+}
+
+/**
+ * Función para previsualizar el código que se generará
+ */
+function previsualizarCodigo(numeracionId) {
+    $.ajax({
+        url: '/EntradaDiario/ObtenerPrevisualizacionCodigo',
+        type: 'GET',
+        data: { numeracionId: numeracionId },
+        success: function(data) {
+            $("#codigoEntrada").val(data.codigo);
+        },
+        error: function() {
+            $("#codigoEntrada").val('Error al obtener código');
+        }
+    });
+}
+
+// Función para actualizar el valor del campo oculto cuando se modifica el valor formateado
+function actualizarCampoOculto(input) {
+    const $input = $(input);
+    const valorFormateado = input.value || '0';
+    let valorNumerico = 0;
+    
+    if (valorFormateado) {
+        // Convertir de formato americano a formato numérico
+        const valorLimpio = valorFormateado.replace(/,/g, '');
+        valorNumerico = parseFloat(valorLimpio) || 0;
+    }
+    
+    // Buscar el campo hidden correspondiente y actualizar su valor
+    const fieldName = $input.attr('name');
+    const hiddenField = fieldName.replace('Str', '');
+    const $hidden = $(`input[name="${hiddenField}"]`);
+    
+    // Actualizar el valor del campo oculto que va al servidor
+    $hidden.val(valorNumerico.toString());
+    console.log(`Actualizado campo oculto ${hiddenField}: ${valorNumerico}`);
+    
+    // Calcular totales
+    calcularTotales();
 } 

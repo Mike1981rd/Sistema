@@ -58,12 +58,12 @@
 /* Estilos para la tabla de movimientos */
 #tablaMovimientos th {
     background-color: #f8f9fa;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 #tablaMovimientos tfoot {
     background-color: #f8f9fa;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 #tablaMovimientos .numero-fila {
@@ -103,6 +103,39 @@
 .badge-estado-anulado {
     background-color: #dc3545;
     color: white;
+}
+
+/* Estilos para el icono de eliminar fila */
+.btn-remove-row {
+    color: #dc3545;
+    font-size: 0.95rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.btn-remove-row:hover {
+    opacity: 1;
+    color: #dc3545;
+}
+
+/* Títulos y breadcrumbs */
+.breadcrumb {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: #007848;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #007848;
 }
 
 /* Estilos responsivos */
