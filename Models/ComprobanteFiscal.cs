@@ -70,6 +70,9 @@ namespace SistemaContable.Models
         [Display(Name = "Última modificación")]
         [DataType(DataType.DateTime)]
         public DateTime UltimaModificacion { get; set; } = DateTime.Now;
+
+        [Display(Name = "Activo")]
+        public bool Activo { get; set; } = true;
         
         // Métodos de validación estáticos
         public static ValidationResult ValidarFechaVencimiento(DateTime fecha, ValidationContext context)

@@ -54,5 +54,33 @@ namespace SistemaContable.Controllers
             
             return View("Index", empresa);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("configuracion/comprobantes-fiscales-toggle-estado")]
+        public async Task<IActionResult> ToggleEstadoComprobante(int id)
+        {
+            var comprobante = await _context.ComprobanteFiscal.FindAsync(id);
+            
+            if (comprobante == null)
+            {
+                return NotFound();
+            }
+            
+            comprobante.Activo = !comprobante.Activo;
+            comprobante.UltimaModificacion = DateTime.Now;
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Comprobante fiscal {(comprobante.Activo ? "activado" : "desactivado")} correctamente.";
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "No se pudo cambiar el estado del comprobante fiscal.";
+            }
+            
+            return RedirectToAction("comprobantes-fiscales", new { tab = comprobante.Activo ? "Activos" : "Inactivos" });
+        }
     }
 } 

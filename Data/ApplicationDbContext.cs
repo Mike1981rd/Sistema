@@ -19,6 +19,7 @@ namespace SistemaContable.Data
         public DbSet<Contacto> Contactos { get; set; }
         public DbSet<CuentaContable> CuentasContables { get; set; }
         public DbSet<SaldoInicial> SaldosIniciales { get; set; }
+        public DbSet<SistemaContable.Models.ComprobanteFiscal> ComprobanteFiscal { get; set; } = null!;
         
         // Banking module DbSets
         public DbSet<Banco> Bancos { get; set; }
@@ -65,6 +66,8 @@ namespace SistemaContable.Data
 
         // Almacenes
         public DbSet<Almacen> Almacenes { get; set; }
+        public DbSet<Impresora> Impresoras { get; set; }
+        public DbSet<RutaImpresora> RutasImpresora { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -666,6 +669,32 @@ namespace SistemaContable.Data
                       .HasForeignKey(a => a.EmpresaId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // Configuración para Impresora
+            builder.Entity<Impresora>(entity =>
+            {
+                entity.ToTable("Impresoras");
+                entity.HasKey(e => e.Id);
+                
+                // Relación con Empresa
+                entity.HasOne(i => i.Empresa)
+                      .WithMany()
+                      .HasForeignKey(i => i.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuración para RutaImpresora
+            builder.Entity<RutaImpresora>(entity =>
+            {
+                entity.ToTable("RutasImpresora");
+                entity.HasKey(e => e.Id);
+                
+                // Relación con Empresa
+                entity.HasOne(r => r.Empresa)
+                      .WithMany()
+                      .HasForeignKey(r => r.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         private void ConvertDatesToUtc()
@@ -770,6 +799,30 @@ namespace SistemaContable.Data
                     }
                     almacen.FechaModificacion = DateTime.UtcNow;
                 }
+                else if (entityEntry.Entity is Impresora impresora)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        impresora.FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    impresora.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                }
+                else if (entityEntry.Entity is RutaImpresora rutaImpresora)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        rutaImpresora.FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    rutaImpresora.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                }
             }
 
             return base.SaveChanges();
@@ -840,6 +893,30 @@ namespace SistemaContable.Data
                         entityEntry.Property("FechaCreacion").IsModified = false;
                     }
                     almacen.FechaModificacion = DateTime.UtcNow;
+                }
+                else if (entityEntry.Entity is Impresora impresora)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        impresora.FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    impresora.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                }
+                else if (entityEntry.Entity is RutaImpresora rutaImpresora)
+                {
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        rutaImpresora.FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        entityEntry.Property("FechaCreacion").IsModified = false;
+                    }
+                    rutaImpresora.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
                 }
             }
 

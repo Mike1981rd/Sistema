@@ -141,14 +141,14 @@ namespace SistemaContable.Controllers
         // GET: /api/obtener-cuentas-contables
         [HttpGet]
         [Route("/api/obtener-cuentas-contables")]
-        public IActionResult ObtenerCuentasContables(string termino)
+        public async Task<IActionResult> ObtenerCuentasContables(string termino)
         {
             if (string.IsNullOrWhiteSpace(termino))
             {
                 return Json(new { results = new object[] { } });
             }
             
-            var cuentas = _context.CuentasContables
+            var cuentas = await _context.CuentasContables
                 .Where(c => c.Nombre.ToLower().Contains(termino.ToLower()) || c.Codigo.ToLower().Contains(termino.ToLower()))
                 .OrderBy(c => c.Codigo)
                 .Take(10)
@@ -157,7 +157,7 @@ namespace SistemaContable.Controllers
                     id = c.Id,
                     text = c.Codigo + " - " + c.Nombre
                 })
-                .ToList();
+                .ToListAsync();
 
             return Json(new { results = cuentas });
         }

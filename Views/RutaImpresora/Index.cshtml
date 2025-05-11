@@ -1,0 +1,176 @@
+@model IEnumerable<SistemaContable.Models.RutaImpresora>
+
+@{
+    ViewData["Title"] = "Rutas de Impresora";
+}
+
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/PuntoVenta">Punto de Venta</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Rutas de Impresora</li>
+        </ol>
+    </nav>
+
+    <!-- Mensaje de éxito -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Card principal -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Rutas de Impresora</h5>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nueva Ruta
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(ViewBag.Tab == "Activos" ? "active" : "")" 
+                       href="@Url.Action("Index", new { tab = "Activos" })" 
+                       role="tab">
+                        Activos
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "")" 
+                       href="@Url.Action("Index", new { tab = "Inactivos" })" 
+                       role="tab">
+                        Inactivos
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Mensaje de sugerencia para cambiar de pestaña -->
+            @if (ViewBag.SugerirCambiarPestana == true)
+            {
+                <div class="alert alert-info">
+                    No hay rutas @(ViewBag.Tab == "Activos" ? "activas" : "inactivas"). 
+                    <a href="@Url.Action("Index", new { tab = ViewBag.HayRutasEnOtraPestana })">
+                        Ver rutas @(ViewBag.HayRutasEnOtraPestana == "Activos" ? "activas" : "inactivas")
+                    </a>
+                </div>
+            }
+
+            <!-- Tabla -->
+            <div class="table-responsive">
+                <table id="tablaRutas" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+                            <th>@Html.DisplayNameFor(model => model.Default)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                                <td>
+                                    @if (item.Default)
+                                    {
+                                        <span class="badge bg-success">Predeterminada</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Edit", new { id = item.Id })" 
+                                           class="btn btn-sm btn-primary" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm @(item.Estado ? "btn-danger" : "btn-success")"
+                                                onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', @item.Estado.ToString().ToLower())"
+                                                title="@(item.Estado ? "Desactivar" : "Activar")">
+                                            <i class="fas @(item.Estado ? "fa-times" : "fa-check")"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#tablaRutas').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                },
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: [1, 2] }
+                ]
+            });
+        });
+
+        function confirmarCambioEstado(id, nombre, estadoActual) {
+            const accion = estadoActual ? 'desactivar' : 'activar';
+            const mensaje = `¿Está seguro que desea ${accion} la ruta "${nombre}"?`;
+            
+            if (confirm(mensaje)) {
+                $.post('@Url.Action("ToggleEstado")', { id: id })
+                    .done(function() {
+                        window.location.reload();
+                    })
+                    .fail(function(error) {
+                        console.error('Error al cambiar el estado:', error);
+                        alert('Ocurrió un error al cambiar el estado de la ruta.');
+                    });
+            }
+        }
+    </script>
+
+    <style>
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            background: none;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            color: #0d6efd;
+        }
+
+        .btn-group .btn {
+            margin: 0 2px;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.35em 0.65em;
+        }
+    </style>
+} 

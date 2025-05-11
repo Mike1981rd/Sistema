@@ -34,29 +34,28 @@ namespace SistemaContable.Controllers
                     new PendingInvoice
                     {
                         InvoiceNumber = "0001",
-                        ClientName = "Empresa ABC",
-                        Amount = 1200.00m,
-                        DueDate = DateTime.Today,
-                        Status = "Vence hoy"
+                        ClientName = "Cliente A",
+                        Amount = 1250.00m,
+                        DueDate = DateTime.Now.AddDays(5),
+                        Status = "Vence en 5 días"
                     },
                     new PendingInvoice
                     {
                         InvoiceNumber = "0002",
-                        ClientName = "Distribuidora XYZ",
+                        ClientName = "Cliente B",
                         Amount = 850.00m,
-                        DueDate = DateTime.Today.AddDays(3),
+                        DueDate = DateTime.Now.AddDays(3),
                         Status = "Vence en 3 días"
                     },
                     new PendingInvoice
                     {
                         InvoiceNumber = "0003",
-                        ClientName = "Servicios Técnicos",
-                        Amount = 510.00m,
-                        DueDate = DateTime.Today.AddDays(10),
-                        Status = "Vence en 10 días"
+                        ClientName = "Cliente C",
+                        Amount = 2100.00m,
+                        DueDate = DateTime.Now.AddDays(7),
+                        Status = "Vence en 7 días"
                     }
-                },
-                CurrentDate = DateTime.Now
+                }
             };
 
             return View(viewModel);

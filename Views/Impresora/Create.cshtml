@@ -1,0 +1,79 @@
+@model SistemaContable.ViewModels.ImpresoraViewModel
+
+@{
+    ViewData["Title"] = "Nueva Impresora";
+}
+
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item">Punto de Venta</li>
+            <li class="breadcrumb-item"><a href="/Impresora">Impresoras</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Nueva Impresora</li>
+        </ol>
+    </nav>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">@ViewData["Title"]</h3>
+                    <div class="card-tools">
+                        <a asp-action="Index" class="btn btn-default btn-sm">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+                <form asp-action="Create">
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="form-group">
+                            <label asp-for="Nombre" class="control-label"></label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="Modelo" class="control-label"></label>
+                            <input asp-for="Modelo" class="form-control" />
+                            <span asp-validation-for="Modelo" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="RutasFisicas" class="form-label">Rutas Físicas</label>
+                            <select asp-for="RutasFisicas" class="form-select select2-rutas" asp-items="@Model.RutasFisicasDisponibles" required>
+                                <option value="">Elija la impresora física</option>
+                            </select>
+                            <span asp-validation-for="RutasFisicas" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" asp-for="Estado" id="Estado">
+                                <label class="custom-control-label" for="Estado">@Html.DisplayNameFor(model => model.Estado)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2 para rutas físicas
+            $('.select2-rutas').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccione una ruta física...',
+                allowClear: true
+            });
+        });
+    </script>
+} 

@@ -20,9 +20,34 @@ namespace SistemaContable.Controllers
 
         // GET: /configuracion/comprobantes-fiscales
         [Route("/configuracion/comprobantes-fiscales")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tab = "Activos")
         {
+            ViewBag.Tab = tab;
+            
             var comprobantes = await _context.ComprobantesFiscales.ToListAsync();
+            
+            if (tab == "Activos")
+            {
+                comprobantes = comprobantes.Where(a => a.Activo).ToList();
+                
+                // Si no hay activos pero hay inactivos, sugerir cambiar pestaña
+                if (!comprobantes.Any() && await _context.ComprobantesFiscales.AnyAsync(a => !a.Activo))
+                {
+                    ViewBag.SugerirCambiarPestana = true;
+                    ViewBag.HayComprobantesEnOtraPestana = "Inactivos";
+                }
+            }
+            else
+            {
+                comprobantes = comprobantes.Where(a => !a.Activo).ToList();
+                
+                // Si no hay inactivos pero hay activos, sugerir cambiar pestaña
+                if (!comprobantes.Any() && await _context.ComprobantesFiscales.AnyAsync(a => a.Activo))
+                {
+                    ViewBag.SugerirCambiarPestana = true;
+                    ViewBag.HayComprobantesEnOtraPestana = "Activos";
+                }
+            }
             
             // Add type information for filter modal
             ViewBag.TiposDocumento = Constantes.TiposDocumento.ObtenerTiposDocumento();
@@ -42,7 +67,8 @@ namespace SistemaContable.Controllers
             {
                 NumeroInicial = 1,
                 SiguienteNumero = 1,
-                FechaVencimiento = DateTime.Now.AddYears(1)
+                FechaVencimiento = DateTime.Now.AddYears(1),
+                Activo = true
             };
             
             return View(comprobante);
@@ -58,6 +84,7 @@ namespace SistemaContable.Controllers
             {
                 // Asignar siguiente número igual al número inicial
                 comprobante.SiguienteNumero = comprobante.NumeroInicial;
+                comprobante.Activo = true;
                 
                 // Si es preferida, desmarcar otras del mismo tipo
                 if (comprobante.Preferida)
@@ -108,7 +135,7 @@ namespace SistemaContable.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("/configuracion/comprobantes-fiscales/editar/{id}")]
-        public async Task<IActionResult> Editar(int id, [Bind("Id,Nombre,TipoDocumento,Tipo,Preferida,Electronica,Prefijo,NumeroInicial,NumeroFinal,SiguienteNumero,FechaVencimiento,Sucursal")] ComprobanteFiscal comprobante)
+        public async Task<IActionResult> Editar(int id, [Bind("Id,Nombre,TipoDocumento,Tipo,Preferida,Electronica,Prefijo,NumeroInicial,NumeroFinal,SiguienteNumero,FechaVencimiento,Sucursal,Activo")] ComprobanteFiscal comprobante)
         {
             if (id != comprobante.Id)
             {
@@ -151,12 +178,41 @@ namespace SistemaContable.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { tab = comprobante.Activo ? "Activos" : "Inactivos" });
             }
             
             ViewBag.TiposDocumento = Constantes.TiposDocumento.ObtenerTiposDocumento();
             ViewBag.TiposComprobante = Constantes.TiposComprobanteFiscal.ObtenerTipos();
             return View(comprobante);
+        }
+
+        // POST: /configuracion/comprobantes-fiscales/toggle-estado/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("/configuracion/comprobantes-fiscales/toggle-estado/{id}")]
+        public async Task<IActionResult> ToggleEstado(int id)
+        {
+            var comprobante = await _context.ComprobantesFiscales.FindAsync(id);
+            
+            if (comprobante == null)
+            {
+                return NotFound();
+            }
+            
+            // Invertir el estado actual
+            comprobante.Activo = !comprobante.Activo;
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Comprobante fiscal {(comprobante.Activo ? "activado" : "desactivado")} correctamente.";
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "No se pudo cambiar el estado del comprobante fiscal.";
+            }
+            
+            return RedirectToAction(nameof(Index), new { tab = comprobante.Activo ? "Activos" : "Inactivos" });
         }
 
         // GET: /configuracion/comprobantes-fiscales/eliminar/5
