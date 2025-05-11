@@ -65,6 +65,7 @@ namespace SistemaContable.Controllers
                 .Include(c => c.CuentaDevoluciones)
                 .Include(c => c.CuentaAjustes)
                 .Include(c => c.CuentaCostoMateriaPrima)
+                .Include(c => c.PropinaImpuesto)
                 .Where(c => c.Estado == activos && c.EmpresaId == empresaId)
                 .ToListAsync();
                 
@@ -148,9 +149,9 @@ namespace SistemaContable.Controllers
                         CuentaDevolucionesId = viewModel.CuentaDevolucionesId,
                         CuentaAjustesId = viewModel.CuentaAjustesId,
                         CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId,
-                        Impuestos = viewModel.Impuestos,
+                        ImpuestoId = viewModel.ImpuestoId,
                         PropinaImpuestoId = viewModel.PropinaImpuestoId,
-                        CanalesImpresora = viewModel.CanalesImpresora,
+                        RutaImpresoraId = viewModel.RutaImpresoraId,
                         FechaCreacion = DateTime.UtcNow
                     };
 
@@ -184,29 +185,21 @@ namespace SistemaContable.Controllers
                     var categoriaGuardada = await _context.Categorias.FindAsync(categoria.Id);
                     if (categoriaGuardada != null)
                     {
-                        Console.WriteLine($"Verificación: Categoria encontrada en DB con Id: {categoriaGuardada.Id}, Nombre: {categoriaGuardada.Nombre}, Estado: {categoriaGuardada.Estado}");
-                        
-                        // Agregar mensaje de éxito
-                        TempData["SuccessMessage"] = $"La categoría '{categoriaGuardada.Nombre}' ha sido creada correctamente";
-                        
-                        // Redireccionar a la pestaña correspondiente según el estado
-                        return RedirectToAction(nameof(Index), new { tab = categoriaGuardada.Estado ? "Activos" : "Inactivos" });
+                        Console.WriteLine($"Categoria guardada verificada: {categoriaGuardada.Nombre}");
+                        return RedirectToAction(nameof(Index));
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: No se pudo encontrar la categoría recién creada en la base de datos");
-                        ModelState.AddModelError("", "No se pudo guardar la categoría. Intente nuevamente.");
+                        Console.WriteLine("ERROR: No se pudo verificar la categoría guardada");
+                        ModelState.AddModelError("", "Error al guardar la categoría. Por favor, intente nuevamente.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("ModelState inválido. Errores:");
-                    foreach (var modelState in ModelState.Values)
+                    Console.WriteLine("ModelState no es válido. Errores:");
+                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                     {
-                        foreach (var error in modelState.Errors)
-                        {
-                            Console.WriteLine($"- {error.ErrorMessage}");
-                        }
+                        Console.WriteLine($"- {error.ErrorMessage}");
                     }
                 }
             }
@@ -270,9 +263,9 @@ namespace SistemaContable.Controllers
                 CuentaDevolucionesId = categoria.CuentaDevolucionesId,
                 CuentaAjustesId = categoria.CuentaAjustesId,
                 CuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId,
-                Impuestos = categoria.Impuestos,
+                ImpuestoId = categoria.ImpuestoId,
                 PropinaImpuestoId = categoria.PropinaImpuestoId,
-                CanalesImpresora = categoria.CanalesImpresora
+                RutaImpresoraId = categoria.RutaImpresoraId
             };
 
             await CargarDatosFormulario(viewModel);
@@ -316,9 +309,9 @@ namespace SistemaContable.Controllers
                     categoria.CuentaDevolucionesId = viewModel.CuentaDevolucionesId;
                     categoria.CuentaAjustesId = viewModel.CuentaAjustesId;
                     categoria.CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId;
-                    categoria.Impuestos = viewModel.Impuestos;
+                    categoria.ImpuestoId = viewModel.ImpuestoId;
                     categoria.PropinaImpuestoId = viewModel.PropinaImpuestoId;
-                    categoria.CanalesImpresora = viewModel.CanalesImpresora;
+                    categoria.RutaImpresoraId = viewModel.RutaImpresoraId;
                     categoria.FechaModificacion = DateTime.UtcNow;
 
                     _context.Update(categoria);
@@ -418,14 +411,23 @@ namespace SistemaContable.Controllers
                 
             viewModel.FamiliasDisponibles = new SelectList(familias, "Id", "Nombre", viewModel.FamiliaId);
             
-            // Cargar impuestos disponibles (generales, no filtrados)
+            // Cargar impuestos disponibles
             var impuestos = await _context.Impuestos
                 .Where(i => i.EmpresaId == viewModel.EmpresaId)
                 .OrderBy(i => i.Nombre)
                 .Select(i => new { Id = i.Id, Nombre = i.Nombre })
                 .ToListAsync();
                 
-            viewModel.ImpuestosDisponibles = new SelectList(impuestos, "Id", "Nombre");
+            viewModel.ImpuestosDisponibles = new SelectList(impuestos, "Id", "Nombre", viewModel.ImpuestoId);
+
+            // Cargar rutas de impresora disponibles
+            var rutasImpresora = await _context.RutasImpresora
+                .Where(r => r.EmpresaId == viewModel.EmpresaId)
+                .OrderBy(r => r.Nombre)
+                .Select(r => new { Id = r.Id, Nombre = r.Nombre })
+                .ToListAsync();
+                
+            viewModel.RutasImpresoraDisponibles = new SelectList(rutasImpresora, "Id", "Nombre", viewModel.RutaImpresoraId);
 
             // NUEVO: Cargar propinas disponibles (solo impuestos de tipo "Propina")
             var propinasDb = await _context.Impuestos

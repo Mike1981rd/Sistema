@@ -4,131 +4,297 @@
     ViewData["Title"] = "Impresoras";
 }
 
-<div class="container-fluid">
-    <div class="row">
+@section Styles {
+    <style>
+        /* ESTILOS FORZADOS - NO MODIFICAR */
+        /* Botón rectangular */
+        .btn-primary.btn-sm {
+            background-color: #0A1172 !important;
+            border-color: #0A1172 !important;
+            border-radius: 4px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Ajuste SUPER FORZADO de espaciado de iconos */
+        table .btn-group {
+            display: inline-flex !important;
+            width: auto !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            max-width: 80px !important;
+        }
+
+        table .btn-group .btn {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 30px !important;
+            height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        table .btn-group .btn i {
+            font-size: 14px !important;
+        }
+
+        /* Eliminar completamente el botón del medio del flujo */
+        .view-details {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 0 !important;
+            position: absolute !important;
+            overflow: hidden !important;
+            clip: rect(0 0 0 0) !important;
+        }
+
+        /* Estilo para el botón de exportar */
+        .dropdown-toggle::after {
+            display: inline-block;
+            margin-left: 0.5em;
+            vertical-align: 0.15em;
+            content: "";
+            border-top: 0.3em solid;
+            border-right: 0.3em solid transparent;
+            border-bottom: 0;
+            border-left: 0.3em solid transparent;
+        }
+
+        .btn-outline-secondary {
+            border-color: #e3e6f0;
+            color: #6c757d;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #444;
+            border-color: #dde0e6;
+        }
+
+        /* Corregir visualización de "Mostrar X registros" */
+        .dataTables_length {
+            width: 100%;
+            margin-bottom: 15px;
+            padding-left: 0;
+        }
+
+        .dataTables_length select {
+            min-width: 60px;
+        }
+
+        /* Asegurar que el contenedor tenga suficiente espacio */
+        div.dataTables_wrapper div.dataTables_length {
+            float: left;
+            padding-top: 0.5em;
+        }
+
+        /* Corregir problema visual al colapsar panel lateral */
+        .aurora-wrapper.sidebar-collapsed .aurora-sidebar {
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .aurora-wrapper.sidebar-collapsed .aurora-content {
+            transition: margin-left 0.3s ease;
+        }
+
+        .aurora-main {
+            background-color: #f5f7fa;
+            min-height: calc(100vh - 60px);
+            padding: 20px;
+        }
+
+        /* Estilos para las pestañas */
+        .nav-link.active {
+            border-bottom: 2px solid #007bff !important;
+            font-weight: 500;
+        }
+
+        .nav-link {
+            padding-bottom: 10px;
+            margin-bottom: -1px;
+        }
+        
+        /* Botón específico para Test Impresora */
+        .btn-test-printer {
+            color: #0A1172;
+            background-color: rgba(10, 17, 114, 0.12);
+        }
+        
+        .btn-test-printer:hover {
+            background-color: rgba(10, 17, 114, 0.2);
+        }
+    </style>
+}
+
+<div class="container-fluid p-0">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">@ViewData["Title"]</h3>
-                    <div class="card-tools">
-                        <a asp-action="Create" class="btn" style="background:#3944BC;color:#FFFFFF;">
-                            <i class="fas fa-plus me-1"></i> Nueva Impresora
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-check-circle me-2"></i>
-                                <span>¡Éxito!</span>
-                            </div>
-                            <p class="mb-0 mt-1">@TempData["SuccessMessage"]</p>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="$(this).parent().fadeOut();"></button>
-                        </div>
-                    }
+            <h1 class="h4">Impresoras</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="PuntoVenta" asp-action="Index">Punto de Venta</a>
+                    </li>
+                    <li class="breadcrumb-item active">Impresoras</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
-                    @if (TempData["InfoMessage"] != null)
-                    {
-                        <div class="alert alert-info alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            <h5><i class="icon fas fa-info"></i> Información</h5>
-                            @TempData["InfoMessage"]
-                        </div>
-                    }
+    <div class="card mb-4">
+        <div class="card-header">
+            <ul class="nav border-0">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewBag.Tab == "Activos" || ViewBag.Tab == null ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Activos">
+                        Activos
+                        @if (ViewBag.Tab == "Activos" || ViewBag.Tab == null)
+                        {
+                            <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "") border-0 position-relative" asp-action="Index" asp-route-tab="Inactivos">
+                        Inactivos
+                        @if (ViewBag.Tab == "Inactivos")
+                        {
+                            <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
+                        }
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
-                    @if (ViewBag.SugerirCambiarPestana == true)
-                    {
-                        <div class="alert alert-info alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            <h5><i class="icon fas fa-info"></i> Información</h5>
-                            No hay impresoras @(ViewBag.Tab == "Activos" ? "activas" : "inactivas"). 
-                            <a asp-action="Index" asp-route-tab="@ViewBag.HayImpresorasEnOtraPestana" class="alert-link">
-                                Ver impresoras @(ViewBag.HayImpresorasEnOtraPestana == "Activos" ? "activas" : "inactivas")
-                            </a>
-                        </div>
-                    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                            <li class="breadcrumb-item">Punto de Venta</li>
-                            <li class="breadcrumb-item active" aria-current="page">Impresoras</li>
-                        </ol>
-                    </nav>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (ViewBag.SugerirCambiarPestana == true)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i> 
+            No hay impresoras @(ViewBag.Tab == "Activos" ? "activas" : "inactivas").
+            <a asp-action="Index" asp-route-tab="@ViewBag.HayImpresorasEnOtraPestana" class="alert-link">
+                Ver impresoras @(ViewBag.HayImpresorasEnOtraPestana == "Activos" ? "activas" : "inactivas")
+            </a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-                    <ul class="nav nav-tabs" id="custom-tabs-one-tab" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link @(ViewBag.Tab == "Activos" ? "active" : "")" 
-                               asp-action="Index" asp-route-tab="Activos" role="tab">
-                                Activos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "")" 
-                               asp-action="Index" asp-route-tab="Inactivos" role="tab">
-                                Inactivos
-                            </a>
-                        </li>
-                    </ul>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <!-- Espacio para posible búsqueda en el futuro -->
+        </div>
+        <div class="col-md-8 text-end">
+            <div class="dropdown d-inline-block me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" id="export-excel"><i class="fas fa-file-excel me-2 text-success"></i>Excel</button></li>
+                    <li><button class="dropdown-item" id="export-pdf"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF</button></li>
+                    <li><button class="dropdown-item" id="export-csv"><i class="fas fa-file-csv me-2 text-primary"></i>CSV</button></li>
+                </ul>
+            </div>
+            <a asp-action="Create" class="btn btn-primary btn-sm px-3">
+                <i class="fas fa-plus me-1"></i> Nueva Impresora
+            </a>
+        </div>
+    </div>
 
-                    <div class="tab-content mt-3">
-                        <div class="tab-pane fade show active">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="tablaImpresoras">
-                                    <thead>
-                                        <tr style="background-color: #f8f9fa;">
-                                            <th>NOMBRE</th>
-                                            <th>MODELO</th>
-                                            <th>RUTAS FÍSICAS</th>
-                                            <th>ESTADO</th>
-                                            <th>ACCIÓN</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in Model)
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="impresorasTable" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Modelo</th>
+                            <th>Rutas Físicas</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Modelo)</td>
+                                <td>@Html.DisplayFor(modelItem => item.RutasFisicas)</td>
+                                <td>
+                                    <span class="badge @(item.Estado ? "bg-success" : "bg-danger")">
+                                        @(item.Estado ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm text-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-action="Test" asp-route-id="@item.Id" class="btn btn-sm text-secondary" title="Probar impresora">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        @if (item.Estado)
                                         {
-                                            <tr>
-                                                <td>@item.Nombre</td>
-                                                <td>@item.Modelo</td>
-                                                <td>@item.RutasFisicas</td>
-                                                <td>
-                                                    <span class="badge @(item.Estado ? "bg-success" : "bg-danger")">
-                                                        @(item.Estado ? "Activo" : "Inactivo")
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon btn-flat-primary">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit">
-                                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="#" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', @item.Estado.ToString().ToLower()); return false;" class="btn btn-icon btn-flat-danger">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2">
-                                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        </svg>
-                                                    </a>
-                                                    <a asp-action="Test" asp-route-id="@item.Id" class="btn btn-icon btn-flat-secondary">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-printer">
-                                                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                                                            <rect x="6" y="14" width="12" height="8"></rect>
-                                                        </svg>
-                                                    </a>
-                                                </td>
-                                            </tr>
+                                            <button class="btn btn-sm text-danger" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
                                         }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                        else
+                                        {
+                                            <button class="btn btn-sm text-success" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" title="Activar">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para cambio de estado -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="mensajeConfirmacion"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
+                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
+                    <input type="hidden" id="impresoraId" name="id" />
+                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
+                </form>
             </div>
         </div>
     </div>
@@ -137,129 +303,62 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('#tablaImpresoras').DataTable({
+            $('#impresorasTable').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
-                    lengthMenu: 'Mostrar _MENU_ registros',
-                    paginate: {
-                        first: '<i class="fas fa-angle-double-left"></i>',
-                        previous: '<i class="fas fa-angle-left"></i>',
-                        next: '<i class="fas fa-angle-right"></i>',
-                        last: '<i class="fas fa-angle-double-right"></i>'
-                    }
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
                 },
-                pageLength: 10,
-                order: [[0, 'asc']],
-                lengthMenu: [
-                    [10, 25, 50, 100, -1],
-                    ['10', '25', '50', '100', 'Todos']
-                ],
-                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel me-2 text-success"></i>Excel',
+                        className: 'btn btn-sm btn-outline-secondary me-2',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf me-2 text-danger"></i>PDF',
+                        className: 'btn btn-sm btn-outline-secondary me-2',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'csv',
+                        text: '<i class="fas fa-file-csv me-2 text-primary"></i>CSV',
+                        className: 'btn btn-sm btn-outline-secondary',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    }
+                ]
+            });
+
+            // Conectar los botones del dropdown con los botones de DataTables
+            $('#export-excel').on('click', function() {
+                $('#impresorasTable').DataTable().button(0).trigger();
+            });
+
+            $('#export-pdf').on('click', function() {
+                $('#impresorasTable').DataTable().button(1).trigger();
+            });
+
+            $('#export-csv').on('click', function() {
+                $('#impresorasTable').DataTable().button(2).trigger();
             });
         });
 
-        function confirmarCambioEstado(id, nombre, estado) {
+        function confirmarCambioEstado(id, nombre, estaActivo) {
             document.getElementById('impresoraId').value = id;
-            var accion = estado ? 'desactivar' : 'activar';
+            var accion = estaActivo ? 'desactivar' : 'activar';
             document.getElementById('mensajeConfirmacion').textContent = 
                 `¿Está seguro que desea ${accion} la impresora "${nombre}"?`;
             var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
             modal.show();
         }
     </script>
-}
-
-<style>
-    /* Estilos para los botones de acción */
-    .btn-icon {
-        padding: 0.5rem;
-        margin: 0 0.125rem;
-        border-radius: 0.25rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .btn-flat-primary {
-        color: #EC5800;
-        background-color: rgba(236, 88, 0, 0.12);
-        border: none;
-    }
-    
-    .btn-flat-primary:hover {
-        background-color: rgba(236, 88, 0, 0.2);
-        color: #EC5800;
-    }
-    
-    .btn-flat-danger {
-        color: #ea5455;
-        background-color: rgba(234, 84, 85, 0.12);
-        border: none;
-    }
-    
-    .btn-flat-danger:hover {
-        background-color: rgba(234, 84, 85, 0.2);
-        color: #ea5455;
-    }
-    
-    .btn-flat-secondary {
-        color: #82868b;
-        background-color: rgba(130, 134, 139, 0.12);
-        border: none;
-    }
-    
-    .btn-flat-secondary:hover {
-        background-color: rgba(130, 134, 139, 0.2);
-        color: #82868b;
-    }
-    
-    .feather {
-        font-family: feather!important;
-        speak: none;
-        font-style: normal;
-        font-weight: 400;
-        font-variant: normal;
-        text-transform: none;
-        line-height: 1;
-        -webkit-font-smoothing: antialiased;
-    }
-    
-    /* Estilos para pestañas sin bordes */
-    .nav-link {
-        border: none !important;
-    }
-    
-    .nav-link.active {
-        border-bottom: 2px solid #007bff !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-top: none !important;
-    }
-    
-    /* Estilos para los botones de paginación */
-    .page-item.active .page-link {
-        background-color: #3944BC !important;
-        border-color: #3944BC !important;
-        color: white !important;
-    }
-    .page-link {
-        color: #333 !important;
-    }
-    .page-link:hover {
-        color: #3944BC !important;
-    }
-    /* Estilos para botones de Anterior/Siguiente */
-    .dataTables_paginate .paginate_button.previous,
-    .dataTables_paginate .paginate_button.next {
-        background-color: #f8f9fa !important;
-        border-color: #dee2e6 !important;
-    }
-    /* Estilo para el botón activo */
-    .dataTables_paginate .paginate_button.current {
-        background-color: #3944BC !important;
-        border-color: #3944BC !important;
-        color: white !important;
-    }
-</style> 
+} 

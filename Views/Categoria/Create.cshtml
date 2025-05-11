@@ -52,9 +52,10 @@
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label asp-for="Impuestos" class="form-label">Impuestos</label>
-                        <select asp-for="Impuestos" class="form-select select-impuestos" multiple
+                        <label asp-for="ImpuestoId" class="form-label">Impuesto</label>
+                        <select asp-for="ImpuestoId" class="form-select select-impuesto"
                                 asp-items="@Model.ImpuestosDisponibles">
+                            <option value="">-- Seleccionar impuesto --</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -65,8 +66,12 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="CanalesImpresora" class="form-label">Canales de impresora</label>
-                        <input asp-for="CanalesImpresora" class="form-control" />
+                        <label asp-for="RutaImpresoraId" class="form-label">Ruta de impresión</label>
+                        <select asp-for="RutaImpresoraId" class="form-select select-ruta"
+                                asp-items="@Model.RutasImpresoraDisponibles">
+                            <option value="">-- Seleccionar ruta --</option>
+                        </select>
+                        <span asp-validation-for="RutaImpresoraId" class="text-danger"></span>
                     </div>
                 </div>
                 
@@ -159,15 +164,21 @@
                 allowClear: true
             });
             
-            $('.select-impuestos').select2({
+            $('.select-impuesto').select2({
                 theme: 'bootstrap-5',
-                placeholder: 'Seleccionar impuestos',
+                placeholder: 'Seleccionar impuesto',
                 allowClear: true
             });
 
             $('.select-propina').select2({
                 theme: 'bootstrap-5',
                 placeholder: 'Seleccionar propina',
+                allowClear: true
+            });
+
+            $('.select-ruta').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccionar ruta de impresión',
                 allowClear: true
             });
 

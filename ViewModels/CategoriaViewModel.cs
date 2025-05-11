@@ -57,8 +57,8 @@ namespace SistemaContable.ViewModels
         public SelectList? CuentasCostoMateriaPrimaDisponibles { get; set; }
 
         // Impuestos
-        [DisplayName("Impuestos")]
-        public string? Impuestos { get; set; }
+        [DisplayName("Impuesto")]
+        public int? ImpuestoId { get; set; }
         public SelectList? ImpuestosDisponibles { get; set; }
 
         // Propina
@@ -66,9 +66,24 @@ namespace SistemaContable.ViewModels
         public int? PropinaImpuestoId { get; set; }
         public SelectList? PropinasDisponibles { get; set; }
 
-        // Canales de impresora
-        [DisplayName("Canales de impresora")]
-        public string? CanalesImpresora { get; set; }
+        // Ruta de impresora
+        [DisplayName("Ruta de Impresión")]
+        public int? RutaImpresoraId { get; set; }
+        public SelectList? RutasImpresoraDisponibles { get; set; }
+
+        /// <summary>
+        /// Obsoleta: Use RutaImpresoraId en su lugar
+        /// </summary>
+        [Obsolete("Use RutaImpresoraId instead", true)]
+        public string CanalesImpresora 
+        { 
+            get => RutaImpresoraId?.ToString(); 
+            set 
+            {
+                if (int.TryParse(value, out int id))
+                    RutaImpresoraId = id;
+            }
+        }
 
         // Campos requeridos por la base de datos
         [Required]

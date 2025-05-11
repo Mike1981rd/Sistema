@@ -1,65 +1,83 @@
-@model SistemaContable.ViewModels.ImpresoraViewModel
+@model SistemaContable.Models.Impresora
 
 @{
     ViewData["Title"] = "Nueva Impresora";
 }
 
-<div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-            <li class="breadcrumb-item">Punto de Venta</li>
-            <li class="breadcrumb-item"><a href="/Impresora">Impresoras</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Nueva Impresora</li>
-        </ol>
-    </nav>
-    <div class="row">
+<div class="container-fluid p-0">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">@ViewData["Title"]</h3>
-                    <div class="card-tools">
-                        <a asp-action="Index" class="btn btn-default btn-sm">
-                            <i class="fas fa-arrow-left"></i> Volver
-                        </a>
-                    </div>
-                </div>
-                <form asp-action="Create">
-                    <div class="card-body">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        
-                        <div class="form-group">
+            <h1 class="h4">Nueva Impresora</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="PuntoVenta" asp-action="Index">Punto de Venta</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Impresora" asp-action="Index">Impresoras</a>
+                    </li>
+                    <li class="breadcrumb-item active">Nueva Impresora</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
                             <label asp-for="Nombre" class="control-label"></label>
                             <input asp-for="Nombre" class="form-control" />
                             <span asp-validation-for="Nombre" class="text-danger"></span>
                         </div>
-                        
-                        <div class="form-group">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
                             <label asp-for="Modelo" class="control-label"></label>
                             <input asp-for="Modelo" class="form-control" />
                             <span asp-validation-for="Modelo" class="text-danger"></span>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <label asp-for="RutasFisicas" class="form-label">Rutas Físicas</label>
-                            <select asp-for="RutasFisicas" class="form-select select2-rutas" asp-items="@Model.RutasFisicasDisponibles" required>
-                                <option value="">Elija la impresora física</option>
-                            </select>
-                            <span asp-validation-for="RutasFisicas" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" asp-for="Estado" id="Estado">
-                                <label class="custom-control-label" for="Estado">@Html.DisplayNameFor(model => model.Estado)</label>
-                            </div>
-                        </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Guardar</button>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="RutasFisicas" class="control-label">Ruta Física</label>
+                    <select name="rutaSeleccionada" class="form-control select2" data-placeholder="Seleccione una ruta...">
+                        <option value="">-- Seleccione una ruta --</option>
+                        @foreach (var ruta in ViewBag.RutasDisponibles)
+                        {
+                            var isSelected = Model != null && Model.RutasFisicas == ruta.Nombre;
+                            <option value="@ruta.Nombre" selected="@isSelected">
+                                @ruta.Nombre
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="RutasFisicas" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <div class="form-check">
+                        <input asp-for="Estado" class="form-check-input" />
+                        <label asp-for="Estado" class="form-check-label"></label>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">
+                        <i class="fas fa-save me-1"></i> Guardar
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -68,10 +86,9 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         $(document).ready(function() {
-            // Inicializar Select2 para rutas físicas
-            $('.select2-rutas').select2({
+            $('.select2').select2({
                 theme: 'bootstrap-5',
-                placeholder: 'Seleccione una ruta física...',
+                width: '100%',
                 allowClear: true
             });
         });

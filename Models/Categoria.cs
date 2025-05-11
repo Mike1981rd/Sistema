@@ -53,23 +53,45 @@ namespace SistemaContable.Models
         [ForeignKey("CuentaCostoMateriaPrimaId")]
         public virtual CuentaContable? CuentaCostoMateriaPrima { get; set; }
 
+        // Impuesto
+        public int? ImpuestoId { get; set; }
+        [ForeignKey("ImpuestoId")]
+        public virtual Impuesto? Impuesto { get; set; }
+
+        // Ruta de impresora
+        public int? RutaImpresoraId { get; set; }
+        [ForeignKey("RutaImpresoraId")]
+        public virtual RutaImpresora? RutaImpresora { get; set; }
+
         // Campos para impuestos
         public string? Impuestos { get; set; }
         
         // Propina
         public decimal? Propina { get; set; }
-        
-        // Canales de impresora
-        public string? CanalesImpresora { get; set; }
 
-        // Campos requeridos por la base de datos
-        [Required]
-        public int EmpresaId { get; set; }
-        public virtual Empresa? Empresa { get; set; }
+        /// <summary>
+        /// Obsoleta: Use RutaImpresoraId en su lugar
+        /// </summary>
+        [Obsolete("Use RutaImpresoraId instead", true)]
+        public string? CanalesImpresora 
+        { 
+            get => RutaImpresoraId?.ToString(); 
+            set 
+            {
+                if (int.TryParse(value, out int id))
+                    RutaImpresoraId = id;
+            }
+        }
 
+        // Campos de auditoría
         [Required]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
         public DateTime? FechaModificacion { get; set; }
+
+        [Required]
+        public int EmpresaId { get; set; }
+        [ForeignKey("EmpresaId")]
+        public virtual Empresa? Empresa { get; set; }
 
         public int? PropinaImpuestoId { get; set; }
         [ForeignKey("PropinaImpuestoId")]

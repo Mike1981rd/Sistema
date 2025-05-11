@@ -75,28 +75,21 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Impresora/Create
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            if (empresaId <= 0)
-            {
-                return RedirectToAction("Index", "Empresas");
-            }
-
-            var viewModel = new ImpresoraViewModel
-            {
-                Estado = true,
-                EmpresaId = empresaId
-            };
-
-            await CargarRutasFisicas(viewModel);
-            return View(viewModel);
+            // Obtener las rutas desde la BD
+            var rutasDisponibles = _context.RutasImpresora.Where(r => r.Estado).ToList();
+            
+            // Guardar en ViewBag para el select2
+            ViewBag.RutasDisponibles = rutasDisponibles;
+            
+            return View();
         }
 
         // POST: Impresora/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ImpresoraViewModel viewModel)
+        public async Task<IActionResult> Create(Impresora impresora, string rutaSeleccionada)
         {
             try
             {
@@ -112,30 +105,23 @@ namespace SistemaContable.Controllers
                     return RedirectToAction("Index", "Empresas");
                 }
 
-                viewModel.EmpresaId = empresaId;
-                Console.WriteLine($"EmpresaId asignado al viewModel: {viewModel.EmpresaId}");
+                impresora.EmpresaId = empresaId;
+                Console.WriteLine($"EmpresaId asignado al modelo: {impresora.EmpresaId}");
 
                 if (ModelState.IsValid)
                 {
+                    // Asignar la ruta seleccionada directamente
+                    impresora.RutasFisicas = rutaSeleccionada;
+
                     // Verificar explícitamente todos los valores para diagnosticar problemas de NULL
                     Console.WriteLine("Verificando valores antes de crear Impresora:");
-                    Console.WriteLine($"- Nombre: {viewModel.Nombre ?? "NULL"}, longitud: {viewModel.Nombre?.Length ?? 0}");
-                    Console.WriteLine($"- Modelo: {viewModel.Modelo ?? "NULL"}, longitud: {viewModel.Modelo?.Length ?? 0}");
-                    Console.WriteLine($"- RutasFisicas: {viewModel.RutasFisicas ?? "NULL"}, longitud: {viewModel.RutasFisicas?.Length ?? 0}");
-                    Console.WriteLine($"- Estado: {viewModel.Estado}");
-                    Console.WriteLine($"- EmpresaId: {viewModel.EmpresaId}");
+                    Console.WriteLine($"- Nombre: {impresora.Nombre ?? "NULL"}, longitud: {impresora.Nombre?.Length ?? 0}");
+                    Console.WriteLine($"- Modelo: {impresora.Modelo ?? "NULL"}, longitud: {impresora.Modelo?.Length ?? 0}");
+                    Console.WriteLine($"- RutasFisicas: {impresora.RutasFisicas ?? "NULL"}, longitud: {impresora.RutasFisicas?.Length ?? 0}");
+                    Console.WriteLine($"- Estado: {impresora.Estado}");
+                    Console.WriteLine($"- EmpresaId: {impresora.EmpresaId}");
                     
-                    // Crear una nueva instancia de Impresora con los valores del ViewModel
-                    var impresora = new Impresora
-                    {
-                        Nombre = viewModel.Nombre ?? string.Empty,
-                        Modelo = viewModel.Modelo ?? string.Empty,
-                        RutasFisicas = viewModel.RutasFisicas ?? string.Empty,
-                        Estado = viewModel.Estado,
-                        EmpresaId = viewModel.EmpresaId,
-                        FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
-                    };
-
+                    impresora.FechaCreacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
                     Console.WriteLine($"Creando impresora: {impresora.Nombre}, Estado: {impresora.Estado}, EmpresaId: {impresora.EmpresaId}");
                     
                     // Verificar si hay algún problema con EmpresaId
@@ -143,8 +129,7 @@ namespace SistemaContable.Controllers
                     {
                         Console.WriteLine("ERROR CRÍTICO: EmpresaId inválido en el objeto Impresora");
                         ModelState.AddModelError("", "La empresa seleccionada no es válida.");
-                        await CargarRutasFisicas(viewModel);
-                        return View(viewModel);
+                        return View(impresora);
                     }
                     
                     // Agregar al contexto y guardar
@@ -198,49 +183,42 @@ namespace SistemaContable.Controllers
                 Console.WriteLine("======= FIN CREATE IMPRESORA =======");
             }
 
-            // Si llegamos aquí, hubo algún error, volvemos a la vista
-            await CargarRutasFisicas(viewModel);
-            return View(viewModel);
+            // Si llegamos aquí, hubo algún error, recargar las rutas y volver a la vista
+            var rutasDisponibles = _context.RutasImpresora.Where(r => r.Estado).ToList();
+            ViewBag.RutasDisponibles = rutasDisponibles;
+            
+            return View(impresora);
         }
 
         // GET: Impresora/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-                return NotFound();
-
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            if (empresaId <= 0)
             {
-                return RedirectToAction("Index", "Empresas");
+                return NotFound();
             }
 
-            var impresora = await _context.Impresoras
-                .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
-
+            var impresora = await _context.Impresoras.FindAsync(id);
             if (impresora == null)
-                return NotFound();
-
-            var viewModel = new ImpresoraViewModel
             {
-                Id = impresora.Id,
-                Nombre = impresora.Nombre,
-                Modelo = impresora.Modelo,
-                RutasFisicas = impresora.RutasFisicas,
-                Estado = impresora.Estado,
-                EmpresaId = impresora.EmpresaId
-            };
-
-            await CargarRutasFisicas(viewModel);
-            return View(viewModel);
+                return NotFound();
+            }
+            
+            // Obtener las rutas desde la BD
+            var rutasDisponibles = _context.RutasImpresora.Where(r => r.Estado).ToList();
+            
+            // Guardar en ViewBag para el select2
+            ViewBag.RutasDisponibles = rutasDisponibles;
+            
+            return View(impresora);
         }
 
         // POST: Impresora/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ImpresoraViewModel viewModel)
+        public async Task<IActionResult> Edit(int id, Impresora impresora, string rutaSeleccionada)
         {
-            if (id != viewModel.Id)
+            if (id != impresora.Id)
                 return NotFound();
 
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
@@ -249,43 +227,49 @@ namespace SistemaContable.Controllers
                 return RedirectToAction("Index", "Empresas");
             }
 
-            viewModel.EmpresaId = empresaId;
+            impresora.EmpresaId = empresaId;
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var impresora = await _context.Impresoras
+                    var impresoraExistente = await _context.Impresoras
                         .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
                     
-                    if (impresora == null)
+                    if (impresoraExistente == null)
                         return NotFound();
 
-                    impresora.Nombre = viewModel.Nombre ?? string.Empty;
-                    impresora.Modelo = viewModel.Modelo ?? string.Empty;
-                    impresora.RutasFisicas = viewModel.RutasFisicas ?? string.Empty;
-                    impresora.Estado = viewModel.Estado;
-                    impresora.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    // Asignar la ruta seleccionada directamente
+                    impresora.RutasFisicas = rutaSeleccionada;
 
-                    _context.Update(impresora);
+                    impresoraExistente.Nombre = impresora.Nombre ?? string.Empty;
+                    impresoraExistente.Modelo = impresora.Modelo ?? string.Empty;
+                    impresoraExistente.RutasFisicas = impresora.RutasFisicas ?? string.Empty;
+                    impresoraExistente.Estado = impresora.Estado;
+                    impresoraExistente.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+
+                    _context.Update(impresoraExistente);
                     await _context.SaveChangesAsync();
                     
                     // Agregar mensaje de éxito
-                    TempData["SuccessMessage"] = $"La impresora '{impresora.Nombre}' ha sido actualizada correctamente";
+                    TempData["SuccessMessage"] = $"La impresora '{impresoraExistente.Nombre}' ha sido actualizada correctamente";
                     
-                    return RedirectToAction(nameof(Index), new { tab = impresora.Estado ? "Activos" : "Inactivos" });
+                    return RedirectToAction(nameof(Index), new { tab = impresoraExistente.Estado ? "Activos" : "Inactivos" });
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ImpresoraExists(viewModel.Id))
+                    if (!ImpresoraExists(impresora.Id))
                         return NotFound();
                     else
                         throw;
                 }
             }
 
-            await CargarRutasFisicas(viewModel);
-            return View(viewModel);
+            // Si hay error, recargar las rutas
+            var rutasDisponibles = _context.RutasImpresora.Where(r => r.Estado).ToList();
+            ViewBag.RutasDisponibles = rutasDisponibles;
+            
+            return View(impresora);
         }
 
         // POST: Impresora/ToggleEstado/5
@@ -351,21 +335,6 @@ namespace SistemaContable.Controllers
         private bool ImpresoraExists(int id)
         {
             return _context.Impresoras.Any(e => e.Id == id);
-        }
-
-        private async Task CargarRutasFisicas(ImpresoraViewModel viewModel)
-        {
-            // Aquí cargamos las rutas físicas disponibles como un SelectList
-            // En un caso real, podrías obtener estas opciones de la base de datos
-            var rutasFisicas = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "CAJA", Text = "CAJA" },
-                new SelectListItem { Value = "COCINA", Text = "COCINA" },
-                new SelectListItem { Value = "BAR", Text = "BAR" },
-                new SelectListItem { Value = "TERRAZA", Text = "TERRAZA" }
-            };
-            
-            viewModel.RutasFisicasDisponibles = new SelectList(rutasFisicas, "Value", "Text", viewModel.RutasFisicas);
         }
 
         // GET: Impresora/Test/5
