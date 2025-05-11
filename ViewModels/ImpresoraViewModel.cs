@@ -18,10 +18,9 @@ namespace SistemaContable.ViewModels
         [DisplayName("Modelo")]
         public string Modelo { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La ruta física es obligatoria")]
         [MaxLength(100, ErrorMessage = "La ruta física no puede exceder los 100 caracteres")]
-        [DisplayName("Rutas Físicas")]
-        public string RutasFisicas { get; set; } = string.Empty;
+        [DisplayName("Ruta Física")]
+        public string? RutasFisicas { get; set; }
         
         // Lista de rutas físicas disponibles
         public SelectList? RutasFisicasDisponibles { get; set; }

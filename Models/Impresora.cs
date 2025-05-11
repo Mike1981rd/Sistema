@@ -17,9 +17,8 @@ namespace SistemaContable.Models
         [MaxLength(100)]
         public string Modelo { get; set; } = string.Empty;
 
-        [Required]
         [MaxLength(100)]
-        public string RutasFisicas { get; set; } = string.Empty;
+        public string? RutasFisicas { get; set; }
 
         [Required]
         public bool Estado { get; set; } = true; // true = Activo, false = Inactivo
