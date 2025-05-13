@@ -1,0 +1,864 @@
+@model SistemaContable.Models.ViewModels.ItemViewModel
+@{
+    ViewData["Title"] = "Nuevo Item";
+}
+
+<div class="container-fluid p-0">
+    <!-- Sección de encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Nuevo Item</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-action="Index">Items</a>
+                    </li>
+                    <li class="breadcrumb-item active">Nuevo</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="itemForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <!-- Nav tabs con estilo Underline -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <ul class="nav nav-tabs-underline" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" href="#tab-info" role="tab" data-bs-toggle="tab">
+                            Información
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#tab-compras" role="tab" data-bs-toggle="tab">
+                            Compras
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#tab-contabilidad" role="tab" data-bs-toggle="tab">
+                            Contabilidad
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#tab-taras" role="tab" data-bs-toggle="tab">
+                            Taras
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#tab-venta" role="tab" data-bs-toggle="tab">
+                            Producto de Venta
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab content -->
+                <div class="tab-content mt-4">
+                    <!-- Tab Información -->
+                    <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="Codigo" class="form-label">Código</label>
+                                        <input asp-for="Codigo" class="form-control" />
+                                        <span asp-validation-for="Codigo" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
+                                        <div class="input-group">
+                                            <input asp-for="CodigoBarras" class="form-control" />
+                                            <button type="button" class="btn btn-outline-secondary" id="generarCodigoBarras">
+                                                <i class="fas fa-barcode"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info" id="imprimirCodigoBarras" disabled>
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                        <div id="codigoBarrasPreview" class="mt-2 text-center" style="display: none;">
+                                            <svg id="barcode"></svg>
+                                        </div>
+                                        <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label asp-for="Nombre" class="form-label">Nombre *</label>
+                                        <input asp-for="Nombre" class="form-control" required />
+                                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="CategoriaId" class="form-label">Categoría *</label>
+                                        <select asp-for="CategoriaId" asp-items="Model.CategoriasDisponibles" class="form-select select2-categoria" required>
+                                            <option value="">Seleccione una categoría</option>
+                                        </select>
+                                        <span asp-validation-for="CategoriaId" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="MarcaId" class="form-label">Marca</label>
+                                        <select asp-for="MarcaId" asp-items="Model.MarcasDisponibles" class="form-select select2-marca">
+                                            <option value="">Genérica</option>
+                                        </select>
+                                        <span asp-validation-for="MarcaId" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label asp-for="Descripcion" class="form-label">Descripción</label>
+                                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="ImpuestoId" class="form-label">Impuesto</label>
+                                        <select asp-for="ImpuestoId" asp-items="Model.ImpuestosDisponibles" class="form-select select2">
+                                            <option value="">Seleccione un impuesto</option>
+                                        </select>
+                                        <span asp-validation-for="ImpuestoId" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Rendimiento" class="form-label">Rendimiento (%)</label>
+                                        <input asp-for="Rendimiento" class="form-control" type="number" step="0.01" min="0" max="100" value="100" data-decimal="@Model.SeparadorDecimal" />
+                                        <small class="text-muted">Porcentaje del producto que se mantiene después de procesarlo</small>
+                                        <span asp-validation-for="Rendimiento" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="Estado" class="form-label">Estado</label>
+                                        <select asp-for="Estado" class="form-select">
+                                            <option value="true" selected>Activo</option>
+                                            <option value="false">Inactivo</option>
+                                        </select>
+                                        <span asp-validation-for="Estado" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Imagen</h5>
+                                        <div class="image-upload-container">
+                                            <div class="image-preview-wrapper text-center">
+                                                <div id="imagePreview" class="mb-3" style="display: none;">
+                                                    <img id="preview" src="#" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
+                                                </div>
+                                                <div id="imageDefault" class="mb-3 p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-image fa-4x mb-3"></i>
+                                                        <p>No hay imagen</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="dropzone-container mb-3 text-center">
+                                                <div id="dropzone" class="dropzone-area p-3 border border-dashed rounded">
+                                                    <input asp-for="ItemImage" type="file" class="file-input" accept="image/*" hidden />
+                                                    <div class="dropzone-message">
+                                                        <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                                                        <p>Arrastra y suelta una imagen aquí o<br>
+                                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="browseButton">
+                                                            Seleccionar imagen
+                                                        </button></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="upload-options d-flex justify-content-between">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="cropButton" style="display: none;">
+                                                    <i class="fas fa-crop me-1"></i> Recortar
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" id="btnResetImage" style="display: none;">
+                                                    <i class="fas fa-trash me-1"></i> Eliminar
+                                                </button>
+                                            </div>
+                                            <div class="mt-2 text-muted small">
+                                                <ul class="ps-3 mb-0">
+                                                    <li>Formatos: JPG, PNG o GIF</li>
+                                                    <li>Tamaño máximo: 800KB</li>
+                                                    <li>Dimensiones recomendadas: 800x800px</li>
+                                                </ul>
+                                            </div>
+                                            <span asp-validation-for="ItemImage" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Compras -->
+                    <div class="tab-pane fade" id="tab-compras" role="tabpanel">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="UnidadMedidaInventarioId" class="form-label">Unidad de Medida (Inventario) *</label>
+                                <div class="input-group">
+                                    <select asp-for="UnidadMedidaInventarioId" asp-items="Model.UnidadesMedidaDisponibles" class="form-select select2-uom" required>
+                                        <option value="">Seleccione una unidad</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" id="btnNuevaUnidad">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="UnidadMedidaInventarioId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="UnidadCompraId" class="form-label">Unidad de Compra Preferida</label>
+                                <select id="UnidadCompraId" name="UnidadCompraId" class="form-select" disabled>
+                                    <option value="">Debe agregar contenedores primero</option>
+                                </select>
+                                <small class="text-muted">Se habilitará después de configurar los contenedores</small>
+                            </div>
+                        </div>
+
+                        <!-- Unidades y Conversiones -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Conversiones de Unidades</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="tablaContenedores">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th style="width: 50px;">No</th>
+                                                <th>Contenedor</th>
+                                                <th>Etiqueta</th>
+                                                <th>Cantidad</th>
+                                                <th>Costo</th>
+                                                <th style="width: 50px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Las filas se agregarán dinámicamente con JavaScript -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="6">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btnAgregarContenedor">
+                                                        <i class="fas fa-plus me-1"></i> Agregar Fila
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Proveedores -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Proveedores</h5>
+                                <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProveedor">
+                                    <i class="fas fa-plus me-1"></i> Agregar Proveedor
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="proveedoresContainer">
+                                    <!-- Los proveedores se agregarán dinámicamente con JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Almacenes -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Distribución en Almacenes</h5>
+                                <div>
+                                    <label asp-for="StockActual" class="form-label me-2">Stock Inicial:</label>
+                                    <input asp-for="StockActual" class="form-control-sm" type="number" step="0.01" min="0" value="0" id="stockActualTotal" style="width: 100px;" data-decimal="@Model.SeparadorDecimal" />
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="btnDistribuirStock">
+                                        <i class="fas fa-balance-scale me-1"></i> Distribuir
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="almacenesContainer">
+                                    <!-- Los almacenes se agregarán dinámicamente con JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Contabilidad -->
+                    <div class="tab-pane fade" id="tab-contabilidad" role="tabpanel">
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i> Las cuentas contables se heredan de la categoría seleccionada. Puede personalizarlas para este item específico.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CuentaVentasId" class="form-label">Cuenta de Ventas</label>
+                                <select asp-for="CuentaVentasId" asp-items="Model.CuentasVentasDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaVentasId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CuentaComprasInventariosId" class="form-label">Cuenta de Compras/Inventarios</label>
+                                <select asp-for="CuentaComprasInventariosId" asp-items="Model.CuentasComprasInventariosDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaComprasInventariosId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CuentaCostoVentasGastosId" class="form-label">Cuenta de Costo de Ventas</label>
+                                <select asp-for="CuentaCostoVentasGastosId" asp-items="Model.CuentasCostoVentasGastosDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaCostoVentasGastosId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CuentaDescuentosId" class="form-label">Cuenta de Descuentos</label>
+                                <select asp-for="CuentaDescuentosId" asp-items="Model.CuentasDescuentosDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaDescuentosId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CuentaDevolucionesId" class="form-label">Cuenta de Devoluciones</label>
+                                <select asp-for="CuentaDevolucionesId" asp-items="Model.CuentasDevolucionesDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaDevolucionesId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CuentaAjustesId" class="form-label">Cuenta de Ajustes</label>
+                                <select asp-for="CuentaAjustesId" asp-items="Model.CuentasAjustesDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaAjustesId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Taras -->
+                    <div class="tab-pane fade" id="tab-taras" role="tabpanel">
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i> Configure el peso de los contenedores vacíos (tara) para cada tipo de contenedor.
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="tablaTaras">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Contenedor</th>
+                                        <th>Tara</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Las filas se agregarán dinámicamente con JavaScript -->
+                                    <tr id="sinContenedores" class="text-center">
+                                        <td colspan="3">
+                                            <p class="text-muted my-3">Debe agregar contenedores en la pestaña Compras primero</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab Producto de Venta -->
+                    <div class="tab-pane fade" id="tab-venta" role="tabpanel">
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i> Configure cómo se venderá este producto. Seleccione el contenedor, precio y otras opciones.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ProductoVenta_Nombre" class="form-label">Nombre del Producto *</label>
+                                <input type="text" id="ProductoVenta_Nombre" name="ProductoVenta.Nombre" class="form-control" value="@Model.Nombre" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ProductoVenta_ItemContenedorId" class="form-label">Contenedor de Venta *</label>
+                                <select id="ProductoVenta_ItemContenedorId" name="ProductoVenta.ItemContenedorId" class="form-select" required>
+                                    <option value="">Debe agregar contenedores primero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_Cantidad" class="form-label">Cantidad *</label>
+                                <input type="number" id="ProductoVenta_Cantidad" name="ProductoVenta.Cantidad" class="form-control" value="1" min="0.001" step="0.001" required data-decimal="@Model.SeparadorDecimal" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_Costo" class="form-label">Costo</label>
+                                <input type="number" id="ProductoVenta_Costo" name="ProductoVenta.Costo" class="form-control" value="0" min="0" step="0.01" readonly data-decimal="@Model.SeparadorDecimal" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_PrecioVenta" class="form-label">Precio de Venta *</label>
+                                <input type="number" id="ProductoVenta_PrecioVenta" name="ProductoVenta.PrecioVenta" class="form-control" value="0" min="0" step="0.01" required data-decimal="@Model.SeparadorDecimal" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_ImpuestoId" class="form-label">Impuesto</label>
+                                <select id="ProductoVenta_ImpuestoId" name="ProductoVenta.ImpuestoId" asp-items="Model.ImpuestosDisponibles" class="form-select">
+                                    <option value="">Seleccione un impuesto</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_DisponibleParaVenta" class="form-label d-block">Disponible para Venta</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="ProductoVenta_DisponibleParaVenta" name="ProductoVenta.DisponibleParaVenta" checked>
+                                    <label class="form-check-label" for="ProductoVenta_DisponibleParaVenta">Sí</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_RequierePreparacion" class="form-label d-block">Requiere Preparación</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="ProductoVenta_RequierePreparacion" name="ProductoVenta.RequierePreparacion">
+                                    <label class="form-check-label" for="ProductoVenta_RequierePreparacion">Sí</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="tiempoPreparacionRow" style="display: none;">
+                            <div class="col-md-4">
+                                <label for="ProductoVenta_TiempoPreparacion" class="form-label">Tiempo de Preparación (minutos)</label>
+                                <input type="number" id="ProductoVenta_TiempoPreparacion" name="ProductoVenta.TiempoPreparacion" class="form-control" value="0" min="0" step="1" />
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-body bg-light">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p class="mb-1 text-muted">Costo:</p>
+                                        <h5 id="resumenCosto">$0.00</h5>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1 text-muted">Precio de Venta:</p>
+                                        <h5 id="resumenPrecio">$0.00</h5>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1 text-muted">Margen de Utilidad:</p>
+                                        <h5 id="resumenMargen">0%</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Templates para elementos dinámicos -->
+<template id="contenedorTemplate">
+    <tr class="fila-contenedor">
+        <td class="text-center no-contenedor"></td>
+        <td>
+            <div class="input-group">
+                <select name="Contenedores[INDEX].Nombre" class="form-select select2-contenedor">
+                    <option value="">Seleccione</option>
+                </select>
+                <button type="button" class="btn btn-outline-primary btn-nuevo-contenedor">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <input type="hidden" name="Contenedores[INDEX].EsPrincipal" class="es-principal" value="false" />
+            <input type="hidden" name="Contenedores[INDEX].ContenedorSuperiorId" class="contenedor-superior-id" value="" />
+            <input type="hidden" name="Contenedores[INDEX].UnidadMedidaId" class="unidad-medida-id" value="" />
+        </td>
+        <td>
+            <input type="text" name="Contenedores[INDEX].Etiqueta" class="form-control etiqueta-contenedor" readonly />
+            <small class="form-text text-muted hint-etiqueta"></small>
+        </td>
+        <td>
+            <input type="number" name="Contenedores[INDEX].Factor" class="form-control cantidad-contenedor" step="0.001" min="1" value="1" data-decimal="@Model.SeparadorDecimal" DISABLED-FIRST-ROW />
+        </td>
+        <td>
+            <input type="number" name="Contenedores[INDEX].Costo" class="form-control costo-contenedor" step="0.0001" min="0" value="0" data-decimal="@Model.SeparadorDecimal" READONLY-EXCEPT-FIRST-ROW />
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-contenedor" DISABLED-FIRST-ROW>
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<template id="proveedorTemplate">
+    <div class="proveedor-item card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Proveedor *</label>
+                        <div class="input-group">
+                            <select name="Proveedores[INDEX].ProveedorId" class="form-select select2-proveedor" required>
+                                <option value="">Seleccione un proveedor</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary btn-nuevo-proveedor">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Compra</label>
+                        <input type="text" name="Proveedores[INDEX].NombreCompra" class="form-control nombre-compra" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Código Proveedor</label>
+                        <input type="text" name="Proveedores[INDEX].CodigoProveedor" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Precio *</label>
+                        <input type="number" name="Proveedores[INDEX].PrecioCompra" class="form-control precio-compra" step="0.01" min="0" required data-decimal="@Model.SeparadorDecimal" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Unidad de Compra *</label>
+                        <select name="Proveedores[INDEX].UnidadMedidaCompraId" class="form-select select2-contenedor-compra" required>
+                            <option value="">Seleccione</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Factor de Conversión *</label>
+                        <div class="input-group">
+                            <input type="number" name="Proveedores[INDEX].FactorConversion" class="form-control factor-conversion" step="0.000001" min="0.000001" value="1" required data-decimal="@Model.SeparadorDecimal" />
+                            <span class="input-group-text unidad-medida-texto">unidades</span>
+                        </div>
+                        <small class="text-muted">Unidades de inventario por unidad de compra</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Precio por Unidad</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control precio-unitario" readonly data-decimal="@Model.SeparadorDecimal" />
+                            <span class="input-group-text">por unidad</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Principal</label>
+                        <div class="form-check form-switch pt-2">
+                            <input class="form-check-input proveedor-principal" type="checkbox" name="Proveedores[INDEX].EsPrincipal" value="true" />
+                            <label class="form-check-label">Proveedor principal</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end align-self-end">
+                    <button type="button" class="btn btn-danger btn-sm btn-eliminar-proveedor">
+                        <i class="fas fa-trash me-1"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="almacenTemplate">
+    <div class="almacen-item card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Almacén</label>
+                        <select name="Almacenes[INDEX].AlmacenId" class="form-select select2-almacen" required>
+                            <option value="">Seleccione un almacén</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Stock Inicial</label>
+                        <input type="number" name="Almacenes[INDEX].Stock" class="form-control stock-almacen" step="0.01" min="0" value="0" data-decimal="@Model.SeparadorDecimal" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Nivel Mínimo</label>
+                        <input type="number" name="Almacenes[INDEX].NivelMinimo" class="form-control" step="0.01" min="0" value="0" data-decimal="@Model.SeparadorDecimal" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-3">
+                        <label class="form-label">Ubicación</label>
+                        <input type="text" name="Almacenes[INDEX].Ubicacion" class="form-control" placeholder="Estante, pasillo..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="taraTemplate">
+    <tr class="fila-tara">
+        <td>
+            <input type="hidden" name="Taras[INDEX].ItemContenedorId" class="contenedor-id" value="CONTENEDOR_ID" />
+            <span class="nombre-contenedor">NOMBRE_CONTENEDOR</span>
+        </td>
+        <td>
+            <input type="number" name="Taras[INDEX].ValorTara" class="form-control valor-tara" step="0.0001" min="0" value="0" data-decimal="@Model.SeparadorDecimal" />
+        </td>
+        <td>
+            <input type="text" name="Taras[INDEX].Observacion" class="form-control" placeholder="Opcional" />
+        </td>
+    </tr>
+</template>
+
+<!-- Offcanvas para crear/editar categoría -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCategoria" aria-labelledby="offcanvasCategoriaLabel">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasCategoriaLabel">Nueva Categoría</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="formCategoriaContainer">
+            <!-- Se cargará dinámicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas para crear/editar marca -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasMarca" aria-labelledby="offcanvasMarcaLabel">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasMarcaLabel">Nueva Marca</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="formMarcaContainer">
+            <!-- Se cargará dinámicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nueva unidad de medida -->
+<div class="modal fade" id="modalNuevaUnidad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Unidad de Medida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaUnidad">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nuevaUnidadName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Abreviatura *</label>
+                        <input type="text" class="form-control" id="nuevaUnidadAbreviatura" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="nuevaUnidadTipo">
+                            <option value="Unidad">Unidad</option>
+                            <option value="Peso">Peso</option>
+                            <option value="Volumen">Volumen</option>
+                            <option value="Longitud">Longitud</option>
+                            <option value="Tiempo">Tiempo</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarNuevaUnidad">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nuevo contenedor -->
+<div class="modal fade" id="modalNuevoContenedor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Contenedor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoContenedor">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nuevoContenedorName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unidad de Medida *</label>
+                        <select class="form-select" id="nuevoContenedorUnidadId" required>
+                            <option value="">Seleccione una unidad</option>
+                            @foreach (var item in Model.UnidadesMedidaDisponibles)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarNuevoContenedor">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nueva marca -->
+<div class="modal fade" id="modalNuevaMarca" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Marca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaMarca">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nuevaMarcaName" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarNuevaMarca">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="~/js/items/form.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for accounting accounts with AJAX
+            $('.select2-cuenta, #CuentaVentasId, #CuentaComprasInventariosId, #CuentaCostoVentasGastosId, #CuentaDescuentosId, #CuentaDevolucionesId, #CuentaAjustesId').each(function() {
+                const $this = $(this);
+                
+                // Avoid initializing twice
+                if (!$this.hasClass('select2-hidden-accessible')) {
+                    $this.select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        placeholder: 'Buscar cuenta contable...',
+                        allowClear: true,
+                        minimumInputLength: 1,
+                        language: {
+                            inputTooShort: function() {
+                                return "Ingrese al menos 1 caracter para buscar";
+                            },
+                            noResults: function() {
+                                return "No se encontraron resultados";
+                            },
+                            searching: function() {
+                                return "Buscando...";
+                            }
+                        },
+                        ajax: {
+                            url: '/Item/BuscarCuentasContables',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function(params) {
+                                return {
+                                    term: params.term || ''
+                                };
+                            },
+                            processResults: function(data) {
+                                return data;
+                            },
+                            cache: true
+                        },
+                        templateResult: formatCuenta,
+                        templateSelection: formatCuentaSelection
+                    });
+                    console.log(`Account selector initialized with AJAX: ${$this.attr('id') || 'no ID'}`);
+                }
+            });
+
+            // Format function for accounting account search results
+            function formatCuenta(cuenta) {
+                if (!cuenta.id) {
+                    return cuenta.text;
+                }
+                
+                var $resultado = $(
+                    '<div class="select2-result">' +
+                        '<span class="badge bg-secondary me-2">' + (cuenta.codigo || '') + '</span>' +
+                        '<span>' + (cuenta.nombre || cuenta.text) + '</span>' +
+                    '</div>'
+                );
+                return $resultado;
+            }
+
+            // Format function for selected accounting account
+            function formatCuentaSelection(cuenta) {
+                if (!cuenta.id) {
+                    return cuenta.text;
+                }
+                return cuenta.text;
+            }
+            
+            // For debugging: Log account fields and their values
+            function debugAccountFields() {
+                console.log("Debugging account fields:");
+                [
+                    "#CuentaVentasId", 
+                    "#CuentaComprasInventariosId", 
+                    "#CuentaCostoVentasGastosId", 
+                    "#CuentaDescuentosId", 
+                    "#CuentaDevolucionesId", 
+                    "#CuentaAjustesId"
+                ].forEach(selector => {
+                    const $field = $(selector);
+                    console.log(`Field ${selector}: Value=${$field.val()}, Text=${$field.find('option:selected').text()}`);
+                });
+            }
+            
+            // Log initial state
+            setTimeout(debugAccountFields, 500);
+            
+            // Initialize the image upload component
+            initImageUpload();
+        });
+    </script>
+}

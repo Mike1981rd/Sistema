@@ -44,8 +44,8 @@ namespace SistemaContable.Models
         // Flag para indicar si el impuesto está en uso
         public bool EstaEnUso { get; set; } = false;
         
-        // Flag para indicar si el impuesto está activo (similar a Estado en Familia)
-        public bool Activo { get; set; } = true;
+        // Nuevo campo Estado
+        public bool Estado { get; set; } = true;
         
         // ID de la empresa a la que pertenece este impuesto
         [Required]

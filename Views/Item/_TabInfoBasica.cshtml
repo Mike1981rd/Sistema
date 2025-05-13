@@ -1,0 +1,124 @@
+@model SistemaContable.Models.ViewModels.ItemViewModel
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="Codigo" class="form-label">Código (Automático)</label>
+                <input asp-for="Codigo" class="form-control bg-light" readonly />
+                <span asp-validation-for="Codigo" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
+                <div class="input-group">
+                    <input asp-for="CodigoBarras" class="form-control" />
+                    <button type="button" class="btn btn-outline-secondary" id="generarCodigoBarras">
+                        <i class="fas fa-barcode"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="imprimirCodigoBarras" @(string.IsNullOrEmpty(Model.CodigoBarras) ? "disabled" : "")>
+                        <i class="fas fa-print"></i>
+                    </button>
+                </div>
+                <div id="codigoBarrasPreview" class="mt-2 text-center" style="@(string.IsNullOrEmpty(Model.CodigoBarras) ? "display: none;" : "")">
+                    <svg id="barcode"></svg>
+                </div>
+                <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label asp-for="Nombre" class="form-label">Nombre *</label>
+                <input asp-for="Nombre" class="form-control" required />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="CategoriaId" class="form-label">Categoría *</label>
+                <div class="input-group">
+                    <select asp-for="CategoriaId" asp-items="Model.CategoriasDisponibles" class="form-select select2-categoria" required>
+                        <option value="">Seleccione una categoría</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" id="btnNuevaCategoria">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="CategoriaId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="MarcaId" class="form-label">Marca</label>
+                <div class="input-group">
+                    <select asp-for="MarcaId" asp-items="Model.MarcasDisponibles" class="form-select select2-marca">
+                        <option value="">Genérica</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" id="btnNuevaMarca">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="MarcaId" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="ImpuestoId" class="form-label">Impuesto</label>
+                <select asp-for="ImpuestoId" asp-items="Model.ImpuestosDisponibles" class="form-select select2">
+                    <option value="">Seleccione un impuesto</option>
+                </select>
+                <span asp-validation-for="ImpuestoId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Rendimiento" class="form-label">Rendimiento (%)</label>
+                <input asp-for="Rendimiento" class="form-control" type="number" step="0.01" min="0" max="100" value="100" data-decimal="@Model.SeparadorDecimal" />
+                <small class="text-muted">Porcentaje del producto que se mantiene después de procesarlo</small>
+                <span asp-validation-for="Rendimiento" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="Estado" class="form-label">Estado</label>
+                <select asp-for="Estado" class="form-select">
+                    <option value="true" selected>Activo</option>
+                    <option value="false">Inactivo</option>
+                </select>
+                <span asp-validation-for="Estado" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Imagen</h5>
+                <div class="profile-image-container">
+                    <div class="image-preview text-center">
+                        <div id="imagePreview" class="mb-3" style="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "")">
+                            <img id="preview" src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid" style="max-height: 200px;" />
+                        </div>
+                        <div id="imageDefault" class="mb-3" style="@(!string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "")">
+                            <i class="fas fa-box fa-5x text-muted"></i>
+                        </div>
+                    </div>
+                    <div class="upload-buttons mt-3">
+                        <button type="button" class="btn btn-primary d-block w-100" onclick="document.getElementById('ItemImage').click()">
+                            <i class="fas fa-upload me-1"></i> Subir imagen
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary d-block w-100 mt-2" id="btnResetImage" style="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "")">
+                            <i class="fas fa-times me-1"></i> Quitar imagen
+                        </button>
+                    </div>
+                    <div class="upload-info mt-2 text-muted small text-center">
+                        <p>Se permiten JPG, PNG o GIF.<br />Tamaño máximo 800KB</p>
+                    </div>
+                    <input asp-for="ItemImage" type="file" class="d-none" accept="image/*" />
+                    <span asp-validation-for="ItemImage" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

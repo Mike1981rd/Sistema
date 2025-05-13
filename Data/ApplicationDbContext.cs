@@ -43,6 +43,10 @@ namespace SistemaContable.Data
         
         // Clientes module
         public DbSet<Cliente> Clientes { get; set; }
+        
+        // Alias para filtrar Clientes que son Proveedores
+        public IQueryable<Cliente> Proveedores => Clientes.Where(c => c.EsProveedor);
+        
         public DbSet<TipoIdentificacion> TiposIdentificacion { get; set; }
         public DbSet<Municipio> Municipios { get; set; }
         public DbSet<Provincia> Provincias { get; set; }
@@ -59,6 +63,17 @@ namespace SistemaContable.Data
 
         // Familias
         public DbSet<Familia> Familias { get; set; }
+
+        // Inventario y modelos relacionados
+        public DbSet<Item> Items { get; set; }
+        public DbSet<Marca> Marcas { get; set; }
+        public DbSet<UnidadMedida> UnidadesMedida { get; set; }
+        public DbSet<ItemProveedor> ItemProveedores { get; set; }
+        public DbSet<ItemContenedor> ItemContenedores { get; set; }
+        public DbSet<ItemTara> ItemTaras { get; set; }
+        public DbSet<ItemAlmacen> ItemAlmacenes { get; set; }
+        public DbSet<ProductoVenta> ProductosVenta { get; set; }
+
         public DbSet<Categoria> Categorias { get; set; }
         #pragma warning disable CS0618 // Suprimir advertencia sobre tipo obsoleto
         public DbSet<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }

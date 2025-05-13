@@ -1,0 +1,222 @@
+@model SistemaContable.Models.Categoria
+
+<form id="formCategoria">
+    <input type="hidden" id="CategoriaId" name="Id" value="@Model?.Id" />
+    <div class="mb-3">
+        <label for="CategoriaNombre" class="form-label">Nombre *</label>
+        <input type="text" class="form-control" id="CategoriaNombre" name="Nombre" value="@Model?.Nombre" required />
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaFamiliaId" class="form-label">Familia</label>
+        <select class="form-select select2-familia" id="CategoriaFamiliaId" name="FamiliaId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.Familias != null)
+            {
+                foreach (var familia in ViewBag.Familias)
+                {
+                    <option value="@familia.Value" selected="@(Model != null && Model.FamiliaId.ToString() == familia.Value)">@familia.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <h5 class="mt-4 mb-3">Cuentas Contables</h5>
+    
+    <div class="mb-3">
+        <label for="CategoriaImpuestoId" class="form-label">Impuesto</label>
+        <select class="form-select select2-impuesto" id="CategoriaImpuestoId" name="ImpuestoId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.Impuestos != null)
+            {
+                foreach (var impuesto in ViewBag.Impuestos)
+                {
+                    <option value="@impuesto.Value" selected="@(Model != null && Model.ImpuestoId.ToString() == impuesto.Value)">@impuesto.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaVentasId" class="form-label">Cuenta de Ventas</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaVentasId" name="CuentaVentasId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaVentasId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaComprasInventariosId" class="form-label">Cuenta de Compras/Inventarios</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaComprasInventariosId" name="CuentaComprasInventariosId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaComprasInventariosId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaCostoVentasGastosId" class="form-label">Cuenta de Costo de Ventas</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaCostoVentasGastosId" name="CuentaCostoVentasGastosId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaCostoVentasGastosId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaDescuentosId" class="form-label">Cuenta de Descuentos</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaDescuentosId" name="CuentaDescuentosId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaDescuentosId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaDevolucionesId" class="form-label">Cuenta de Devoluciones</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaDevolucionesId" name="CuentaDevolucionesId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaDevolucionesId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoriaCuentaAjustesId" class="form-label">Cuenta de Ajustes</label>
+        <select class="form-select select2-cuenta" id="CategoriaCuentaAjustesId" name="CuentaAjustesId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.CuentasContables != null)
+            {
+                foreach (var cuenta in ViewBag.CuentasContables)
+                {
+                    <option value="@cuenta.Value" selected="@(Model != null && Model.CuentaAjustesId.ToString() == cuenta.Value)">@cuenta.Text</option>
+                }
+            }
+        </select>
+    </div>
+    
+    <div class="d-grid gap-2 mt-4">
+        <button type="button" class="btn btn-primary" id="btnGuardarCategoria">
+            <i class="fas fa-save me-1"></i> Guardar Categoría
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">
+            <i class="fas fa-times me-1"></i> Cancelar
+        </button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        // Inicializar select2
+        $('.select2-familia, .select2-impuesto, .select2-cuenta').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#offcanvasCategoria')
+        });
+        
+        // Guardar categoría
+        $('#btnGuardarCategoria').click(function() {
+            // Validación básica
+            if (!$('#CategoriaNombre').val()) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El nombre de la categoría es requerido'
+                });
+                return;
+            }
+            
+            // Preparar datos
+            var formData = $('#formCategoria').serialize();
+            
+            // Enviar solicitud
+            $.ajax({
+                url: '/Item/CrearCategoria',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(getFormData($('#formCategoria'))),
+                success: function(response) {
+                    if (response.success) {
+                        // Agregar al dropdown y seleccionar
+                        var newOption = new Option(response.nombre, response.id, true, true);
+                        $('#CategoriaId').append(newOption).trigger('change');
+                        
+                        // Actualizar cuentas contables heredadas
+                        $('#ImpuestoId').val(response.impuestoId).trigger('change');
+                        $('#CuentaVentasId').val(response.cuentaVentasId).trigger('change');
+                        $('#CuentaComprasInventariosId').val(response.cuentaComprasInventariosId).trigger('change');
+                        $('#CuentaCostoVentasGastosId').val(response.cuentaCostoVentasGastosId).trigger('change');
+                        $('#CuentaDescuentosId').val(response.cuentaDescuentosId).trigger('change');
+                        $('#CuentaDevolucionesId').val(response.cuentaDevolucionesId).trigger('change');
+                        $('#CuentaAjustesId').val(response.cuentaAjustesId).trigger('change');
+                        
+                        // Cerrar offcanvas
+                        $('#offcanvasCategoria').offcanvas('hide');
+                        
+                        // Mostrar mensaje
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Categoría guardada correctamente',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo guardar la categoría'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la solicitud'
+                    });
+                }
+            });
+        });
+        
+        // Función para convertir form a objeto
+        function getFormData($form) {
+            var unindexed_array = $form.serializeArray();
+            var indexed_array = {};
+            
+            $.map(unindexed_array, function(n, i) {
+                indexed_array[n['name']] = n['value'];
+            });
+            
+            return indexed_array;
+        }
+    });
+</script>

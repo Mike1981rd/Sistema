@@ -1,0 +1,75 @@
+@model SistemaContable.ViewModels.CategoriaViewModel
+
+<form asp-action="EditPartial" id="formEditarCategoria">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="EmpresaId" />
+    
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="FamiliaId" class="form-label">Familia</label>
+        <select asp-for="FamiliaId" asp-items="Model.FamiliasDisponibles" class="form-select">
+            <option value="">Seleccione una familia</option>
+        </select>
+        <span asp-validation-for="FamiliaId" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="Nota" class="form-label">Nota</label>
+        <textarea asp-for="Nota" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Nota" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="ImpuestoId" class="form-label">Impuesto</label>
+        <select asp-for="ImpuestoId" asp-items="Model.ImpuestosDisponibles" class="form-select">
+            <option value="">Seleccione un impuesto</option>
+        </select>
+        <span asp-validation-for="ImpuestoId" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="PropinaImpuestoId" class="form-label">Impuesto de Propina</label>
+        <select asp-for="PropinaImpuestoId" asp-items="Model.ImpuestosDisponibles" class="form-select">
+            <option value="">Seleccione un impuesto para propina</option>
+        </select>
+        <span asp-validation-for="PropinaImpuestoId" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="RutaImpresoraId" class="form-label">Ruta de Impresora</label>
+        <select asp-for="RutaImpresoraId" asp-items="Model.RutasImpresoraDisponibles" class="form-select">
+            <option value="">Seleccione una ruta de impresora</option>
+        </select>
+        <span asp-validation-for="RutaImpresoraId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="Estado" class="form-check-input" />
+        <label asp-for="Estado" class="form-check-label">Activo</label>
+    </div>
+    
+    <div class="text-end">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Inicializar selects como select2
+            $('.form-select').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+        });
+    </script>
+} 

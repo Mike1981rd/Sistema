@@ -341,6 +341,38 @@ namespace SistemaContable.Controllers
             }
         }
 
+        // GET: Almacen/ObtenerTodos
+        [HttpGet]
+        public async Task<JsonResult> ObtenerTodos()
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { error = "Empresa no seleccionada" });
+                }
+
+                var almacenes = await _context.Almacenes
+                    .Where(a => a.EmpresaId == empresaId && a.Estado)
+                    .OrderBy(a => a.Nombre)
+                    .Select(a => new { 
+                        id = a.Id, 
+                        nombre = a.Nombre,
+                        telefono = a.Telefono,
+                        correo = a.CorreoElectronico
+                    })
+                    .ToListAsync();
+
+                return Json(almacenes);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerTodos: {ex.Message}");
+                return Json(new { error = ex.Message });
+            }
+        }
+
         private bool AlmacenExists(int id)
         {
             return _context.Almacenes.Any(e => e.Id == id);

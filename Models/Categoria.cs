@@ -58,6 +58,9 @@ namespace SistemaContable.Models
         [ForeignKey("ImpuestoId")]
         public virtual Impuesto? Impuesto { get; set; }
 
+        // Usuario que creó la categoría
+        public int? UsuarioCreacionId { get; set; }
+
         // Ruta de impresora
         public int? RutaImpresoraId { get; set; }
         [ForeignKey("RutaImpresoraId")]

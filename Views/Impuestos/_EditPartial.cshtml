@@ -1,0 +1,101 @@
+@model SistemaContable.Models.Impuesto
+
+<form asp-action="EditPartial" id="formEditarImpuesto">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="EmpresaId" />
+    <input type="hidden" asp-for="FechaCreacion" />
+    <input type="hidden" asp-for="EstaEnUso" />
+    
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="Tipo" class="form-label">Tipo</label>
+        <select asp-for="Tipo" class="form-select">
+            <option value="">Seleccione un tipo</option>
+            <option value="ITBIS">ITBIS</option>
+            <option value="ISR">ISR</option>
+            <option value="Propina">Propina</option>
+            <option value="Servicio">Servicio</option>
+            <option value="Otro">Otro</option>
+        </select>
+        <span asp-validation-for="Tipo" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="Porcentaje" class="form-label">Porcentaje</label>
+        <div class="input-group">
+            <input asp-for="Porcentaje" class="form-control" />
+            <span class="input-group-text">%</span>
+        </div>
+        <span asp-validation-for="Porcentaje" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label">Descripción</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="CuentaContableVentasId" class="form-label">Cuenta Contable (Ventas)</label>
+        <select asp-for="CuentaContableVentasId" class="form-select cuentas-contables">
+            <option value="">Seleccione una cuenta</option>
+        </select>
+        <span asp-validation-for="CuentaContableVentasId" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3">
+        <label asp-for="CuentaContableComprasId" class="form-label">Cuenta Contable (Compras)</label>
+        <select asp-for="CuentaContableComprasId" class="form-select cuentas-contables">
+            <option value="">Seleccione una cuenta</option>
+        </select>
+        <span asp-validation-for="CuentaContableComprasId" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3 form-check">
+        <input asp-for="EsAcreditable" class="form-check-input" />
+        <label asp-for="EsAcreditable" class="form-check-label">Es Acreditable</label>
+        <span asp-validation-for="EsAcreditable" class="text-danger"></span>
+    </div>
+    
+    <div class="mb-3 form-check">
+        <input asp-for="Estado" class="form-check-input" />
+        <label asp-for="Estado" class="form-check-label">Activo</label>
+        <span asp-validation-for="Estado" class="text-danger"></span>
+    </div>
+    
+    <div class="text-end">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        // Cargar cuentas contables
+        var cuentasContables = @Html.Raw(ViewBag.CuentasContablesJson);
+        
+        // Inicializar selects
+        $('.form-select').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+        
+        // Cargar opciones en cuentas contables
+        if (cuentasContables) {
+            $('.cuentas-contables').each(function() {
+                var $select = $(this);
+                $.each(cuentasContables, function (i, cuenta) {
+                    var option = new Option(cuenta.text, cuenta.id);
+                    $select.append(option);
+                });
+                $select.trigger('change');
+            });
+        }
+    });
+</script> 

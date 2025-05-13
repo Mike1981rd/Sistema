@@ -1,0 +1,567 @@
+@model SistemaContable.Models.Item
+@{
+    ViewData["Title"] = "Detalle de Item";
+    var separadorDecimal = ViewBag.SeparadorDecimal ?? ",";
+    var precisionDecimal = ViewBag.PrecisionDecimal ?? 2;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h4 mb-0">Detalle de Item</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index"><i class="fas fa-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-action="Index">Items</a>
+                    </li>
+                    <li class="breadcrumb-item active">Detalle</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="fas fa-pencil-alt me-1"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Nav tabs con estilo Underline -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <ul class="nav nav-tabs-underline" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" href="#tab-info" role="tab" data-bs-toggle="tab">
+                        Información
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#tab-compras" role="tab" data-bs-toggle="tab">
+                        Compras
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#tab-contabilidad" role="tab" data-bs-toggle="tab">
+                        Contabilidad
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#tab-taras" role="tab" data-bs-toggle="tab">
+                        Taras
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#tab-venta" role="tab" data-bs-toggle="tab">
+                        Producto de Venta
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Tab content -->
+            <div class="tab-content mt-4">
+                <!-- Tab Información -->
+                <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Información Básica</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Código:</label>
+                                            <p>@Model.Codigo</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Código de Barras:</label>
+                                            <p>
+                                                @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+                                                {
+                                                    @Model.CodigoBarras
+                                                    <button type="button" class="btn btn-sm btn-outline-primary ms-2"
+                                                            onclick="imprimirCodigoBarras('@Model.CodigoBarras', '@Model.Nombre')">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No definido</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold">Nombre:</label>
+                                            <p>@Model.Nombre</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Categoría:</label>
+                                            <p>@Model.Categoria?.Nombre</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Marca:</label>
+                                            <p>@(Model.Marca?.Nombre ?? "Genérica")</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold">Descripción:</label>
+                                            <p>@(Model.Descripcion ?? "No hay descripción disponible")</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Impuesto:</label>
+                                            <p>@(Model.Impuesto?.Nombre ?? "No aplica")</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Rendimiento:</label>
+                                            <p>@Model.Rendimiento.ToString("N" + precisionDecimal)%</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Estado:</label>
+                                            <p>
+                                                <span class="badge @(Model.Estado ? "bg-success" : "bg-danger")">
+                                                    @(Model.Estado ? "Activo" : "Inactivo")
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Imagen</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                                    {
+                                        <img src="@Model.ImagenUrl" alt="@Model.Nombre" class="img-fluid" style="max-height: 300px;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="p-5">
+                                            <i class="fas fa-box fa-5x text-muted"></i>
+                                            <p class="mt-3 text-muted">Sin imagen</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Compras -->
+                <div class="tab-pane fade" id="tab-compras" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Unidades</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Unidad de Medida (Inventario):</label>
+                                            <p>@Model.UnidadMedidaInventario?.Nombre (@Model.UnidadMedidaInventario?.Abreviatura)</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Nivel Mínimo:</label>
+                                            <p>@Model.NivelMinimo.ToString("N" + precisionDecimal) @Model.UnidadMedidaInventario?.Abreviatura</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Stock Actual:</label>
+                                            <p class="@(Model.StockActual <= Model.NivelMinimo ? "text-danger" : "text-success")">
+                                                @Model.StockActual.ToString("N" + precisionDecimal) @Model.UnidadMedidaInventario?.Abreviatura
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conversiones de Unidades -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Conversiones de Unidades</h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (Model.Contenedores != null && Model.Contenedores.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>No</th>
+                                                        <th>Contenedor</th>
+                                                        <th>Etiqueta</th>
+                                                        <th>Cantidad</th>
+                                                        <th>Costo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var contenedor in Model.Contenedores.OrderBy(c => c.Orden))
+                                                    {
+                                                        <tr>
+                                                            <td>@contenedor.Orden</td>
+                                                            <td>@contenedor.Nombre (@contenedor.UnidadMedida?.Abreviatura)</td>
+                                                            <td>@contenedor.Etiqueta</td>
+                                                            <td>@contenedor.Factor.ToString("N" + precisionDecimal)</td>
+                                                            <td>@contenedor.Costo.ToString("N" + precisionDecimal)</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i> No hay conversiones de unidades definidas.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Proveedores -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Proveedores</h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (Model.Proveedores != null && Model.Proveedores.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>Proveedor</th>
+                                                        <th>Nombre de Compra</th>
+                                                        <th>Código Proveedor</th>
+                                                        <th>Precio</th>
+                                                        <th>Unidad</th>
+                                                        <th>Factor</th>
+                                                        <th>Precio Unitario</th>
+                                                        <th>Principal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var proveedor in Model.Proveedores.OrderByDescending(p => p.EsPrincipal))
+                                                    {
+                                                        <tr class="@(proveedor.EsPrincipal ? "table-primary" : "")">
+                                                            <td>@proveedor.Proveedor?.NombreRazonSocial</td>
+                                                            <td>@proveedor.NombreCompra</td>
+                                                            <td>@proveedor.CodigoProveedor</td>
+                                                            <td>@proveedor.PrecioCompra.ToString("N" + precisionDecimal)</td>
+                                                            <td>@proveedor.UnidadMedidaCompra?.Nombre</td>
+                                                            <td>@proveedor.FactorConversion.ToString("N" + precisionDecimal)</td>
+                                                            <td>@((proveedor.PrecioCompra / (proveedor.FactorConversion > 0 ? proveedor.FactorConversion : 1)).ToString("N" + precisionDecimal))</td>
+                                                            <td>
+                                                                @if (proveedor.EsPrincipal)
+                                                                {
+                                                                    <i class="fas fa-check text-success"></i>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i> No hay proveedores definidos.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Almacenes -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Distribución en Almacenes</h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (Model.Almacenes != null && Model.Almacenes.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>Almacén</th>
+                                                        <th>Stock</th>
+                                                        <th>Nivel Mínimo</th>
+                                                        <th>Ubicación</th>
+                                                        <th>Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var almacen in Model.Almacenes.OrderBy(a => a.Almacen?.Nombre))
+                                                    {
+                                                        <tr>
+                                                            <td>@almacen.Almacen?.Nombre</td>
+                                                            <td>@almacen.Stock.ToString("N" + precisionDecimal)</td>
+                                                            <td>@almacen.NivelMinimo.ToString("N" + precisionDecimal)</td>
+                                                            <td>@(almacen.Ubicacion ?? "-")</td>
+                                                            <td>
+                                                                <span class="badge @(almacen.Stock <= almacen.NivelMinimo ? "bg-danger" : "bg-success")">
+                                                                    @(almacen.Stock <= almacen.NivelMinimo ? "Bajo" : "Normal")
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i> No hay distribución en almacenes definida.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Contabilidad -->
+                <div class="tab-pane fade" id="tab-contabilidad" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Cuentas Contables</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Ventas:</label>
+                                    <p>@(Model.CuentaVentas != null ? $"{Model.CuentaVentas.Codigo} - {Model.CuentaVentas.Nombre}" : "No definida")</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Compras/Inventarios:</label>
+                                    <p>@(Model.CuentaComprasInventarios != null ? $"{Model.CuentaComprasInventarios.Codigo} - {Model.CuentaComprasInventarios.Nombre}" : "No definida")</p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Costo de Ventas:</label>
+                                    <p>@(Model.CuentaCostoVentasGastos != null ? $"{Model.CuentaCostoVentasGastos.Codigo} - {Model.CuentaCostoVentasGastos.Nombre}" : "No definida")</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Descuentos:</label>
+                                    <p>@(Model.CuentaDescuentos != null ? $"{Model.CuentaDescuentos.Codigo} - {Model.CuentaDescuentos.Nombre}" : "No definida")</p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Devoluciones:</label>
+                                    <p>@(Model.CuentaDevoluciones != null ? $"{Model.CuentaDevoluciones.Codigo} - {Model.CuentaDevoluciones.Nombre}" : "No definida")</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cuenta de Ajustes:</label>
+                                    <p>@(Model.CuentaAjustes != null ? $"{Model.CuentaAjustes.Codigo} - {Model.CuentaAjustes.Nombre}" : "No definida")</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Taras -->
+                <div class="tab-pane fade" id="tab-taras" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Taras</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Taras != null && Model.Taras.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Contenedor</th>
+                                                <th>Tara</th>
+                                                <th>Observación</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var tara in Model.Taras)
+                                            {
+                                                <tr>
+                                                    <td>@tara.ItemContenedor?.Nombre</td>
+                                                    <td>@tara.ValorTara.ToString("N" + precisionDecimal)</td>
+                                                    <td>@(tara.Observacion ?? "-")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> No hay taras definidas.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Producto de Venta -->
+                <div class="tab-pane fade" id="tab-venta" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Producto de Venta</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.ProductosVenta != null && Model.ProductosVenta.Any())
+                            {
+                                var productoVenta = Model.ProductosVenta.FirstOrDefault();
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Nombre del Producto:</label>
+                                        <p>@productoVenta.Nombre</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Contenedor de Venta:</label>
+                                        <p>@productoVenta.ItemContenedor?.Nombre</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Cantidad:</label>
+                                        <p>@productoVenta.Cantidad.ToString("N" + precisionDecimal)</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Costo:</label>
+                                        <p>@productoVenta.Costo.ToString("N" + precisionDecimal)</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Precio de Venta:</label>
+                                        <p>@productoVenta.PrecioVenta.ToString("N" + precisionDecimal)</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Impuesto:</label>
+                                        <p>@(productoVenta.Impuesto?.Nombre ?? "No aplica")</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Disponible para Venta:</label>
+                                        <p>
+                                            <span class="badge @(productoVenta.DisponibleParaVenta ? "bg-success" : "bg-danger")">
+                                                @(productoVenta.DisponibleParaVenta ? "Sí" : "No")
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Requiere Preparación:</label>
+                                        <p>
+                                            <span class="badge @(productoVenta.RequierePreparacion ? "bg-warning" : "bg-secondary")">
+                                                @(productoVenta.RequierePreparacion ? "Sí" : "No")
+                                            </span>
+                                            @if (productoVenta.RequierePreparacion && productoVenta.TiempoPreparacion.HasValue)
+                                            {
+                                                <span class="ms-2">(@productoVenta.TiempoPreparacion min.)</span>
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="card mt-4 bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted">Costo Total:</p>
+                                                <h5>@productoVenta.CostoTotal.ToString("N" + precisionDecimal)</h5>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted">Precio de Venta:</p>
+                                                <h5>@productoVenta.PrecioVenta.ToString("N" + precisionDecimal)</h5>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted">Margen de Utilidad:</p>
+                                                @{
+                                                    decimal margen = 0;
+                                                    if (productoVenta.Costo > 0)
+                                                    {
+                                                        margen = ((productoVenta.PrecioVenta - productoVenta.Costo) / productoVenta.Costo) * 100;
+                                                    }
+                                                }
+                                                <h5>@margen.ToString("N" + precisionDecimal)%</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> No hay configuración de producto de venta.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        // Inicializar
+        $(document).ready(function() {
+            // Activar tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        // Función para imprimir código de barras
+        function imprimirCodigoBarras(codigo, nombre) {
+            if (!codigo) return;
+
+            $.ajax({
+                url: '/Item/ExportarCodigoBarras',
+                type: 'POST',
+                data: {
+                    codigo: codigo,
+                    nombre: nombre
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.open(response.fileUrl, '_blank');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo generar el código de barras'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al procesar la solicitud'
+                    });
+                }
+            });
+        }
+    </script>
+}

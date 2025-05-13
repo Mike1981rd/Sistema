@@ -46,6 +46,8 @@ namespace SistemaContable.Models
         
         public bool Activo { get; set; } = true;
         
+        public bool Estado { get; set; } = true;
+        
         public bool EsCuentaSistema { get; set; }
         
         [NotMapped]

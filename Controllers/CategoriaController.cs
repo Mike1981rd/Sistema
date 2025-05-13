@@ -402,6 +402,9 @@ namespace SistemaContable.Controllers
 
         private async Task CargarDatosFormulario(CategoriaViewModel viewModel)
         {
+            var empresaId = viewModel.EmpresaId;
+            Console.WriteLine($"CargarDatosFormulario para EmpresaId: {empresaId}");
+            
             // Cargar familias disponibles
             var familias = await _context.Familias
                 .Where(f => f.Estado && f.EmpresaId == viewModel.EmpresaId)
@@ -499,6 +502,38 @@ namespace SistemaContable.Controllers
             }
         }
 
+        // GET: Categoria/ObtenerTodas
+        [HttpGet]
+        public async Task<JsonResult> ObtenerTodas()
+        {
+            try 
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { error = "Empresa no seleccionada" });
+                }
+
+                var categorias = await _context.Categorias
+                    .Where(c => c.EmpresaId == empresaId && c.Estado)
+                    .OrderBy(c => c.Nombre)
+                    .Select(c => new { 
+                        id = c.Id, 
+                        nombre = c.Nombre,
+                        familiaId = c.FamiliaId,
+                        familiaName = c.Familia.Nombre
+                    })
+                    .ToListAsync();
+
+                return Json(categorias);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerTodas: {ex.Message}");
+                return Json(new { error = ex.Message });
+            }
+        }
+
         // GET: Categoria/ObtenerCuentasContablesFamilia/5
         [HttpGet]
         public async Task<IActionResult> ObtenerCuentasContablesFamilia(int familiaId)
@@ -526,6 +561,299 @@ namespace SistemaContable.Controllers
                 cuentaAjustesId = familia.CuentaAjustesId,
                 cuentaCostoMateriaPrimaId = familia.CuentaCostoMateriaPrimaId
             });
+        }
+        
+        // GET: Categoria/CreatePartial
+        [HttpGet]
+        public async Task<IActionResult> CreatePartial()
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return Json(new { success = false, message = "Empresa no seleccionada" });
+            }
+
+            var viewModel = new CategoriaViewModel
+            {
+                Estado = true,
+                EmpresaId = empresaId
+            };
+
+            await CargarDatosFormulario(viewModel);
+            return PartialView("_CreatePartial", viewModel);
+        }
+        
+        // POST: Categoria/CreatePartial
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> CreatePartial(CategoriaViewModel viewModel)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { success = false, message = "Empresa no seleccionada" });
+                }
+
+                viewModel.EmpresaId = empresaId;
+
+                if (ModelState.IsValid)
+                {
+                    var categoria = new Categoria
+                    {
+                        Nombre = viewModel.Nombre ?? string.Empty,
+                        Nota = viewModel.Nota,
+                        Estado = viewModel.Estado,
+                        EmpresaId = viewModel.EmpresaId,
+                        FamiliaId = viewModel.FamiliaId,
+                        CuentaVentasId = viewModel.CuentaVentasId,
+                        CuentaComprasInventariosId = viewModel.CuentaComprasInventariosId,
+                        CuentaCostoVentasGastosId = viewModel.CuentaCostoVentasGastosId,
+                        CuentaDescuentosId = viewModel.CuentaDescuentosId,
+                        CuentaDevolucionesId = viewModel.CuentaDevolucionesId,
+                        CuentaAjustesId = viewModel.CuentaAjustesId,
+                        CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId,
+                        ImpuestoId = viewModel.ImpuestoId,
+                        PropinaImpuestoId = viewModel.PropinaImpuestoId,
+                        RutaImpresoraId = viewModel.RutaImpresoraId,
+                        FechaCreacion = DateTime.UtcNow
+                    };
+                    
+                    _context.Categorias.Add(categoria);
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { 
+                        success = true, 
+                        message = "Categoría creada con éxito", 
+                        categoria = new { 
+                            id = categoria.Id, 
+                            nombre = categoria.Nombre 
+                        } 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Error al crear categoría", 
+                        errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+        
+        // GET: Categoria/EditPartial/5
+        [HttpGet]
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return Json(new { success = false, message = "Empresa no seleccionada" });
+            }
+
+            var categoria = await _context.Categorias
+                .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
+                
+            if (categoria == null)
+            {
+                return Json(new { success = false, message = "Categoría no encontrada" });
+            }
+
+            var viewModel = new CategoriaViewModel
+            {
+                Id = categoria.Id,
+                Nombre = categoria.Nombre,
+                Nota = categoria.Nota,
+                Estado = categoria.Estado,
+                EmpresaId = categoria.EmpresaId,
+                FamiliaId = categoria.FamiliaId,
+                CuentaVentasId = categoria.CuentaVentasId,
+                CuentaComprasInventariosId = categoria.CuentaComprasInventariosId,
+                CuentaCostoVentasGastosId = categoria.CuentaCostoVentasGastosId,
+                CuentaDescuentosId = categoria.CuentaDescuentosId,
+                CuentaDevolucionesId = categoria.CuentaDevolucionesId,
+                CuentaAjustesId = categoria.CuentaAjustesId,
+                CuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId,
+                ImpuestoId = categoria.ImpuestoId,
+                PropinaImpuestoId = categoria.PropinaImpuestoId,
+                RutaImpresoraId = categoria.RutaImpresoraId
+            };
+
+            await CargarDatosFormulario(viewModel);
+            return PartialView("_EditPartial", viewModel);
+        }
+        
+        // POST: Categoria/EditPartial/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> EditPartial(int id, CategoriaViewModel viewModel)
+        {
+            if (id != viewModel.Id)
+            {
+                return Json(new { success = false, message = "ID de categoría no válido" });
+            }
+
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { success = false, message = "Empresa no seleccionada" });
+                }
+
+                var categoria = await _context.Categorias
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
+                    
+                if (categoria == null)
+                {
+                    return Json(new { success = false, message = "Categoría no encontrada" });
+                }
+
+                if (ModelState.IsValid)
+                {
+                    categoria.Nombre = viewModel.Nombre ?? string.Empty;
+                    categoria.Nota = viewModel.Nota;
+                    categoria.Estado = viewModel.Estado;
+                    categoria.FamiliaId = viewModel.FamiliaId;
+                    categoria.CuentaVentasId = viewModel.CuentaVentasId;
+                    categoria.CuentaComprasInventariosId = viewModel.CuentaComprasInventariosId;
+                    categoria.CuentaCostoVentasGastosId = viewModel.CuentaCostoVentasGastosId;
+                    categoria.CuentaDescuentosId = viewModel.CuentaDescuentosId;
+                    categoria.CuentaDevolucionesId = viewModel.CuentaDevolucionesId;
+                    categoria.CuentaAjustesId = viewModel.CuentaAjustesId;
+                    categoria.CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId;
+                    categoria.ImpuestoId = viewModel.ImpuestoId;
+                    categoria.PropinaImpuestoId = viewModel.PropinaImpuestoId;
+                    categoria.RutaImpresoraId = viewModel.RutaImpresoraId;
+                    categoria.FechaModificacion = DateTime.UtcNow;
+
+                    _context.Update(categoria);
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { 
+                        success = true, 
+                        message = "Categoría actualizada con éxito", 
+                        categoria = new { 
+                            id = categoria.Id, 
+                            nombre = categoria.Nombre 
+                        } 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Error al actualizar categoría", 
+                        errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        /**
+         * Obtiene los detalles completos de una categoría incluida la información de impuestos y cuentas contables
+         */
+        [HttpGet]
+        public async Task<JsonResult> ObtenerDetalle(int id)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { success = false, message = "Empresa no seleccionada" });
+                }
+
+                // Obtener la categoría con información completa incluyendo referencias
+                var categoria = await _context.Categorias
+                    .Include(c => c.CuentaVentas)
+                    .Include(c => c.CuentaComprasInventarios)
+                    .Include(c => c.CuentaCostoVentasGastos)
+                    .Include(c => c.CuentaDescuentos)
+                    .Include(c => c.CuentaDevoluciones)
+                    .Include(c => c.CuentaAjustes)
+                    .Include(c => c.CuentaCostoMateriaPrima)
+                    .Where(c => c.Id == id && c.EmpresaId == empresaId)
+                    .Select(c => new {
+                        id = c.Id,
+                        nombre = c.Nombre,
+                        nota = c.Nota,
+                        familiaId = c.FamiliaId,
+                        impuestoId = c.ImpuestoId,
+                        propinaImpuestoId = c.PropinaImpuestoId,
+                        // IDs de cuentas
+                        cuentaVentasId = c.CuentaVentasId,
+                        cuentaComprasInventariosId = c.CuentaComprasInventariosId,
+                        cuentaCostoVentasGastosId = c.CuentaCostoVentasGastosId,
+                        cuentaDescuentosId = c.CuentaDescuentosId,
+                        cuentaDevolucionesId = c.CuentaDevolucionesId,
+                        cuentaAjustesId = c.CuentaAjustesId,
+                        cuentaCostoMateriaPrimaId = c.CuentaCostoMateriaPrimaId,
+                        rutaImpresoraId = c.RutaImpresoraId,
+                        // Nombres de cuentas para usar en Select2
+                        nombreCuentaVentas = c.CuentaVentas != null ? $"{c.CuentaVentas.Codigo} - {c.CuentaVentas.Nombre}" : null,
+                        nombreCuentaComprasInventarios = c.CuentaComprasInventarios != null ? $"{c.CuentaComprasInventarios.Codigo} - {c.CuentaComprasInventarios.Nombre}" : null,
+                        nombreCuentaCostoVentasGastos = c.CuentaCostoVentasGastos != null ? $"{c.CuentaCostoVentasGastos.Codigo} - {c.CuentaCostoVentasGastos.Nombre}" : null,
+                        nombreCuentaDescuentos = c.CuentaDescuentos != null ? $"{c.CuentaDescuentos.Codigo} - {c.CuentaDescuentos.Nombre}" : null,
+                        nombreCuentaDevoluciones = c.CuentaDevoluciones != null ? $"{c.CuentaDevoluciones.Codigo} - {c.CuentaDevoluciones.Nombre}" : null,
+                        nombreCuentaAjustes = c.CuentaAjustes != null ? $"{c.CuentaAjustes.Codigo} - {c.CuentaAjustes.Nombre}" : null,
+                        nombreCuentaCostoMateriaPrima = c.CuentaCostoMateriaPrima != null ? $"{c.CuentaCostoMateriaPrima.Codigo} - {c.CuentaCostoMateriaPrima.Nombre}" : null
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (categoria == null)
+                {
+                    return Json(new { success = false, message = "Categoría no encontrada" });
+                }
+
+                return Json(new { success = true, categoria });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerDetalle: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: Categoria/Buscar
+        [HttpGet]
+        public async Task<JsonResult> Buscar(string term)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { results = new List<object>() });
+                }
+
+                var categorias = await _context.Categorias
+                    .Where(c => c.EmpresaId == empresaId && c.Estado && 
+                          (string.IsNullOrEmpty(term) || c.Nombre.Contains(term)))
+                    .OrderBy(c => c.Nombre)
+                    .Select(c => new { 
+                        id = c.Id, 
+                        text = c.Nombre
+                    })
+                    .ToListAsync();
+
+                return Json(new { results = categorias });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en Buscar: {ex.Message}");
+                return Json(new { results = new List<object>() });
+            }
         }
     }
 } 

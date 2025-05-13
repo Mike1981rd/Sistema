@@ -25,13 +25,13 @@
         <div class="mb-4">
             <ul class="nav nav-tabs border-0">
                 <li class="nav-item me-3">
-                    <a class="nav-link px-0 py-2 border-0 @(ViewBag.MostrarActivos ? "fw-bold text-success border-bottom border-2 border-success" : "text-muted")" 
+                    <a class="nav-link px-0 py-2 border-0 @(ViewBag.MostrarEstados ? "fw-bold text-success border-bottom border-2 border-success" : "text-muted")" 
                        href="@Url.Action("Index", new { activos = true })">
-                        <i class="fas fa-check-circle me-1"></i>Activos
+                        <i class="fas fa-check-circle me-1"></i>Estados
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link px-0 py-2 border-0 @(!ViewBag.MostrarActivos ? "fw-bold text-danger border-bottom border-2 border-danger" : "text-muted")" 
+                    <a class="nav-link px-0 py-2 border-0 @(!ViewBag.MostrarEstados ? "fw-bold text-danger border-bottom border-2 border-danger" : "text-muted")" 
                        href="@Url.Action("Index", new { activos = false })">
                         <i class="fas fa-times-circle me-1"></i>Inactivos
                     </a>
@@ -80,9 +80,9 @@
                                             <i class="fas fa-pause-circle me-1"></i>Disponible
                                         </div>
                                     }
-                                    @if(item.Activo) {
+                                    @if(item.Estado) {
                                         <div class="badge bg-success">
-                                            <i class="fas fa-check-circle me-1"></i>Activo
+                                            <i class="fas fa-check-circle me-1"></i>Estado
                                         </div>
                                     } else {
                                         <div class="badge bg-danger">

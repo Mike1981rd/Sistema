@@ -111,6 +111,11 @@ namespace SistemaContable.Models
         [Display(Name = "Fecha de Modificación")]
         public DateTime? FechaModificacion { get; set; }
 
+        // Campo para el ID de empresa (multiempresa)
+        public int? EmpresaId { get; set; }
+        [ForeignKey("EmpresaId")]
+        public virtual Empresa? Empresa { get; set; }
+
         // Propiedad calculada para mostrar el tipo (Cliente, Proveedor o ambos)
         [NotMapped]
         public string Tipo

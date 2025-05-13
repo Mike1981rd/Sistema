@@ -327,6 +327,9 @@ namespace SistemaContable.Migrations
                     b.Property<int?>("RutaImpresoraId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CuentaAjustesId");
@@ -381,6 +384,9 @@ namespace SistemaContable.Migrations
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("EsCliente")
                         .HasColumnType("boolean");
@@ -441,6 +447,8 @@ namespace SistemaContable.Migrations
                     b.HasIndex("CuentaPorCobrarId");
 
                     b.HasIndex("CuentaPorPagarId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("ListaPrecioId");
 
@@ -677,6 +685,9 @@ namespace SistemaContable.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("EsCuentaSistema")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Estado")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("FechaCreacion")
@@ -1050,9 +1061,6 @@ namespace SistemaContable.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Activo")
-                        .HasColumnType("boolean");
-
                     b.Property<int>("CuentaContableComprasId")
                         .HasColumnType("integer");
 
@@ -1070,6 +1078,9 @@ namespace SistemaContable.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("EstaEnUso")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Estado")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("FechaCreacion")
@@ -1099,6 +1110,342 @@ namespace SistemaContable.Migrations
                     b.HasIndex("EmpresaId");
 
                     b.ToTable("Impuestos", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.Item", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoriaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CodigoBarras")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("CuentaAjustesId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CuentaComprasInventariosId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CuentaCostoVentasGastosId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CuentaDescuentosId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CuentaDevolucionesId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CuentaVentasId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("ImpuestoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MarcaId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("NivelMinimo")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Rendimiento")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("StockActual")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("UnidadMedidaInventarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoriaId");
+
+                    b.HasIndex("CuentaAjustesId");
+
+                    b.HasIndex("CuentaComprasInventariosId");
+
+                    b.HasIndex("CuentaCostoVentasGastosId");
+
+                    b.HasIndex("CuentaDescuentosId");
+
+                    b.HasIndex("CuentaDevolucionesId");
+
+                    b.HasIndex("CuentaVentasId");
+
+                    b.HasIndex("ImpuestoId");
+
+                    b.HasIndex("MarcaId");
+
+                    b.HasIndex("UnidadMedidaInventarioId");
+
+                    b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemAlmacen", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlmacenId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("NivelMinimo")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("Ubicacion")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemAlmacenes");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemContenedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ContenedorSuperiorId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Costo")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("EsContenedorCompra")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Etiqueta")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<decimal>("Factor")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnidadMedidaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContenedorSuperiorId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("UnidadMedidaId");
+
+                    b.ToTable("ItemContenedores");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemProveedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodigoProveedor")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("FactorConversion")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NombreCompra")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("PrecioCompra")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("ProveedorId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UltimaActualizacionPrecio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UnidadMedidaCompraId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.HasIndex("UnidadMedidaCompraId");
+
+                    b.ToTable("ItemProveedores");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemTara", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ItemContenedorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ValorTara")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemContenedorId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemTaras");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.ListaPrecio", b =>
@@ -1158,6 +1505,46 @@ namespace SistemaContable.Migrations
                             Nombre = "VIP",
                             Porcentaje = 20m
                         });
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.Marca", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Marcas");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.MovimientoContable", b =>
@@ -1447,7 +1834,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4040),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4475),
                             Nombre = "De contado"
                         },
                         new
@@ -1457,7 +1844,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4043),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4478),
                             Nombre = "8 días"
                         },
                         new
@@ -1467,7 +1854,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4045),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4480),
                             Nombre = "15 días"
                         },
                         new
@@ -1477,7 +1864,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4066),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4482),
                             Nombre = "30 días"
                         },
                         new
@@ -1487,7 +1874,7 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = false,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4068),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4483),
                             Nombre = "60 días"
                         },
                         new
@@ -1496,9 +1883,78 @@ namespace SistemaContable.Migrations
                             EsPredeterminado = false,
                             EsVencimientoManual = true,
                             EstaEnUso = false,
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(4070),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(4485),
                             Nombre = "Vencimiento manual"
                         });
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ProductoVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Costo")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CostoTotal")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("DisponibleParaVenta")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ImpuestoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemContenedorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("PrecioVenta")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("RequierePreparacion")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("TiempoPreparacion")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImpuestoId");
+
+                    b.HasIndex("ItemContenedorId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ProductosVenta");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.Provincia", b =>
@@ -1593,8 +2049,8 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Impuesto Sobre la Renta al 10%",
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(5483),
-                            FechaModificacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(5484),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(5912),
+                            FechaModificacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(5913),
                             Nombre = "ISR 10%",
                             Porcentaje = 10.00m,
                             Tipo = "ISR"
@@ -1604,8 +2060,8 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Retención del IVA al 15%",
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(5487),
-                            FechaModificacion = new DateTime(2025, 5, 11, 14, 45, 40, 33, DateTimeKind.Utc).AddTicks(5487),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(5918),
+                            FechaModificacion = new DateTime(2025, 5, 12, 3, 30, 10, 369, DateTimeKind.Utc).AddTicks(5918),
                             Nombre = "IVA Retenido 15%",
                             Porcentaje = 15.00m,
                             Tipo = "IVA"
@@ -1921,6 +2377,50 @@ namespace SistemaContable.Migrations
                     b.ToTable("TransaccionesBanco");
                 });
 
+            modelBuilder.Entity("SistemaContable.Models.UnidadMedida", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Abreviatura")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UsuarioCreacionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioModificacionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UnidadesMedida");
+                });
+
             modelBuilder.Entity("SistemaContable.Models.Vendedor", b =>
                 {
                     b.Property<int>("Id")
@@ -1961,7 +2461,7 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Email = "juan@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 35, DateTimeKind.Utc).AddTicks(7740),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 372, DateTimeKind.Utc).AddTicks(1546),
                             Nombre = "Juan Pérez",
                             PorcentajeComision = 5m,
                             Telefono = "809-555-1234"
@@ -1971,7 +2471,7 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Email = "maria@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 11, 14, 45, 40, 35, DateTimeKind.Utc).AddTicks(7749),
+                            FechaCreacion = new DateTime(2025, 5, 12, 3, 30, 10, 372, DateTimeKind.Utc).AddTicks(1555),
                             Nombre = "María González",
                             PorcentajeComision = 7m,
                             Telefono = "809-555-5678"
@@ -2128,6 +2628,10 @@ namespace SistemaContable.Migrations
                         .HasForeignKey("CuentaPorPagarId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("SistemaContable.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("SistemaContable.Models.ListaPrecio", "ListaPrecio")
                         .WithMany()
                         .HasForeignKey("ListaPrecioId")
@@ -2166,6 +2670,8 @@ namespace SistemaContable.Migrations
                     b.Navigation("CuentaPorCobrar");
 
                     b.Navigation("CuentaPorPagar");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("ListaPrecio");
 
@@ -2391,6 +2897,163 @@ namespace SistemaContable.Migrations
                     b.Navigation("Empresa");
                 });
 
+            modelBuilder.Entity("SistemaContable.Models.Item", b =>
+                {
+                    b.HasOne("SistemaContable.Models.Categoria", "Categoria")
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaAjustes")
+                        .WithMany()
+                        .HasForeignKey("CuentaAjustesId");
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaComprasInventarios")
+                        .WithMany()
+                        .HasForeignKey("CuentaComprasInventariosId");
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaCostoVentasGastos")
+                        .WithMany()
+                        .HasForeignKey("CuentaCostoVentasGastosId");
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaDescuentos")
+                        .WithMany()
+                        .HasForeignKey("CuentaDescuentosId");
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaDevoluciones")
+                        .WithMany()
+                        .HasForeignKey("CuentaDevolucionesId");
+
+                    b.HasOne("SistemaContable.Models.CuentaContable", "CuentaVentas")
+                        .WithMany()
+                        .HasForeignKey("CuentaVentasId");
+
+                    b.HasOne("SistemaContable.Models.Impuesto", "Impuesto")
+                        .WithMany()
+                        .HasForeignKey("ImpuestoId");
+
+                    b.HasOne("SistemaContable.Models.Marca", "Marca")
+                        .WithMany()
+                        .HasForeignKey("MarcaId");
+
+                    b.HasOne("SistemaContable.Models.UnidadMedida", "UnidadMedidaInventario")
+                        .WithMany()
+                        .HasForeignKey("UnidadMedidaInventarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Categoria");
+
+                    b.Navigation("CuentaAjustes");
+
+                    b.Navigation("CuentaComprasInventarios");
+
+                    b.Navigation("CuentaCostoVentasGastos");
+
+                    b.Navigation("CuentaDescuentos");
+
+                    b.Navigation("CuentaDevoluciones");
+
+                    b.Navigation("CuentaVentas");
+
+                    b.Navigation("Impuesto");
+
+                    b.Navigation("Marca");
+
+                    b.Navigation("UnidadMedidaInventario");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemAlmacen", b =>
+                {
+                    b.HasOne("SistemaContable.Models.Almacen", "Almacen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.Item", "Item")
+                        .WithMany("Almacenes")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemContenedor", b =>
+                {
+                    b.HasOne("SistemaContable.Models.ItemContenedor", "ContenedorSuperior")
+                        .WithMany()
+                        .HasForeignKey("ContenedorSuperiorId");
+
+                    b.HasOne("SistemaContable.Models.Item", "Item")
+                        .WithMany("Contenedores")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.UnidadMedida", "UnidadMedida")
+                        .WithMany()
+                        .HasForeignKey("UnidadMedidaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContenedorSuperior");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("UnidadMedida");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemProveedor", b =>
+                {
+                    b.HasOne("SistemaContable.Models.Item", "Item")
+                        .WithMany("Proveedores")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.Cliente", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.UnidadMedida", "UnidadMedidaCompra")
+                        .WithMany()
+                        .HasForeignKey("UnidadMedidaCompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Proveedor");
+
+                    b.Navigation("UnidadMedidaCompra");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ItemTara", b =>
+                {
+                    b.HasOne("SistemaContable.Models.ItemContenedor", "ItemContenedor")
+                        .WithMany()
+                        .HasForeignKey("ItemContenedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.Item", "Item")
+                        .WithMany("Taras")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("ItemContenedor");
+                });
+
             modelBuilder.Entity("SistemaContable.Models.MovimientoContable", b =>
                 {
                     b.HasOne("SistemaContable.Models.Cliente", "Contacto")
@@ -2437,6 +3100,31 @@ namespace SistemaContable.Migrations
                         .IsRequired();
 
                     b.Navigation("TipoEntradaDiario");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.ProductoVenta", b =>
+                {
+                    b.HasOne("SistemaContable.Models.Impuesto", "Impuesto")
+                        .WithMany()
+                        .HasForeignKey("ImpuestoId");
+
+                    b.HasOne("SistemaContable.Models.ItemContenedor", "ItemContenedor")
+                        .WithMany()
+                        .HasForeignKey("ItemContenedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.Item", "Item")
+                        .WithMany("ProductosVenta")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Impuesto");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("ItemContenedor");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.RutaImpresora", b =>
@@ -2562,6 +3250,19 @@ namespace SistemaContable.Migrations
             modelBuilder.Entity("SistemaContable.Models.Familia", b =>
                 {
                     b.Navigation("FamiliaCuentasContables");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.Item", b =>
+                {
+                    b.Navigation("Almacenes");
+
+                    b.Navigation("Contenedores");
+
+                    b.Navigation("ProductosVenta");
+
+                    b.Navigation("Proveedores");
+
+                    b.Navigation("Taras");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.NumeracionEntradaDiario", b =>

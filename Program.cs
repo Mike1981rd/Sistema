@@ -30,6 +30,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
 
 // Registro de repositorios para Cuenta Contable y Contacto

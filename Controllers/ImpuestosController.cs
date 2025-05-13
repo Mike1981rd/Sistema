@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
 using System;
+using System.Collections.Generic;
 
 namespace SistemaContable.Controllers
 {
@@ -38,12 +39,12 @@ namespace SistemaContable.Controllers
             }
             
             // Pasar el estado de filtro a la vista
-            ViewBag.MostrarActivos = activos;
+            ViewBag.MostrarEstados = activos;
 
             return View(await _context.Impuestos
                 .Include(i => i.CuentaContableVentas)
                 .Include(i => i.CuentaContableCompras)
-                .Where(i => i.EmpresaId == empresaId && i.Activo == activos)
+                .Where(i => i.EmpresaId == empresaId && i.Estado == activos)
                 .OrderBy(i => i.Nombre)
                 .ToListAsync());
         }
@@ -86,7 +87,7 @@ namespace SistemaContable.Controllers
         // POST: Impuestos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,Activo")] Impuesto impuesto)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,Estado")] Impuesto impuesto)
         {
             // Obtener la empresa actual
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
@@ -129,7 +130,7 @@ namespace SistemaContable.Controllers
         // POST: Impuestos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,FechaCreacion,EstaEnUso,EmpresaId,Activo")] Impuesto impuesto)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,FechaCreacion,EstaEnUso,EmpresaId,Estado")] Impuesto impuesto)
         {
             if (id != impuesto.Id)
             {
@@ -211,11 +212,190 @@ namespace SistemaContable.Controllers
             return _context.Impuestos.Any(e => e.Id == id);
         }
         
+        // GET: Impuestos/ObtenerTodos
+        [HttpGet]
+        public async Task<JsonResult> ObtenerTodos()
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { error = "Empresa no seleccionada" });
+                }
+
+                var impuestos = await _context.Impuestos
+                    .Where(i => i.EmpresaId == empresaId && i.Estado)
+                    .OrderBy(i => i.Nombre)
+                    .Select(i => new {
+                        id = i.Id,
+                        nombre = i.Nombre,
+                        porcentaje = i.Porcentaje,
+                        tipo = i.Tipo
+                    })
+                    .ToListAsync();
+
+                return Json(impuestos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerTodos: {ex.Message}");
+                return Json(new { error = ex.Message });
+            }
+        }
+        
+        // GET: Impuestos/CreatePartial
+        [HttpGet]
+        public async Task<IActionResult> CreatePartial()
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return Json(new { success = false, message = "Empresa no seleccionada" });
+            }
+
+            await CargarCuentasContables(empresaId);
+            return PartialView("_CreatePartial");
+        }
+        
+        // POST: Impuestos/CreatePartial
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> CreatePartial([Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,Estado")] Impuesto impuesto)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { success = false, message = "Empresa no seleccionada" });
+                }
+
+                impuesto.EmpresaId = empresaId;
+
+                if (ModelState.IsValid)
+                {
+                    _context.Add(impuesto);
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { 
+                        success = true, 
+                        message = "Impuesto creado con éxito", 
+                        impuesto = new { 
+                            id = impuesto.Id, 
+                            nombre = impuesto.Nombre,
+                            porcentaje = impuesto.Porcentaje
+                        } 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Error al crear impuesto", 
+                        errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+        
+        // GET: Impuestos/EditPartial/5
+        [HttpGet]
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return Json(new { success = false, message = "Empresa no seleccionada" });
+            }
+
+            var impuesto = await _context.Impuestos
+                .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
+                
+            if (impuesto == null)
+            {
+                return Json(new { success = false, message = "Impuesto no encontrado" });
+            }
+
+            await CargarCuentasContables(impuesto.EmpresaId);
+            return PartialView("_EditPartial", impuesto);
+        }
+        
+        // POST: Impuestos/EditPartial/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> EditPartial(int id, [Bind("Id,Nombre,Tipo,Porcentaje,Descripcion,EsAcreditable,CuentaContableVentasId,CuentaContableComprasId,FechaCreacion,EstaEnUso,EmpresaId,Estado")] Impuesto impuesto)
+        {
+            if (id != impuesto.Id)
+            {
+                return Json(new { success = false, message = "ID de impuesto no válido" });
+            }
+
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { success = false, message = "Empresa no seleccionada" });
+                }
+
+                var existingImpuesto = await _context.Impuestos
+                    .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
+                    
+                if (existingImpuesto == null)
+                {
+                    return Json(new { success = false, message = "Impuesto no encontrado" });
+                }
+
+                if (ModelState.IsValid)
+                {
+                    existingImpuesto.Nombre = impuesto.Nombre;
+                    existingImpuesto.Tipo = impuesto.Tipo;
+                    existingImpuesto.Porcentaje = impuesto.Porcentaje;
+                    existingImpuesto.Descripcion = impuesto.Descripcion;
+                    existingImpuesto.EsAcreditable = impuesto.EsAcreditable;
+                    existingImpuesto.CuentaContableVentasId = impuesto.CuentaContableVentasId;
+                    existingImpuesto.CuentaContableComprasId = impuesto.CuentaContableComprasId;
+                    existingImpuesto.Estado = impuesto.Estado;
+                    existingImpuesto.FechaModificacion = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    
+                    _context.Update(existingImpuesto);
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { 
+                        success = true, 
+                        message = "Impuesto actualizado con éxito", 
+                        impuesto = new { 
+                            id = existingImpuesto.Id, 
+                            nombre = existingImpuesto.Nombre,
+                            porcentaje = existingImpuesto.Porcentaje
+                        } 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Error al actualizar impuesto", 
+                        errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+        
         private async Task CargarCuentasContables(int empresaId)
         {
             // Obtener todas las cuentas contables para la empresa actual
             var cuentasContables = await _context.CuentasContables
-                .Where(c => c.EmpresaId == empresaId && c.Activo)
+                .Where(c => c.EmpresaId == empresaId && c.Estado)
                 .OrderBy(c => c.Codigo)
                 .ToListAsync();
             
@@ -235,6 +415,37 @@ namespace SistemaContable.Controllers
                 "CodigoNombre",
                 null
             );
+        }
+
+        // GET: Impuestos/Buscar
+        [HttpGet]
+        public async Task<JsonResult> Buscar(string term)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { results = new List<object>() });
+                }
+
+                var impuestos = await _context.Impuestos
+                    .Where(i => i.EmpresaId == empresaId && i.Estado && 
+                          (string.IsNullOrEmpty(term) || i.Nombre.Contains(term)))
+                    .OrderBy(i => i.Nombre)
+                    .Select(i => new { 
+                        id = i.Id, 
+                        text = $"{i.Nombre} {(i.Porcentaje.HasValue ? i.Porcentaje.Value.ToString() + "%" : "")}"
+                    })
+                    .ToListAsync();
+
+                return Json(new { results = impuestos });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en Buscar: {ex.Message}");
+                return Json(new { results = new List<object>() });
+            }
         }
     }
 } 

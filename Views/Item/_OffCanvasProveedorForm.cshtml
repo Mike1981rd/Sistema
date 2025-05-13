@@ -1,0 +1,148 @@
+@model SistemaContable.Models.Cliente
+
+<form id="formProveedor">
+    <input type="hidden" id="ProveedorId" name="Id" value="@Model?.Id" />
+
+    <div class="mb-3">
+        <label for="ProveedorNombre" class="form-label">Nombre/Razón Social *</label>
+        <input type="text" class="form-control" id="ProveedorNombre" name="Nombre" value="@Model?.NombreRazonSocial" required />
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorRnc" class="form-label">RNC/Cédula</label>
+        <input type="text" class="form-control" id="ProveedorRnc" name="Rnc" value="@Model?.NumeroIdentificacion" />
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorTelefono" class="form-label">Teléfono</label>
+        <input type="text" class="form-control" id="ProveedorTelefono" name="Telefono" value="@Model?.Telefono" />
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorEmail" class="form-label">Email</label>
+        <input type="email" class="form-control" id="ProveedorEmail" name="Email" value="@Model?.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorDireccion" class="form-label">Dirección</label>
+        <textarea class="form-control" id="ProveedorDireccion" name="Direccion" rows="2">@Model?.Direccion</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorPlazoPagoId" class="form-label">Plazo de Pago</label>
+        <select class="form-select" id="ProveedorPlazoPagoId" name="PlazoPagoId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.PlazosPago != null)
+            {
+                foreach (var plazo in ViewBag.PlazosPago)
+                {
+                    <option value="@plazo.Value" selected="@(Model != null && Model.PlazoPagoId.ToString() == plazo.Value)">@plazo.Text</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorTipoNcfId" class="form-label">Tipo de NCF</label>
+        <select class="form-select" id="ProveedorTipoNcfId" name="TipoNcfId">
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.TiposNcf != null)
+            {
+                foreach (var tipo in ViewBag.TiposNcf)
+                {
+                    <option value="@tipo.Value" selected="@(Model != null && Model.TipoNcfId.ToString() == tipo.Value)">@tipo.Text</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="d-grid gap-2 mt-4">
+        <button type="button" class="btn btn-primary" id="btnGuardarProveedor">
+            <i class="fas fa-save me-1"></i> Guardar Proveedor
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">
+            <i class="fas fa-times me-1"></i> Cancelar
+        </button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        // Inicializar select2
+        $('#ProveedorPlazoPagoId, #ProveedorTipoNcfId').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('#offcanvasProveedor')
+        });
+
+        // Guardar proveedor
+        $('#btnGuardarProveedor').click(function() {
+            // Validación básica
+            if (!$('#ProveedorNombre').val()) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El nombre del proveedor es requerido'
+                });
+                return;
+            }
+
+            // Preparar datos
+            var formData = getFormData($('#formProveedor'));
+
+            // Enviar solicitud
+            $.ajax({
+                url: '/Proveedor/CrearProveedorAjax',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        // Agregar al dropdown y seleccionar
+                        var newOption = new Option(response.nombre, response.id, true, true);
+                        $('.select2-proveedor:last').append(newOption).trigger('change');
+
+                        // Cerrar offcanvas
+                        $('#offcanvasProveedor').offcanvas('hide');
+
+                        // Mostrar mensaje
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Proveedor guardado correctamente',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo guardar el proveedor'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la solicitud'
+                    });
+                }
+            });
+        });
+
+        // Función para convertir form a objeto
+        function getFormData($form) {
+            var unindexed_array = $form.serializeArray();
+            var indexed_array = {};
+
+            $.map(unindexed_array, function(n, i) {
+                indexed_array[n['name']] = n['value'];
+            });
+
+            return indexed_array;
+        }
+    });
+</script>
