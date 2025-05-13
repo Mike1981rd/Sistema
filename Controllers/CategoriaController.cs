@@ -855,5 +855,49 @@ namespace SistemaContable.Controllers
                 return Json(new { results = new List<object>() });
             }
         }
+
+        [HttpGet]
+        public async Task<JsonResult> Obtener(int id)
+        {
+            var categoria = await _context.Categorias.FindAsync(id);
+            if (categoria == null)
+                return Json(new { success = false, message = "No encontrada" });
+
+            return Json(new {
+                success = true,
+                id = categoria.Id,
+                nombre = categoria.Nombre,
+                familiaId = categoria.FamiliaId,
+                impuestoId = categoria.ImpuestoId,
+                estado = categoria.Estado
+            });
+        }
+
+        // GET: Categoria/ObtenerDatos/{id}
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDatos(int id)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var categoria = await _context.Categorias
+                .Where(c => c.Id == id && c.EmpresaId == empresaId)
+                .Select(c => new {
+                    impuestoId = c.ImpuestoId,
+                    cuentaVentaId = c.CuentaVentasId,
+                    cuentaCompraId = c.CuentaComprasInventariosId,
+                    cuentaInventarioId = c.CuentaCostoVentasGastosId
+                })
+                .FirstOrDefaultAsync();
+            
+            if (categoria == null)
+                return Json(new { success = false });
+            
+            return Json(new {
+                success = true,
+                impuestoId = categoria.impuestoId,
+                cuentaVentaId = categoria.cuentaVentaId,
+                cuentaCompraId = categoria.cuentaCompraId,
+                cuentaInventarioId = categoria.cuentaInventarioId
+            });
+        }
     }
 } 

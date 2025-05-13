@@ -17,6 +17,7 @@ using iTextSharp.text.pdf;
 using Npgsql.Internal;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using SistemaContable.ViewModels;
 
 namespace SistemaContable.Controllers
 {
@@ -852,13 +853,24 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Item/GenerarCodigoBarras
-        [HttpGet]
+        [HttpPost]
         public IActionResult GenerarCodigoBarras()
         {
-            // Generar un c�digo de barras �nico
-            string codigo = GenerarCodigoUnico();
-
-            return Json(new { codigo });
+            try
+            {
+                // Generar un código de barras único basado en timestamp + número aleatorio
+                string timestamp = DateTime.Now.ToString("yyMMddHHmmss");
+                Random random = new Random();
+                string randomDigits = random.Next(100, 999).ToString();
+                
+                string codigoBarras = $"{timestamp}{randomDigits}";
+                
+                return Json(new { success = true, codigoBarras = codigoBarras });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // POST: Item/ExportarCodigoBarras
@@ -867,10 +879,10 @@ namespace SistemaContable.Controllers
         {
             if (string.IsNullOrEmpty(codigo))
             {
-                return Json(new { success = false, message = "El c�digo de barras es requerido." });
+                return Json(new { success = false, message = "El código de barras es requerido." });
             }
 
-            // Generar PDF con c�digo de barras
+            // Generar PDF con código de barras
             string fileName = $"CodigoBarras_{nombre}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             string filePath = Path.Combine(_hostEnvironment.WebRootPath, "temp", fileName);
 
@@ -887,14 +899,14 @@ namespace SistemaContable.Controllers
                 var writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
                 document.Open();
 
-                // A�adir t�tulo
+                // Añadir título
                 var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
-                var title = new Paragraph($"C�digo de Barras: {nombre}", titleFont);
+                var title = new Paragraph($"Código de Barras: {nombre}", titleFont);
                 title.Alignment = Element.ALIGN_CENTER;
                 document.Add(title);
                 document.Add(Chunk.NEWLINE);
 
-                // Crear c�digo de barras
+                // Crear código de barras
                 var barcode = new iTextSharp.text.pdf.Barcode128();
                 barcode.Code = codigo;
                 barcode.CodeType = iTextSharp.text.pdf.Barcode128.CODE128;
@@ -902,13 +914,13 @@ namespace SistemaContable.Controllers
                 barcode.Size = 20;
                 barcode.Font = null;
 
-                // A�adir el c�digo de barras al documento
+                // Añadir el código de barras al documento
                 var image = barcode.CreateImageWithBarcode(writer.DirectContent, BaseColor.BLACK, BaseColor.WHITE);
                 image.Alignment = Element.ALIGN_CENTER;
                 image.ScalePercent(150);
                 document.Add(image);
 
-                // A�adir el c�digo como texto
+                // Añadir el código como texto
                 var codeText = new Paragraph(codigo);
                 codeText.Alignment = Element.ALIGN_CENTER;
                 document.Add(codeText);
@@ -952,7 +964,7 @@ namespace SistemaContable.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "Datos inv�lidos." });
+                return Json(new { success = false, message = "Datos inválidos." });
             }
 
             var empresaId = _userService.GetEmpresaId();
@@ -1061,6 +1073,53 @@ namespace SistemaContable.Controllers
             }
         }
 
+        // GET: Item/GenerarCodigoAutomatico
+        [HttpGet]
+        public IActionResult GenerarCodigoAutomatico()
+        {
+            var empresaId = _userService.GetEmpresaId();
+            
+            // Obtener último código y generar siguiente
+            var ultimoCodigo = _context.Items
+                .Where(i => i.EmpresaId == empresaId)
+                .OrderByDescending(i => i.Id)
+                .FirstOrDefault()?.Codigo;
+            
+            string nuevoCodigo;
+            
+            if (string.IsNullOrEmpty(ultimoCodigo))
+                nuevoCodigo = "IT-00001";
+            else
+            {
+                int numero = int.Parse(ultimoCodigo.Substring(3)) + 1;
+                nuevoCodigo = $"IT-{numero:D5}";
+            }
+            
+            return Json(new { success = true, codigo = nuevoCodigo });
+        }
+
+        // POST: Item/ImprimirCodigoBarras
+        [HttpPost]
+        public IActionResult ImprimirCodigoBarras(string codigoBarras, string nombre, string formato, int cantidad)
+        {
+            if (string.IsNullOrEmpty(codigoBarras))
+            {
+                return BadRequest("El código de barras es requerido");
+            }
+            
+            // Crear el modelo para la vista de impresión
+            var model = new ImpresionCodigoBarrasViewModel
+            {
+                CodigoBarras = codigoBarras,
+                Nombre = nombre,
+                Formato = formato,
+                Cantidad = cantidad
+            };
+            
+            // Devolver la vista que generará el PDF
+            return View("ImprimirCodigoBarras", model);
+        }
+
         // Mtodos privados
         private ItemViewModel PrepararViewModel(ItemViewModel viewModel = null)
         {
@@ -1080,7 +1139,7 @@ namespace SistemaContable.Controllers
                 };
             }
 
-            // Cargar listas de selecci�n
+            // Cargar listas de selección
             viewModel.CategoriasDisponibles = new SelectList(
                 _context.Categorias
                     .Where(c => c.EmpresaId == empresaId && c.Estado)
@@ -1131,7 +1190,7 @@ namespace SistemaContable.Controllers
                 "Id", "NombreRazonSocial"
             );
 
-            // Obtener configuraci�n de empresa para separador decimal
+            // Obtener configuración de empresa para separador decimal
             var empresa = _context.Empresas.Find(empresaId);
             viewModel.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
 
@@ -1140,17 +1199,17 @@ namespace SistemaContable.Controllers
 
         private string GenerarCodigoUnico()
         {
-            // Generar c�digo EAN-13
+            // Generar código EAN-13
             Random random = new Random();
             string codigo = "";
 
-            // Generar los primeros 12 d�gitos
+            // Generar los primeros 12 dígitos
             for (int i = 0; i < 12; i++)
             {
                 codigo += random.Next(0, 10);
             }
 
-            // Calcular el d�gito de verificaci�n
+            // Calcular el dígito de verificación
             int suma = 0;
             for (int i = 0; i < 12; i++)
             {

@@ -410,5 +410,21 @@ namespace SistemaContable.Controllers
                 return Json(new { results = new List<object>() });
             }
         }
+
+        [HttpGet]
+        public async Task<JsonResult> Obtener(int id)
+        {
+            var marca = await _context.Marcas.FindAsync(id);
+            if (marca == null)
+                return Json(new { success = false, message = "No encontrada" });
+
+            return Json(new {
+                success = true,
+                id = marca.Id,
+                nombre = marca.Nombre,
+                descripcion = marca.Descripcion,
+                estado = marca.Estado
+            });
+        }
     }
 } 

@@ -279,54 +279,53 @@ $(document).ready(function() {
     function editCategoria(id, nombre) {
         $('#CategoriaId').select2('close');
         console.log("Editando categoría:", id, nombre);
-        
-        const offcanvasElement = document.getElementById('offcanvasCategoria');
-        if (!offcanvasElement) {
-            console.error("No se encontró el offcanvas");
-            return false;
-        }
-        
-        // Aplicar estilos al header
-        const header = offcanvasElement.querySelector('.offcanvas-header');
-        if (header) {
-            header.style.backgroundColor = '#3944BC';
-            header.style.color = 'white';
-        }
-        
-        // Hacer el offcanvas más ancho
-        offcanvasElement.style.width = '600px';
-        
-        const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
-        offcanvasBS.show();
-        
-        const formContainer = document.getElementById('formCategoriaContainer');
-        if (formContainer) {
-            formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
-            
-            // Usar la URL correcta para edición
-            $.ajax({
-                url: `/Categoria/EditPartial/${id}`,
-                type: 'GET',
-                success: function(response) {
-                    formContainer.innerHTML = response;
-                    
-                    // Inicializar select2 si es necesario
-                    if ($.fn.select2) {
-                        $('#formCategoriaContainer .select2-familia, #formCategoriaContainer .select2-impuesto, #formCategoriaContainer .select2-cuenta').select2({
-                            theme: 'bootstrap-5',
-                            width: '100%',
-                            dropdownParent: $('#offcanvasCategoria')
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al cargar el formulario de edición:", error);
-                    formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
+        // Siempre cargar los datos por AJAX antes de abrir el offcanvas
+        $.ajax({
+            url: `/Categoria/Obtener/${id}`,
+            type: 'GET',
+            success: function(data) {
+                const offcanvasElement = document.getElementById('offcanvasCategoria');
+                if (!offcanvasElement) {
+                    console.error("No se encontró el offcanvas");
+                    return false;
                 }
-            });
-        }
-        
-        return true;
+                // Aplicar estilos al header
+                const header = offcanvasElement.querySelector('.offcanvas-header');
+                if (header) {
+                    header.style.backgroundColor = '#3944BC';
+                    header.style.color = 'white';
+                }
+                offcanvasElement.style.width = '600px';
+                const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+                offcanvasBS.show();
+                const formContainer = document.getElementById('formCategoriaContainer');
+                if (formContainer) {
+                    formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+                    // Cargar el formulario de edición con los datos recibidos
+                    $.ajax({
+                        url: `/Categoria/EditPartial/${id}`,
+                        type: 'GET',
+                        success: function(response) {
+                            formContainer.innerHTML = response;
+                            // Prellenar campos si es necesario
+                            setTimeout(function() {
+                                let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#CategoriaNombre');
+                                if (nombreInput && data.nombre) {
+                                    nombreInput.value = data.nombre;
+                                }
+                            }, 100);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error al cargar el formulario de edición:", error);
+                            formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
+                        }
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la categoría para editar.' });
+            }
+        });
     }
 
     // Función para abrir y preparar el offcanvas de marca
@@ -400,45 +399,53 @@ $(document).ready(function() {
     function editMarca(id, nombre) {
         $('#MarcaId').select2('close');
         console.log("Editando marca:", id, nombre);
-        
-        const offcanvasElement = document.getElementById('offcanvasMarca');
-        if (!offcanvasElement) {
-            console.error("No se encontró el offcanvas");
-            return false;
-        }
-        
-        // Aplicar estilos al header
-        const header = offcanvasElement.querySelector('.offcanvas-header');
-        if (header) {
-            header.style.backgroundColor = '#3944BC';
-            header.style.color = 'white';
-        }
-        
-        // Hacer el offcanvas más ancho
-        offcanvasElement.style.width = '600px';
-        
-        const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
-        offcanvasBS.show();
-        
-        const formContainer = document.getElementById('formMarcaContainer');
-        if (formContainer) {
-            formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
-            
-            // Usar la URL correcta para edición
-            $.ajax({
-                url: `/Marca/EditPartial/${id}`,
-                type: 'GET',
-                success: function(response) {
-                    formContainer.innerHTML = response;
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al cargar el formulario de edición:", error);
-                    formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
+        // Siempre cargar los datos por AJAX antes de abrir el offcanvas
+        $.ajax({
+            url: `/Marca/Obtener/${id}`,
+            type: 'GET',
+            success: function(data) {
+                const offcanvasElement = document.getElementById('offcanvasMarca');
+                if (!offcanvasElement) {
+                    console.error("No se encontró el offcanvas");
+                    return false;
                 }
-            });
-        }
-        
-        return true;
+                // Aplicar estilos al header
+                const header = offcanvasElement.querySelector('.offcanvas-header');
+                if (header) {
+                    header.style.backgroundColor = '#3944BC';
+                    header.style.color = 'white';
+                }
+                offcanvasElement.style.width = '600px';
+                const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+                offcanvasBS.show();
+                const formContainer = document.getElementById('formMarcaContainer');
+                if (formContainer) {
+                    formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+                    // Cargar el formulario de edición con los datos recibidos
+                    $.ajax({
+                        url: `/Marca/EditPartial/${id}`,
+                        type: 'GET',
+                        success: function(response) {
+                            formContainer.innerHTML = response;
+                            // Prellenar campos si es necesario
+                            setTimeout(function() {
+                                let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#MarcaNombre');
+                                if (nombreInput && data.nombre) {
+                                    nombreInput.value = data.nombre;
+                                }
+                            }, 100);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error al cargar el formulario de edición:", error);
+                            formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
+                        }
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la marca para editar.' });
+            }
+        });
     }
 
     // Inicializar Select2 para Categoría
@@ -718,14 +725,39 @@ $(document).ready(function() {
         return isValid;
     }
 
-    // Manejar el botón de generar código de barras
-    $('#btnGenerarCodigoBarras').on('click', function() {
+    // Si es un nuevo item (no tiene ID), solicitar código automático
+    if (!$('#Id').val()) {
+        $.ajax({
+            url: '/Item/GenerarCodigoAutomatico',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#Codigo').val(response.codigo);
+                }
+            }
+        });
+    }
+
+    // Mejorar la funcionalidad de código de barras
+    $('#btnGenerarCodigoBarras, #generarCodigoBarras').off('click').on('click', function() {
         $.ajax({
             url: '/Item/GenerarCodigoBarras',
             type: 'POST',
+            contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
                     $('#CodigoBarras').val(response.codigoBarras);
+                    
+                    // Mostrar preview si JsBarcode está disponible
+                    if (typeof JsBarcode !== 'undefined') {
+                        JsBarcode("#barcode", response.codigoBarras, {
+                            format: "CODE128",
+                            displayValue: true,
+                            fontSize: 14
+                        });
+                        $('#codigoBarrasPreview').show();
+                        $('#imprimirCodigoBarras').prop('disabled', false);
+                    }
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -734,30 +766,31 @@ $(document).ready(function() {
                     });
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al procesar la solicitud'
+                    text: 'Error al procesar la solicitud: ' + error
                 });
             }
         });
     });
 
-    // Manejar el botón de imprimir código de barras
-    $('#btnImprimirCodigoBarras').on('click', function() {
-        const codigoBarras = $('#CodigoBarras').val();
-        if (!codigoBarras) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Advertencia',
-                text: 'Primero debe generar un código de barras'
+    // Función para generar preview del código de barras después de generarlo
+    $('#CodigoBarras').on('change', function() {
+        const codigoBarras = $(this).val();
+        if (codigoBarras) {
+            JsBarcode("#barcode", codigoBarras, {
+                format: "CODE128",
+                displayValue: true,
+                fontSize: 14
             });
-            return;
+            $('#codigoBarrasPreview').show();
+            $('#imprimirCodigoBarras').prop('disabled', false);
+        } else {
+            $('#codigoBarrasPreview').hide();
+            $('#imprimirCodigoBarras').prop('disabled', true);
         }
-
-        // Abrir ventana de impresión
-        window.open(`/Item/ImprimirCodigoBarras?codigo=${codigoBarras}`, '_blank');
     });
 
     // Delegar el guardado de categoría por AJAX
@@ -813,4 +846,153 @@ $(document).ready(function() {
             }
         });
     });
+
+    // MANTENER solo este manejador de evento para la herencia
+    $('.select2-categoria').off('change').on('change', function() {
+        const categoriaId = $(this).val();
+        console.log('Categoría seleccionada:', categoriaId);
+        
+        if (!categoriaId) return;
+        
+        // Obtener datos de la categoría seleccionada
+        $.ajax({
+            url: `/Categoria/ObtenerDatos/${categoriaId}`,
+            type: 'GET',
+            success: function(response) {
+                console.log('Respuesta de datos de categoría:', response);
+                
+                if (response && response.success) {
+                    // Actualizar impuesto
+                    if (response.impuestoId) {
+                        console.log('Actualizando impuesto:', response.impuestoId);
+                        $('#ImpuestoId').val(response.impuestoId).trigger('change.select2');
+                    }
+                    
+                    // Actualizar cuentas contables
+                    if (response.cuentaVentaId) {
+                        console.log('Actualizando cuenta venta:', response.cuentaVentaId);
+                        $('#CuentaVentasId').val(response.cuentaVentaId).trigger('change.select2');
+                    }
+                    
+                    if (response.cuentaCompraId) {
+                        console.log('Actualizando cuenta compra:', response.cuentaCompraId);
+                        $('#CuentaComprasInventariosId').val(response.cuentaCompraId).trigger('change.select2');
+                    }
+                    
+                    if (response.cuentaInventarioId) {
+                        console.log('Actualizando cuenta inventario:', response.cuentaInventarioId);
+                        $('#CuentaCostoVentasGastosId').val(response.cuentaInventarioId).trigger('change.select2');
+                    }
+                    
+                    // Mostrar alerta informativa
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Datos heredados',
+                        text: 'Se han heredado valores de impuesto y cuentas contables de la categoría seleccionada.',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    console.error('Error en la respuesta:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al obtener datos de categoría:', xhr, status, error);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Error',
+                    text: 'No se pudieron obtener los datos de la categoría'
+                });
+            }
+        });
+    });
+
+    // Asegurar que el campo código sea realmente ineditable
+    $('#Codigo').prop('readonly', true).css('background-color', '#e9ecef');
+    // Prevenir edición incluso si se intenta manipular el DOM
+    $('#Codigo').on('focus keydown paste input', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    $('#imprimirCodigoBarras').off('click').on('click', function() {
+        if (!$('#CodigoBarras').val()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Primero debe generar un código de barras'
+            });
+            return;
+        }
+        
+        // Mostrar modal para seleccionar tamaño y cantidad
+        Swal.fire({
+            title: 'Imprimir Código de Barras',
+            html: `
+                <div class="form-group">
+                    <label>Seleccione el tamaño:</label>
+                    <select id="formatoCodigoBarras" class="form-select mt-2">
+                        <option value="2x2">2x2</option>
+                        <option value="2x3">2x3</option>
+                        <option value="2x4">2x4</option>
+                    </select>
+                </div>
+                <div class="form-group mt-3">
+                    <label>Cantidad:</label>
+                    <input type="number" id="cantidadCodigoBarras" class="form-control mt-2" value="1" min="1" max="100">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Imprimir',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                return {
+                    formato: $('#formatoCodigoBarras').val(),
+                    cantidad: $('#cantidadCodigoBarras').val()
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Imprimir el código de barras con el formato y cantidad seleccionados
+                imprimirCodigoBarras(result.value.formato, result.value.cantidad);
+            }
+        });
+    });
+
+    // Función para imprimir el código de barras
+    function imprimirCodigoBarras(formato, cantidad) {
+        const codigoBarras = $('#CodigoBarras').val();
+        const nombre = $('#Nombre').val();
+        
+        // Crear un formulario y enviarlo para generar el PDF
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Item/ImprimirCodigoBarras';
+        form.target = '_blank'; // Abrir en nueva pestaña
+        
+        // Agregar campos ocultos con la información
+        const addHiddenField = (name, value) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        };
+        
+        addHiddenField('codigoBarras', codigoBarras);
+        addHiddenField('nombre', nombre);
+        addHiddenField('formato', formato);
+        addHiddenField('cantidad', cantidad);
+        
+        // Si es un item existente, enviar el ID
+        const itemId = $('#Id').val();
+        if (itemId) {
+            addHiddenField('id', itemId);
+        }
+        
+        // Enviar el formulario
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
 }); 
