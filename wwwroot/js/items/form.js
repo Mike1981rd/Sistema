@@ -863,6 +863,31 @@ $(document).ready(function() {
             }
         });
         
+        // Limpiar valores anteriores de los campos select2 antes de cargar nuevos
+        // Esto evita problemas cuando se cambia de una categoría a otra
+        const selectsToReset = [
+            '#ImpuestoId', 
+            '#PropinaImpuestoId', 
+            '#CuentaVentasId', 
+            '#CuentaComprasInventariosId', 
+            '#CuentaCostoVentasGastosId', 
+            '#CuentaDescuentosId', 
+            '#CuentaDevolucionesId', 
+            '#CuentaAjustesId',
+            '#CuentaCostoMateriaPrimaId'
+        ];
+        
+        // Limpiar cada select y forzar actualización de UI
+        selectsToReset.forEach(selector => {
+            const $select = $(selector);
+            if ($select.length > 0) {
+                // Eliminar todas las opciones excepto la primera (placeholder)
+                $select.find('option:not(:first)').remove();
+                $select.val(null).trigger('change');
+                console.log(`Limpiado selector: ${selector}`);
+            }
+        });
+        
         // Obtener datos de la categoría seleccionada
         $.ajax({
             url: `/Categoria/ObtenerDatos/${categoriaId}`,
@@ -884,6 +909,7 @@ $(document).ready(function() {
                         // Crear una promesa para poder esperar a que termine
                         return new Promise((resolve) => {
                             if (!valorId) {
+                                console.log(`No hay valor para ${nombreCampo}, saltando.`);
                                 resolve(false);
                                 return;
                             }
@@ -893,28 +919,23 @@ $(document).ready(function() {
                             const $select = $(selector);
                             if ($select.length === 0) {
                                 console.error(`Selector ${selector} no encontrado`);
+                                if (camposFallidos && !camposFallidos.includes(nombreCampo)) {
+                                    camposFallidos.push(nombreCampo);
+                                }
                                 resolve(false);
                                 return;
                             }
                             
-                            // Verificar si la opción ya existe
-                            if ($select.find(`option[value="${valorId}"]`).length > 0) {
-                                console.log(`Opción ${valorId} ya existe para ${nombreCampo}, seleccionando...`);
-                                $select.val(valorId).trigger('change');
-                                camposActualizados.push(nombreCampo);
-                                resolve(true);
-                                return;
-                            }
+                            // Limpiar opción previa si existe (por si queda alguna a pesar de la limpieza inicial)
+                            $select.find(`option[value="${valorId}"]`).remove();
                             
-                            // La opción no existe, crear una opción temporal con el ID
-                            // y luego intentar cargar la información completa
+                            // Crear la opción temporal con el ID
                             const nuevaOpcion = new Option(`${nombreCampo} (ID: ${valorId})`, valorId, true, true);
                             $select.append(nuevaOpcion);
                             $select.val(valorId).trigger('change');
                             camposActualizados.push(nombreCampo);
                             
                             // Intentar buscar el nombre completo para mostrar mejor información
-                            // pero no es crítico para la funcionalidad, por lo que continuamos en cualquier caso
                             try {
                                 // URLs específicas para cada tipo de campo
                                 let ajaxUrl = urlBusqueda;
@@ -935,96 +956,111 @@ $(document).ready(function() {
                                 
                                 console.log(`Solicitando detalles para ${nombreCampo} (ID=${valorId}) a ${ajaxUrl}`);
                                 
-                                $.ajax({
-                                    url: ajaxUrl,
-                                    type: ajaxType,
-                                    data: ajaxData,
-                                    success: function(data) {
-                                        console.log(`Respuesta para ${nombreCampo} (ID=${valorId}):`, data);
-                                        
-                                        // Intentar extraer un nombre más descriptivo
-                                        let nombreMasDescriptivo = null;
-                                        
-                                        if (data && typeof data === 'object') {
-                                            // Manejar formato de respuesta de array para la API CuentasContables
-                                            if (Array.isArray(data) && data.length > 0) {
-                                                const primerItem = data[0];
-                                                if (primerItem) {
-                                                    // El API CuentasContables devuelve un array con propiedades id, codigo, nombre
-                                                    if (primerItem.codigo && primerItem.nombre) {
-                                                        nombreMasDescriptivo = `${primerItem.codigo} - ${primerItem.nombre}`;
-                                                    } else if (primerItem.nombre) {
-                                                        nombreMasDescriptivo = primerItem.nombre;
+                                // Función para hacer la petición AJAX con reintentos
+                                const realizarPeticion = (intentos = 0, maxIntentos = 2) => {
+                                    $.ajax({
+                                        url: ajaxUrl,
+                                        type: ajaxType,
+                                        data: ajaxData,
+                                        timeout: 5000, // 5 segundos de timeout
+                                        success: function(data) {
+                                            console.log(`Respuesta para ${nombreCampo} (ID=${valorId}):`, data);
+                                            
+                                            // Intentar extraer un nombre más descriptivo
+                                            let nombreMasDescriptivo = null;
+                                            
+                                            if (data && typeof data === 'object') {
+                                                // Manejar formato de respuesta de array para la API CuentasContables
+                                                if (Array.isArray(data) && data.length > 0) {
+                                                    const primerItem = data[0];
+                                                    if (primerItem) {
+                                                        // El API CuentasContables devuelve un array con propiedades id, codigo, nombre
+                                                        if (primerItem.codigo && primerItem.nombre) {
+                                                            nombreMasDescriptivo = `${primerItem.codigo} - ${primerItem.nombre}`;
+                                                        } else if (primerItem.nombre) {
+                                                            nombreMasDescriptivo = primerItem.nombre;
+                                                        }
+                                                    }
+                                                } 
+                                                // Manejar la respuesta de Impuestos/Buscar
+                                                else if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+                                                    const primerImpuesto = data.results[0];
+                                                    if (primerImpuesto && primerImpuesto.text) {
+                                                        nombreMasDescriptivo = primerImpuesto.text;
                                                     }
                                                 }
-                                            } 
-                                            // Manejar la respuesta de Impuestos/Buscar
-                                            else if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                                                const primerImpuesto = data.results[0];
-                                                if (primerImpuesto && primerImpuesto.text) {
-                                                    nombreMasDescriptivo = primerImpuesto.text;
+                                                else {
+                                                    // Posibles campos que pueden contener el nombre
+                                                    const camposNombre = ['nombre', 'name', 'text', 'descripcion', 'description'];
+                                                    const camposCodigo = ['codigo', 'code', 'number'];
+                                                    
+                                                    // Buscar en el objeto un campo que pueda contener el nombre
+                                                    for (const campo of camposNombre) {
+                                                        if (data[campo]) {
+                                                            nombreMasDescriptivo = data[campo];
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    // Si encontramos un código, combinarlo con el nombre
+                                                    let codigo = null;
+                                                    for (const campo of camposCodigo) {
+                                                        if (data[campo]) {
+                                                            codigo = data[campo];
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    if (codigo && nombreMasDescriptivo) {
+                                                        nombreMasDescriptivo = `${codigo} - ${nombreMasDescriptivo}`;
+                                                    }
                                                 }
                                             }
-                                            else {
-                                                // Posibles campos que pueden contener el nombre
-                                                const camposNombre = ['nombre', 'name', 'text', 'descripcion', 'description'];
-                                                const camposCodigo = ['codigo', 'code', 'number'];
+                                            
+                                            // Si encontramos un nombre más descriptivo, actualizar la opción
+                                            if (nombreMasDescriptivo) {
+                                                console.log(`Actualizando texto de opción: "${nombreMasDescriptivo}"`);
                                                 
-                                                // Buscar en el objeto un campo que pueda contener el nombre
-                                                for (const campo of camposNombre) {
-                                                    if (data[campo]) {
-                                                        nombreMasDescriptivo = data[campo];
-                                                        break;
-                                                    }
+                                                // Actualizar el texto de la opción en el select
+                                                const $option = $select.find(`option[value="${valorId}"]`);
+                                                if ($option.length) {
+                                                    $option.text(nombreMasDescriptivo);
                                                 }
                                                 
-                                                // Si encontramos un código, combinarlo con el nombre
-                                                let codigo = null;
-                                                for (const campo of camposCodigo) {
-                                                    if (data[campo]) {
-                                                        codigo = data[campo];
-                                                        break;
-                                                    }
-                                                }
+                                                // Forzar una actualización de la interfaz de Select2
+                                                $select.trigger('change');
                                                 
-                                                if (codigo && nombreMasDescriptivo) {
-                                                    nombreMasDescriptivo = `${codigo} - ${nombreMasDescriptivo}`;
+                                                // Actualizar el texto mostrado en el select2
+                                                setTimeout(() => {
+                                                    const $rendered = $select.next('.select2-container').find('.select2-selection__rendered');
+                                                    if ($rendered.length) {
+                                                        $rendered.text(nombreMasDescriptivo);
+                                                        $rendered.attr('title', nombreMasDescriptivo);
+                                                    }
+                                                }, 50);
+                                            }
+                                        },
+                                        error: function(xhr, status, errorThrown) {
+                                            console.warn(`Error al obtener información para ${nombreCampo} (ID=${valorId}). Error: ${errorThrown}`);
+                                            
+                                            // Si no hemos alcanzado el máximo de intentos, reintentar
+                                            if (intentos < maxIntentos) {
+                                                console.log(`Reintentando (${intentos + 1}/${maxIntentos})...`);
+                                                setTimeout(() => {
+                                                    realizarPeticion(intentos + 1, maxIntentos);
+                                                }, 1000); // Esperar 1 segundo antes de reintentar
+                                            } else {
+                                                // Agregar a la lista de campos fallidos si no se pudo obtener el nombre
+                                                if (camposFallidos && !camposFallidos.includes(nombreCampo)) {
+                                                    camposFallidos.push(nombreCampo);
                                                 }
                                             }
                                         }
-                                        
-                                        // Si encontramos un nombre más descriptivo, actualizar la opción
-                                        if (nombreMasDescriptivo) {
-                                            console.log(`Actualizando texto de opción: "${nombreMasDescriptivo}"`);
-                                            
-                                            // Actualizar el texto de la opción en el select
-                                            const $option = $select.find(`option[value="${valorId}"]`);
-                                            if ($option.length) {
-                                                $option.text(nombreMasDescriptivo);
-                                            }
-                                            
-                                            // Forzar una actualización de la interfaz de Select2
-                                            $select.trigger('change');
-                                            
-                                            // Actualizar el texto mostrado en el select2
-                                            setTimeout(() => {
-                                                const $rendered = $select.next('.select2-container').find('.select2-selection__rendered');
-                                                if ($rendered.length) {
-                                                    $rendered.text(nombreMasDescriptivo);
-                                                    $rendered.attr('title', nombreMasDescriptivo);
-                                                }
-                                            }, 50);
-                                        }
-                                    },
-                                    error: function(xhr, status, errorThrown) {
-                                        console.warn(`No se pudo obtener más información para ${nombreCampo} (ID=${valorId}). Error: ${errorThrown}`);
-                                        
-                                        // Agregar a la lista de campos fallidos si no se pudo obtener el nombre
-                                        if (camposFallidos && !camposFallidos.includes(nombreCampo)) {
-                                            camposFallidos.push(nombreCampo);
-                                        }
-                                    }
-                                });
+                                    });
+                                };
+                                
+                                // Iniciar la petición con reintentos
+                                realizarPeticion();
                             } catch (e) {
                                 console.warn(`Error al buscar más información:`, e);
                             }
