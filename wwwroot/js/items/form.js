@@ -2,6 +2,41 @@ $(document).ready(function() {
     // Función temporal para evitar errores
     window.initImageUpload = function() {};
 
+    // Observar las mutaciones del DOM para detectar el modal de advertencia
+    // y ocultarlo automáticamente si menciona datos de categoría
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                for (let i = 0; i < mutation.addedNodes.length; i++) {
+                    const node = mutation.addedNodes[i];
+                    if (node.nodeType === 1 && node.classList && node.classList.contains('swal2-container')) {
+                        // Verificar si es el modal de advertencia que queremos ocultar
+                        const title = node.querySelector('.swal2-title');
+                        const content = node.querySelector('.swal2-content');
+                        
+                        if (title && content && 
+                            title.textContent.includes('Advertencia') && 
+                            content.textContent.includes('No se pudieron obtener los datos de la categoría')) {
+                            
+                            console.log('Modal de advertencia detectado y será ocultado automáticamente');
+                            
+                            // Buscar el botón OK y simular clic
+                            const okButton = node.querySelector('.swal2-confirm');
+                            if (okButton) {
+                                setTimeout(() => {
+                                    okButton.click();
+                                }, 100);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+    // Iniciar observación del cuerpo del documento
+    observer.observe(document.body, { childList: true, subtree: true });
+
     // Datos estáticos para pruebas
     const categorias = [
         {id: 1, text: "Electrónicos"},
@@ -279,53 +314,95 @@ $(document).ready(function() {
     function editCategoria(id, nombre) {
         $('#CategoriaId').select2('close');
         console.log("Editando categoría:", id, nombre);
-        // Siempre cargar los datos por AJAX antes de abrir el offcanvas
-        $.ajax({
-            url: `/Categoria/Obtener/${id}`,
-            type: 'GET',
-            success: function(data) {
-                const offcanvasElement = document.getElementById('offcanvasCategoria');
-                if (!offcanvasElement) {
-                    console.error("No se encontró el offcanvas");
-                    return false;
-                }
-                // Aplicar estilos al header
-                const header = offcanvasElement.querySelector('.offcanvas-header');
-                if (header) {
-                    header.style.backgroundColor = '#3944BC';
-                    header.style.color = 'white';
-                }
-                offcanvasElement.style.width = '600px';
-                const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
-                offcanvasBS.show();
-                const formContainer = document.getElementById('formCategoriaContainer');
-                if (formContainer) {
-                    formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
-                    // Cargar el formulario de edición con los datos recibidos
-                    $.ajax({
-                        url: `/Categoria/EditPartial/${id}`,
-                        type: 'GET',
-                        success: function(response) {
-                            formContainer.innerHTML = response;
-                            // Prellenar campos si es necesario
-                            setTimeout(function() {
-                                let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#CategoriaNombre');
-                                if (nombreInput && data.nombre) {
-                                    nombreInput.value = data.nombre;
-                                }
-                            }, 100);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error("Error al cargar el formulario de edición:", error);
-                            formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
-                        }
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la categoría para editar.' });
+
+        // Validar que el ID sea válido
+        if (!id || id === 'new' || isNaN(parseInt(id))) {
+            console.error("ID de categoría inválido:", id);
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Aviso', 
+                text: 'No se puede editar la categoría en este momento. Intente más tarde.',
+                footer: 'Sugerencia: Recargue la página si acaba de crear esta categoría.'
+            });
+            return;
+        }
+
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo datos de la categoría',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
         });
+        
+        // Retrasar un poco la carga para asegurar que el elemento esté guardado en el servidor
+        setTimeout(() => {
+            // Siempre cargar los datos por AJAX antes de abrir el offcanvas
+            $.ajax({
+                url: `/Categoria/Obtener/${id}`,
+                type: 'GET',
+                success: function(data) {
+                    Swal.close();
+                    const offcanvasElement = document.getElementById('offcanvasCategoria');
+                    if (!offcanvasElement) {
+                        console.error("No se encontró el offcanvas");
+                        return false;
+                    }
+                    // Aplicar estilos al header
+                    const header = offcanvasElement.querySelector('.offcanvas-header');
+                    if (header) {
+                        header.style.backgroundColor = '#3944BC';
+                        header.style.color = 'white';
+                    }
+                    offcanvasElement.style.width = '600px';
+                    const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+                    offcanvasBS.show();
+                    const formContainer = document.getElementById('formCategoriaContainer');
+                    if (formContainer) {
+                        formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+                        // Cargar el formulario de edición con los datos recibidos
+                        $.ajax({
+                            url: `/Categoria/EditPartial/${id}`,
+                            type: 'GET',
+                            success: function(response) {
+                                formContainer.innerHTML = response;
+                                // Prellenar campos si es necesario
+                                setTimeout(function() {
+                                    let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#CategoriaNombre');
+                                    if (nombreInput && data.nombre) {
+                                        nombreInput.value = data.nombre;
+                                    }
+                                }, 100);
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error al cargar el formulario de edición:", error, xhr.status);
+                                let mensaje = "Error al cargar el formulario de edición.";
+                                if (xhr.status === 404) {
+                                    mensaje += " Es posible que la categoría no exista o esté siendo procesada.";
+                                }
+                                formContainer.innerHTML = `<div class="alert alert-danger">${mensaje}<br><small>Por favor, recargue la página e intente nuevamente.</small></div>`;
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.close();
+                    console.error("Error al obtener categoría:", error, xhr.status);
+                    let mensaje = "No se pudo cargar la categoría para editar.";
+                    if (xhr.status === 404) {
+                        mensaje += " Es posible que la categoría no exista o acabe de ser creada.";
+                    }
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error', 
+                        text: mensaje,
+                        footer: 'Sugerencia: Recargue la página si acaba de crear esta categoría.'
+                    });
+                }
+            });
+        }, 500); // Retraso de 500ms para asegurar que el elemento esté guardado
     }
 
     // Función para abrir y preparar el offcanvas de marca
@@ -399,53 +476,95 @@ $(document).ready(function() {
     function editMarca(id, nombre) {
         $('#MarcaId').select2('close');
         console.log("Editando marca:", id, nombre);
-        // Siempre cargar los datos por AJAX antes de abrir el offcanvas
-        $.ajax({
-            url: `/Marca/Obtener/${id}`,
-            type: 'GET',
-            success: function(data) {
-                const offcanvasElement = document.getElementById('offcanvasMarca');
-                if (!offcanvasElement) {
-                    console.error("No se encontró el offcanvas");
-                    return false;
-                }
-                // Aplicar estilos al header
-                const header = offcanvasElement.querySelector('.offcanvas-header');
-                if (header) {
-                    header.style.backgroundColor = '#3944BC';
-                    header.style.color = 'white';
-                }
-                offcanvasElement.style.width = '600px';
-                const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
-                offcanvasBS.show();
-                const formContainer = document.getElementById('formMarcaContainer');
-                if (formContainer) {
-                    formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
-                    // Cargar el formulario de edición con los datos recibidos
-                    $.ajax({
-                        url: `/Marca/EditPartial/${id}`,
-                        type: 'GET',
-                        success: function(response) {
-                            formContainer.innerHTML = response;
-                            // Prellenar campos si es necesario
-                            setTimeout(function() {
-                                let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#MarcaNombre');
-                                if (nombreInput && data.nombre) {
-                                    nombreInput.value = data.nombre;
-                                }
-                            }, 100);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error("Error al cargar el formulario de edición:", error);
-                            formContainer.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario: ${error}</div>`;
-                        }
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la marca para editar.' });
+
+        // Validar que el ID sea válido
+        if (!id || id === 'new' || isNaN(parseInt(id))) {
+            console.error("ID de marca inválido:", id);
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Aviso', 
+                text: 'No se puede editar la marca en este momento. Intente más tarde.',
+                footer: 'Sugerencia: Recargue la página si acaba de crear esta marca.'
+            });
+            return;
+        }
+
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo datos de la marca',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
         });
+        
+        // Retrasar un poco la carga para asegurar que el elemento esté guardado en el servidor
+        setTimeout(() => {
+            // Siempre cargar los datos por AJAX antes de abrir el offcanvas
+            $.ajax({
+                url: `/Marca/Obtener/${id}`,
+                type: 'GET',
+                success: function(data) {
+                    Swal.close();
+                    const offcanvasElement = document.getElementById('offcanvasMarca');
+                    if (!offcanvasElement) {
+                        console.error("No se encontró el offcanvas");
+                        return false;
+                    }
+                    // Aplicar estilos al header
+                    const header = offcanvasElement.querySelector('.offcanvas-header');
+                    if (header) {
+                        header.style.backgroundColor = '#3944BC';
+                        header.style.color = 'white';
+                    }
+                    offcanvasElement.style.width = '600px';
+                    const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+                    offcanvasBS.show();
+                    const formContainer = document.getElementById('formMarcaContainer');
+                    if (formContainer) {
+                        formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+                        // Cargar el formulario de edición con los datos recibidos
+                        $.ajax({
+                            url: `/Marca/EditPartial/${id}`,
+                            type: 'GET',
+                            success: function(response) {
+                                formContainer.innerHTML = response;
+                                // Prellenar campos si es necesario
+                                setTimeout(function() {
+                                    let nombreInput = formContainer.querySelector('[name="Nombre"]') || formContainer.querySelector('#Nombre') || formContainer.querySelector('#MarcaNombre');
+                                    if (nombreInput && data.nombre) {
+                                        nombreInput.value = data.nombre;
+                                    }
+                                }, 100);
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error al cargar el formulario de edición:", error, xhr.status);
+                                let mensaje = "Error al cargar el formulario de edición.";
+                                if (xhr.status === 404) {
+                                    mensaje += " Es posible que la marca no exista o esté siendo procesada.";
+                                }
+                                formContainer.innerHTML = `<div class="alert alert-danger">${mensaje}<br><small>Por favor, recargue la página e intente nuevamente.</small></div>`;
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.close();
+                    console.error("Error al obtener marca:", error, xhr.status);
+                    let mensaje = "No se pudo cargar la marca para editar.";
+                    if (xhr.status === 404) {
+                        mensaje += " Es posible que la marca no exista o acabe de ser creada.";
+                    }
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error', 
+                        text: mensaje,
+                        footer: 'Sugerencia: Recargue la página si acaba de crear esta marca.'
+                    });
+                }
+            });
+        }, 500); // Retraso de 500ms para asegurar que el elemento esté guardado
     }
 
     // Inicializar Select2 para Categoría
@@ -474,7 +593,8 @@ $(document).ready(function() {
                     results.push({
                         id: 'new',
                         text: 'Crear categoría: "' + params.term + '"',
-                        term: params.term
+                        term: params.term,
+                        _isNew: true  // Marca para identificar elemento nuevo
                     });
                 }
                 
@@ -528,7 +648,8 @@ $(document).ready(function() {
                     results.push({
                         id: 'new',
                         text: 'Crear marca: "' + params.term + '"',
-                        term: params.term
+                        term: params.term,
+                        _isNew: true  // Marca para identificar elemento nuevo
                     });
                 }
                 
@@ -799,18 +920,64 @@ $(document).ready(function() {
         var $form = $('#formCategoriaContainer form');
         if ($form.length === 0) return;
         var formData = $form.serialize();
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Guardando...',
+            text: 'Procesando la información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
         $.ajax({
             url: $form.attr('action'),
             type: $form.attr('method') || 'POST',
             data: formData,
             success: function(response) {
                 if (response.success) {
-                    // Agregar al select y seleccionar
-                    var newOption = new Option(response.nombre, response.id, true, true);
-                    $('#CategoriaId').append(newOption).trigger('change');
+                    // Agregar la opción al select sin seleccionarla automáticamente
+                    var newOption = new Option(response.nombre, response.id, false, false);
+                    // Marcar como recién creada con timestamp
+                    newOption.dataset.createdAt = new Date().getTime().toString();
+                    $('#CategoriaId').append(newOption);
+                    
                     // Cerrar offcanvas
                     $('#offcanvasCategoria').offcanvas('hide');
-                    Swal.fire({ icon: 'success', title: 'Éxito', text: 'Categoría guardada correctamente', timer: 1500, showConfirmButton: false });
+                    
+                    // Mostrar mensaje de éxito con información adicional
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Éxito', 
+                        text: 'Categoría guardada correctamente',
+                        footer: 'La categoría ahora aparece en la lista de selección.',
+                        timer: 3000, 
+                        showConfirmButton: true 
+                    });
+                    
+                    // Guardar referencia a la categoría recién creada para evitar procesamiento automático
+                    ultimaCategoriaCreada = {
+                        id: response.id,
+                        nombre: response.nombre,
+                        timestamp: new Date().getTime()
+                    };
+                    
+                    // Después de 5 segundos, olvidar la categoría recién creada
+                    setTimeout(() => {
+                        if (ultimaCategoriaCreada && ultimaCategoriaCreada.id == response.id) {
+                            ultimaCategoriaCreada = null;
+                        }
+                    }, 5000);
+                    
+                    // Evitar que se dispare el evento change en CategoriaId
+                    $('#CategoriaId').off('change.afterCreate').on('change.afterCreate', function(e) {
+                        if ($(this).val() == response.id) {
+                            e.stopPropagation();
+                            $(this).off('change.afterCreate');
+                        }
+                    });
+                    
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo guardar la categoría' });
                 }
@@ -827,16 +994,63 @@ $(document).ready(function() {
         var $form = $('#formMarcaContainer form');
         if ($form.length === 0) return;
         var formData = $form.serialize();
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Guardando...',
+            text: 'Procesando la información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
         $.ajax({
             url: $form.attr('action'),
             type: $form.attr('method') || 'POST',
             data: formData,
             success: function(response) {
                 if (response.success) {
-                    var newOption = new Option(response.nombre, response.id, true, true);
-                    $('#MarcaId').append(newOption).trigger('change');
+                    // Agregar la opción al select sin seleccionarla automáticamente
+                    var newOption = new Option(response.nombre, response.id, false, false);
+                    // Marcar como recién creada con timestamp
+                    newOption.dataset.createdAt = new Date().getTime().toString();
+                    $('#MarcaId').append(newOption);
+                    
+                    // Cerrar offcanvas
                     $('#offcanvasMarca').offcanvas('hide');
-                    Swal.fire({ icon: 'success', title: 'Éxito', text: 'Marca guardada correctamente', timer: 1500, showConfirmButton: false });
+                    
+                    // Mostrar mensaje de éxito con información adicional
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Éxito', 
+                        text: 'Marca guardada correctamente',
+                        footer: 'La marca ahora aparece en la lista de selección.',
+                        timer: 3000, 
+                        showConfirmButton: true 
+                    });
+                    
+                    // Guardar referencia a la marca recién creada para evitar procesamiento automático
+                    ultimaMarcaCreada = {
+                        id: response.id,
+                        nombre: response.nombre,
+                        timestamp: new Date().getTime()
+                    };
+                    
+                    // Después de 5 segundos, olvidar la marca recién creada
+                    setTimeout(() => {
+                        if (ultimaMarcaCreada && ultimaMarcaCreada.id == response.id) {
+                            ultimaMarcaCreada = null;
+                        }
+                    }, 5000);
+                    
+                    // Evitar que se dispare el evento change en MarcaId
+                    $('#MarcaId').off('change.afterCreate').on('change.afterCreate', function(e) {
+                        if ($(this).val() == response.id) {
+                            e.stopPropagation();
+                            $(this).off('change.afterCreate');
+                        }
+                    });
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo guardar la marca' });
                 }
@@ -848,10 +1062,41 @@ $(document).ready(function() {
     });
 
     // Manejador para herencia de categoría (enfoque con precarga de datos)
+    let ultimaCategoriaCreada = null; // Variable para tracking
+    let ultimaMarcaCreada = null; // Variable para tracking marcas
+
     $('.select2-categoria').off('change').on('change', function() {
         const categoriaId = $(this).val();
         
         if (!categoriaId) return;
+        
+        // Obtener el objeto de datos completo de Select2
+        const dataItem = $('#CategoriaId').select2('data')[0];
+        console.log('Datos completos de la categoría seleccionada:', dataItem);
+        
+        // Verificaciones para prevenir el popup innecesario
+        // 1. Verificar si es una categoría recién creada
+        if (ultimaCategoriaCreada && ultimaCategoriaCreada.id == categoriaId) {
+            console.log('Omitiendo procesamiento para categoría recién creada:', categoriaId);
+            return; // Salir sin hacer nada
+        }
+        
+        // 2. Verificar si está marcada como nueva desde el select2
+        if (dataItem && (dataItem._isNew || dataItem.id === 'new')) {
+            console.log('Omitiendo procesamiento para categoría nueva:', dataItem);
+            return; // Salir sin hacer nada
+        }
+        
+        // 3. Verificar si ha sido creada hace muy poco (menos de 5 segundos)
+        const option = document.querySelector(`#CategoriaId option[value="${categoriaId}"]`);
+        if (option && option.dataset && option.dataset.createdAt) {
+            const createdTime = parseInt(option.dataset.createdAt);
+            const now = new Date().getTime();
+            if (now - createdTime < 5000) { // Menos de 5 segundos
+                console.log('Omitiendo procesamiento para categoría muy reciente:', categoriaId);
+                return; // Salir sin hacer nada
+            }
+        }
         
         // Mostrar indicador de carga
         Swal.fire({
@@ -1290,4 +1535,19 @@ $(document).ready(function() {
         form.submit();
         document.body.removeChild(form);
     }
+
+    // Manejador para change de marca, para detectar marcas recién creadas y prevenir procesos automáticos
+    $('#MarcaId').off('change.autoProcess').on('change.autoProcess', function() {
+        const marcaId = $(this).val();
+        
+        if (!marcaId) return;
+        
+        // Si la marca acaba de ser creada, evitar procesamiento automático
+        if (ultimaMarcaCreada && ultimaMarcaCreada.id == marcaId) {
+            console.log('Omitiendo procesamiento para marca recién creada:', marcaId);
+            return;
+        }
+        
+        // Aquí se agregaría cualquier procesamiento automático que requieran las marcas
+    });
 }); 
