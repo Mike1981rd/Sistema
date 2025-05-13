@@ -867,7 +867,6 @@ $(document).ready(function() {
         // Esto evita problemas cuando se cambia de una categoría a otra
         const selectsToReset = [
             '#ImpuestoId', 
-            '#PropinaImpuestoId', 
             '#CuentaVentasId', 
             '#CuentaComprasInventariosId', 
             '#CuentaCostoVentasGastosId', 
@@ -1075,14 +1074,6 @@ $(document).ready(function() {
                         console.log(`Intentando establecer impuesto con ID: ${response.impuestoId}`);
                         promesasPendientes.push(
                             precargarYSeleccionarOpcion('#ImpuestoId', response.impuestoId, 'Impuesto', '/Impuestos/Buscar?term=' + response.impuestoId)
-                        );
-                    }
-
-                    // Cargar datos y actualizar campo de Propina (si existe)
-                    if (response.propinaImpuestoId) {
-                        console.log(`Intentando establecer propina con ID: ${response.propinaImpuestoId}`);
-                        promesasPendientes.push(
-                            precargarYSeleccionarOpcion('#PropinaImpuestoId', response.propinaImpuestoId, 'Propina', '/Impuestos/Buscar?term=' + response.propinaImpuestoId)
                         );
                     }
                     
