@@ -7,7 +7,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Impresión de Código de Barras</title>
+    <title>Impresión de Código de Barras - @Model.Nombre</title>
     <!-- Asegurarse de que JsBarcode esté disponible -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -15,66 +15,144 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
         }
         .etiqueta {
             page-break-inside: avoid;
             float: left;
             text-align: center;
-            padding: 5px;
-            margin: 5px;
+            padding: 10px;
+            margin: 10px;
             border: 1px dashed #ccc;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            box-sizing: border-box; /* Importante para que padding no afecte dimensiones */
         }
         .formato-2x2 {
-            width: 1.8in;
-            height: 1.8in;
+            width: 2in; /* 2 pulgadas = 5.08cm */
+            height: 2in;
         }
         .formato-2x3 {
-            width: 1.8in;
-            height: 2.8in;
+            width: 2in; /* 2 pulgadas = 5.08cm */
+            height: 3in; /* 3 pulgadas = 7.62cm */
         }
         .formato-2x4 {
-            width: 1.8in;
-            height: 3.8in;
+            width: 2in; /* 2 pulgadas = 5.08cm */
+            height: 4in; /* 4 pulgadas = 10.16cm */
         }
         .barcode-container {
             margin-top: 5px;
             display: flex;
             justify-content: center;
+            padding: 5px;
+            background-color: white;
         }
         .nombre-item {
-            font-size: 10px;
-            margin-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+            margin-bottom: 5px;
             word-break: break-word;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .clearfix {
             clear: both;
         }
+        .print-controls {
+            margin: 20px;
+            text-align: center;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .print-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .print-button:hover {
+            background-color: #45a049;
+        }
+        .print-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
         @@media print {
             body {
-                width: 8.5in;
+                background-color: white;
                 margin: 0;
+                padding: 5mm;
+                width: 210mm; /* A4 width */
             }
             .no-print {
+                display: none !important;
+            }
+            .etiqueta {
+                box-shadow: none;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .page-header {
                 display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="no-print" style="margin: 20px; text-align: center;">
-        <h2>Vista previa de impresión</h2>
-        <button onclick="window.print()">Imprimir</button>
+    <div class="page-header no-print">
+        <h1>Vista previa de impresión</h1>
+        <p>Código de barras para: <strong>@Model.Nombre</strong></p>
+    </div>
+
+    <div class="print-controls no-print">
+        <button onclick="window.print()" class="print-button">Imprimir</button>
+        <div class="print-info">
+            <p>Formato: <strong>@Model.Formato</strong> | Cantidad: <strong>@Model.Cantidad</strong></p>
+            <p><small>Dimensiones reales: 
+                @{
+                    string dimensiones = Model.Formato switch {
+                        "2x2" => "2\" x 2\" (5.08cm x 5.08cm)",
+                        "2x3" => "2\" x 3\" (5.08cm x 7.62cm)",
+                        "2x4" => "2\" x 4\" (5.08cm x 10.16cm)",
+                        _ => Model.Formato
+                    }; 
+                }
+                <strong>@dimensiones</strong>
+            </small></p>
+            <p><small>Compruebe que todo esté correcto antes de imprimir.</small></p>
+        </div>
     </div>
 
     <div id="contenedor-etiquetas">
         @for (int i = 0; i < Model.Cantidad; i++)
         {
             <div class="etiqueta formato-@Model.Formato">
+                <div class="nombre-item">@Model.Nombre</div>
                 <div class="barcode-container">
                     <svg id="barcode-@i" class="barcode"></svg>
                 </div>
-                <div class="nombre-item">@Model.Nombre</div>
+                <div class="codigo-texto">@Model.CodigoBarras</div>
             </div>
         }
         <div class="clearfix"></div>
@@ -115,11 +193,13 @@
                     try {
                         JsBarcode(barcodeElement, codigoBarras, {
                             format: "CODE128",
-                            displayValue: true,
-                            fontSize: 12,
+                            displayValue: false, // No mostrar el valor debajo del código
+                            fontSize: 14,
                             margin: 5,
-                            height: 50,
-                            width: 1
+                            height: 60,
+                            width: 2,
+                            lineColor: "#000",
+                            background: "#ffffff"
                         });
                         console.log('Código de barras generado correctamente');
                     } catch (error) {
@@ -128,11 +208,6 @@
                             '<div style="color:red">Error: ' + error.message + '</div>');
                     }
                 });
-                
-                // Auto imprimir después de un breve retraso para asegurar que los códigos se generen
-                setTimeout(function() {
-                    // window.print(); // Comentado para que el usuario pueda revisar primero
-                }, 1000);
             });
         });
     </script>
