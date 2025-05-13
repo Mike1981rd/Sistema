@@ -254,6 +254,7 @@ namespace SistemaContable.Controllers
                 CuentaDescuentosId = viewModel.CuentaDescuentosId,
                 CuentaDevolucionesId = viewModel.CuentaDevolucionesId,
                 CuentaAjustesId = viewModel.CuentaAjustesId,
+                CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId,
                 FechaCreacion = DateTime.Now,
                 UsuarioCreacionId = _userService.GetUserId()
             };
@@ -458,6 +459,7 @@ namespace SistemaContable.Controllers
             viewModel.CuentaDescuentosId = item.CuentaDescuentosId;
             viewModel.CuentaDevolucionesId = item.CuentaDevolucionesId;
             viewModel.CuentaAjustesId = item.CuentaAjustesId;
+            viewModel.CuentaCostoMateriaPrimaId = item.CuentaCostoMateriaPrimaId;
             viewModel.ImagenUrl = item.ImagenUrl;
 
             // Mapear proveedores
@@ -609,6 +611,7 @@ namespace SistemaContable.Controllers
             item.CuentaDescuentosId = viewModel.CuentaDescuentosId;
             item.CuentaDevolucionesId = viewModel.CuentaDevolucionesId;
             item.CuentaAjustesId = viewModel.CuentaAjustesId;
+            item.CuentaCostoMateriaPrimaId = viewModel.CuentaCostoMateriaPrimaId;
             item.FechaModificacion = DateTime.Now;
             item.UsuarioModificacionId = _userService.GetUserId();
 
@@ -954,7 +957,8 @@ namespace SistemaContable.Controllers
                 cuentaCostoVentasGastosId = categoria.CuentaCostoVentasGastosId,
                 cuentaDescuentosId = categoria.CuentaDescuentosId,
                 cuentaDevolucionesId = categoria.CuentaDevolucionesId,
-                cuentaAjustesId = categoria.CuentaAjustesId
+                cuentaAjustesId = categoria.CuentaAjustesId,
+                cuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId
             });
         }
 
@@ -987,7 +991,8 @@ namespace SistemaContable.Controllers
                 cuentaCostoVentasGastosId = categoria.CuentaCostoVentasGastosId,
                 cuentaDescuentosId = categoria.CuentaDescuentosId,
                 cuentaDevolucionesId = categoria.CuentaDevolucionesId,
-                cuentaAjustesId = categoria.CuentaAjustesId
+                cuentaAjustesId = categoria.CuentaAjustesId,
+                cuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId
             });
         }
 
@@ -1181,6 +1186,7 @@ namespace SistemaContable.Controllers
             viewModel.CuentasDescuentosDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
             viewModel.CuentasDevolucionesDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
             viewModel.CuentasAjustesDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
+            viewModel.CuentasCostoMateriaPrimaDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
 
             // Lista de proveedores (usando Cliente con EsProveedor=true)
             viewModel.ProveedoresDisponibles = new SelectList(

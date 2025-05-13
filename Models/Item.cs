@@ -11,8 +11,8 @@ namespace SistemaContable.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "El código es requerido")]
-        [StringLength(50, ErrorMessage = "El código no puede exceder los 50 caracteres")]
+        [Required(ErrorMessage = "El cÃ³digo es requerido")]
+        [StringLength(50, ErrorMessage = "El cÃ³digo no puede exceder los 50 caracteres")]
         public string Codigo { get; set; }
 
         [StringLength(50)]
@@ -30,7 +30,7 @@ namespace SistemaContable.Models
         [StringLength(255)]
         public string? ImagenUrl { get; set; }
 
-        [Required(ErrorMessage = "La categoría es requerida")]
+        [Required(ErrorMessage = "La categorÃ­a es requerida")]
         public int CategoriaId { get; set; }
         [ForeignKey("CategoriaId")]
         public virtual Categoria? Categoria { get; set; }
@@ -82,14 +82,18 @@ namespace SistemaContable.Models
         [ForeignKey("CuentaAjustesId")]
         public virtual CuentaContable? CuentaAjustes { get; set; }
 
-        // Relaciones de navegación
+        public int? CuentaCostoMateriaPrimaId { get; set; }
+        [ForeignKey("CuentaCostoMateriaPrimaId")]
+        public virtual CuentaContable? CuentaCostoMateriaPrima { get; set; }
+
+        // Relaciones de navegaciÃ³n
         public virtual ICollection<ItemProveedor>? Proveedores { get; set; }
         public virtual ICollection<ItemAlmacen>? Almacenes { get; set; }
         public virtual ICollection<ItemContenedor>? Contenedores { get; set; }
         public virtual ICollection<ItemTara>? Taras { get; set; }
         public virtual ICollection<ProductoVenta>? ProductosVenta { get; set; }
 
-        // Auditoría
+        // AuditorÃ­a
         public int? UsuarioCreacionId { get; set; }
         public int? UsuarioModificacionId { get; set; }
 

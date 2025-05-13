@@ -882,21 +882,42 @@ namespace SistemaContable.Controllers
                 .Where(c => c.Id == id && c.EmpresaId == empresaId)
                 .Select(c => new {
                     impuestoId = c.ImpuestoId,
+                    propinaImpuestoId = c.PropinaImpuestoId,
                     cuentaVentaId = c.CuentaVentasId,
                     cuentaCompraId = c.CuentaComprasInventariosId,
-                    cuentaInventarioId = c.CuentaCostoVentasGastosId
+                    cuentaInventarioId = c.CuentaCostoVentasGastosId,
+                    cuentaDescuentosId = c.CuentaDescuentosId,
+                    cuentaDevolucionesId = c.CuentaDevolucionesId,
+                    cuentaAjustesId = c.CuentaAjustesId,
+                    cuentaCostoMateriaPrimaId = c.CuentaCostoMateriaPrimaId
                 })
                 .FirstOrDefaultAsync();
             
             if (categoria == null)
                 return Json(new { success = false });
             
+            Console.WriteLine($"ObtenerDatos para categoría ID={id}: " +
+                         $"impuestoId={categoria.impuestoId}, " +
+                         $"propinaImpuestoId={categoria.propinaImpuestoId}, " +
+                         $"cuentaVentaId={categoria.cuentaVentaId}, " +
+                         $"cuentaCompraId={categoria.cuentaCompraId}, " +
+                         $"cuentaInventarioId={categoria.cuentaInventarioId}, " +
+                         $"cuentaDescuentosId={categoria.cuentaDescuentosId}, " +
+                         $"cuentaDevolucionesId={categoria.cuentaDevolucionesId}, " +
+                         $"cuentaAjustesId={categoria.cuentaAjustesId}, " +
+                         $"cuentaCostoMateriaPrimaId={categoria.cuentaCostoMateriaPrimaId}");
+            
             return Json(new {
                 success = true,
                 impuestoId = categoria.impuestoId,
+                propinaImpuestoId = categoria.propinaImpuestoId,
                 cuentaVentaId = categoria.cuentaVentaId,
                 cuentaCompraId = categoria.cuentaCompraId,
-                cuentaInventarioId = categoria.cuentaInventarioId
+                cuentaInventarioId = categoria.cuentaInventarioId,
+                cuentaDescuentosId = categoria.cuentaDescuentosId,
+                cuentaDevolucionesId = categoria.cuentaDevolucionesId,
+                cuentaAjustesId = categoria.cuentaAjustesId,
+                cuentaCostoMateriaPrimaId = categoria.cuentaCostoMateriaPrimaId
             });
         }
     }

@@ -847,61 +847,329 @@ $(document).ready(function() {
         });
     });
 
-    // MANTENER solo este manejador de evento para la herencia
+    // Manejador para herencia de categoría (enfoque con precarga de datos)
     $('.select2-categoria').off('change').on('change', function() {
         const categoriaId = $(this).val();
-        console.log('Categoría seleccionada:', categoriaId);
         
         if (!categoriaId) return;
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Obteniendo datos de la categoría',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
         
         // Obtener datos de la categoría seleccionada
         $.ajax({
             url: `/Categoria/ObtenerDatos/${categoriaId}`,
             type: 'GET',
             success: function(response) {
-                console.log('Respuesta de datos de categoría:', response);
+                console.log('Respuesta categoría:', response);
                 
                 if (response && response.success) {
-                    // Actualizar impuesto
+                    // ===== ENFOQUE CLAVE: PRECARGAR DATOS PARA SELECT2 =====
+                    // La diferencia crucial es que en categorías los select2 tienen opciones
+                    // precargadas, mientras que aquí usan AJAX. Necesitamos precargar las opciones.
+                    
+                    let camposActualizados = [];
+                    let promesasPendientes = [];
+                    let camposFallidos = [];
+                    
+                    // Función para precargar una opción en un select2 con AJAX
+                    function precargarYSeleccionarOpcion(selector, valorId, nombreCampo, urlBusqueda) {
+                        // Crear una promesa para poder esperar a que termine
+                        return new Promise((resolve) => {
+                            if (!valorId) {
+                                resolve(false);
+                                return;
+                            }
+                            
+                            console.log(`Precargando opción para ${nombreCampo} (ID=${valorId})`);
+                            
+                            const $select = $(selector);
+                            if ($select.length === 0) {
+                                console.error(`Selector ${selector} no encontrado`);
+                                resolve(false);
+                                return;
+                            }
+                            
+                            // Verificar si la opción ya existe
+                            if ($select.find(`option[value="${valorId}"]`).length > 0) {
+                                console.log(`Opción ${valorId} ya existe para ${nombreCampo}, seleccionando...`);
+                                $select.val(valorId).trigger('change');
+                                camposActualizados.push(nombreCampo);
+                                resolve(true);
+                                return;
+                            }
+                            
+                            // La opción no existe, crear una opción temporal con el ID
+                            // y luego intentar cargar la información completa
+                            const nuevaOpcion = new Option(`${nombreCampo} (ID: ${valorId})`, valorId, true, true);
+                            $select.append(nuevaOpcion);
+                            $select.val(valorId).trigger('change');
+                            camposActualizados.push(nombreCampo);
+                            
+                            // Intentar buscar el nombre completo para mostrar mejor información
+                            // pero no es crítico para la funcionalidad, por lo que continuamos en cualquier caso
+                            try {
+                                // URLs específicas para cada tipo de campo
+                                let ajaxUrl = urlBusqueda;
+                                let ajaxType = 'GET';
+                                let ajaxData = {};
+                                
+                                // Determinar el tipo de búsqueda basado en el selector o en la URL
+                                if (selector.includes('Impuesto')) {
+                                    // Para impuestos, usar la URL completa pero con exactId para buscar exactamente ese ID
+                                    ajaxUrl = '/Impuestos/Buscar';
+                                    ajaxData = { term: valorId, exactId: true };
+                                }
+                                else if (selector.includes('Cuenta') || urlBusqueda.includes('CuentasContables')) {
+                                    // Para cuentas contables, usar la API endpoint
+                                    ajaxUrl = `/api/CuentasContables/buscar`;
+                                    ajaxData = { q: valorId, exactId: true };
+                                }
+                                
+                                console.log(`Solicitando detalles para ${nombreCampo} (ID=${valorId}) a ${ajaxUrl}`);
+                                
+                                $.ajax({
+                                    url: ajaxUrl,
+                                    type: ajaxType,
+                                    data: ajaxData,
+                                    success: function(data) {
+                                        console.log(`Respuesta para ${nombreCampo} (ID=${valorId}):`, data);
+                                        
+                                        // Intentar extraer un nombre más descriptivo
+                                        let nombreMasDescriptivo = null;
+                                        
+                                        if (data && typeof data === 'object') {
+                                            // Manejar formato de respuesta de array para la API CuentasContables
+                                            if (Array.isArray(data) && data.length > 0) {
+                                                const primerItem = data[0];
+                                                if (primerItem) {
+                                                    // El API CuentasContables devuelve un array con propiedades id, codigo, nombre
+                                                    if (primerItem.codigo && primerItem.nombre) {
+                                                        nombreMasDescriptivo = `${primerItem.codigo} - ${primerItem.nombre}`;
+                                                    } else if (primerItem.nombre) {
+                                                        nombreMasDescriptivo = primerItem.nombre;
+                                                    }
+                                                }
+                                            } 
+                                            // Manejar la respuesta de Impuestos/Buscar
+                                            else if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+                                                const primerImpuesto = data.results[0];
+                                                if (primerImpuesto && primerImpuesto.text) {
+                                                    nombreMasDescriptivo = primerImpuesto.text;
+                                                }
+                                            }
+                                            else {
+                                                // Posibles campos que pueden contener el nombre
+                                                const camposNombre = ['nombre', 'name', 'text', 'descripcion', 'description'];
+                                                const camposCodigo = ['codigo', 'code', 'number'];
+                                                
+                                                // Buscar en el objeto un campo que pueda contener el nombre
+                                                for (const campo of camposNombre) {
+                                                    if (data[campo]) {
+                                                        nombreMasDescriptivo = data[campo];
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                // Si encontramos un código, combinarlo con el nombre
+                                                let codigo = null;
+                                                for (const campo of camposCodigo) {
+                                                    if (data[campo]) {
+                                                        codigo = data[campo];
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                if (codigo && nombreMasDescriptivo) {
+                                                    nombreMasDescriptivo = `${codigo} - ${nombreMasDescriptivo}`;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Si encontramos un nombre más descriptivo, actualizar la opción
+                                        if (nombreMasDescriptivo) {
+                                            console.log(`Actualizando texto de opción: "${nombreMasDescriptivo}"`);
+                                            
+                                            // Actualizar el texto de la opción en el select
+                                            const $option = $select.find(`option[value="${valorId}"]`);
+                                            if ($option.length) {
+                                                $option.text(nombreMasDescriptivo);
+                                            }
+                                            
+                                            // Forzar una actualización de la interfaz de Select2
+                                            $select.trigger('change');
+                                            
+                                            // Actualizar el texto mostrado en el select2
+                                            setTimeout(() => {
+                                                const $rendered = $select.next('.select2-container').find('.select2-selection__rendered');
+                                                if ($rendered.length) {
+                                                    $rendered.text(nombreMasDescriptivo);
+                                                    $rendered.attr('title', nombreMasDescriptivo);
+                                                }
+                                            }, 50);
+                                        }
+                                    },
+                                    error: function(xhr, status, errorThrown) {
+                                        console.warn(`No se pudo obtener más información para ${nombreCampo} (ID=${valorId}). Error: ${errorThrown}`);
+                                        
+                                        // Agregar a la lista de campos fallidos si no se pudo obtener el nombre
+                                        if (camposFallidos && !camposFallidos.includes(nombreCampo)) {
+                                            camposFallidos.push(nombreCampo);
+                                        }
+                                    }
+                                });
+                            } catch (e) {
+                                console.warn(`Error al buscar más información:`, e);
+                            }
+                            
+                            // Resolvemos la promesa como éxito porque ya creamos la opción
+                            resolve(true);
+                        });
+                    }
+                    
+                    // Cargar datos y actualizar campo de Impuesto
                     if (response.impuestoId) {
-                        console.log('Actualizando impuesto:', response.impuestoId);
-                        $('#ImpuestoId').val(response.impuestoId).trigger('change.select2');
+                        console.log(`Intentando establecer impuesto con ID: ${response.impuestoId}`);
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#ImpuestoId', response.impuestoId, 'Impuesto', '/Impuestos/Buscar?term=' + response.impuestoId)
+                        );
+                    }
+
+                    // Cargar datos y actualizar campo de Propina (si existe)
+                    if (response.propinaImpuestoId) {
+                        console.log(`Intentando establecer propina con ID: ${response.propinaImpuestoId}`);
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#PropinaImpuestoId', response.propinaImpuestoId, 'Propina', '/Impuestos/Buscar?term=' + response.propinaImpuestoId)
+                        );
                     }
                     
-                    // Actualizar cuentas contables
-                    if (response.cuentaVentaId) {
-                        console.log('Actualizando cuenta venta:', response.cuentaVentaId);
-                        $('#CuentaVentasId').val(response.cuentaVentaId).trigger('change.select2');
+                    // Activar la pestaña de contabilidad donde están las cuentas
+                    const $pestanaContabilidad = $('a[href="#tab-contabilidad"]');
+                    if ($pestanaContabilidad.length > 0) {
+                        $pestanaContabilidad.tab('show');
+                        
+                        // Actualizar cuentas contables usando los endpoints correctos
+                        if (response.cuentaVentaId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaVentasId', response.cuentaVentaId, 'Cuenta de Ventas', '/api/CuentasContables/buscar?q=' + response.cuentaVentaId)
+                            );
+                        }
+                        
+                        if (response.cuentaCompraId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaComprasInventariosId', response.cuentaCompraId, 'Cuenta de Compras', '/api/CuentasContables/buscar?q=' + response.cuentaCompraId)
+                            );
+                        }
+                        
+                        if (response.cuentaInventarioId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaCostoVentasGastosId', response.cuentaInventarioId, 'Cuenta de Costo de Ventas', '/api/CuentasContables/buscar?q=' + response.cuentaInventarioId)
+                            );
+                        }
+                        
+                        // Cuentas adicionales
+                        if (response.cuentaDescuentosId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaDescuentosId', response.cuentaDescuentosId, 'Cuenta de Descuentos', '/api/CuentasContables/buscar?q=' + response.cuentaDescuentosId)
+                            );
+                        }
+                        
+                        if (response.cuentaDevolucionesId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaDevolucionesId', response.cuentaDevolucionesId, 'Cuenta de Devoluciones', '/api/CuentasContables/buscar?q=' + response.cuentaDevolucionesId)
+                            );
+                        }
+                        
+                        if (response.cuentaAjustesId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaAjustesId', response.cuentaAjustesId, 'Cuenta de Ajustes', '/api/CuentasContables/buscar?q=' + response.cuentaAjustesId)
+                            );
+                        }
+                        
+                        // Cuenta de Costo de Materia Prima
+                        if (response.cuentaCostoMateriaPrimaId) {
+                            promesasPendientes.push(
+                                precargarYSeleccionarOpcion('#CuentaCostoMateriaPrimaId', response.cuentaCostoMateriaPrimaId, 'Cuenta de Costo de Materia Prima', '/api/CuentasContables/buscar?q=' + response.cuentaCostoMateriaPrimaId)
+                            );
+                        }
+                    } else {
+                        console.warn('No se encontró la pestaña de contabilidad');
                     }
                     
-                    if (response.cuentaCompraId) {
-                        console.log('Actualizando cuenta compra:', response.cuentaCompraId);
-                        $('#CuentaComprasInventariosId').val(response.cuentaCompraId).trigger('change.select2');
-                    }
-                    
-                    if (response.cuentaInventarioId) {
-                        console.log('Actualizando cuenta inventario:', response.cuentaInventarioId);
-                        $('#CuentaCostoVentasGastosId').val(response.cuentaInventarioId).trigger('change.select2');
-                    }
-                    
-                    // Mostrar alerta informativa
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Datos heredados',
-                        text: 'Se han heredado valores de impuesto y cuentas contables de la categoría seleccionada.',
-                        timer: 3000,
-                        timerProgressBar: true
+                    // Esperar a que todas las promesas terminen
+                    Promise.all(promesasPendientes).then(() => {
+                        console.log(`Completadas ${promesasPendientes.length} operaciones, actualizados ${camposActualizados.length} campos`);
+                        
+                        // Cerrar el indicador de carga
+                        Swal.close();
+                        
+                        // Volver a la pestaña general
+                        const $pestanaGeneral = $('a[href="#tab-general"]');
+                        if ($pestanaGeneral.length > 0) {
+                            $pestanaGeneral.tab('show');
+                        }
+                        
+                        // Verificar si hay campos fallidos - aquellos que muestran aún (ID: XX) en su texto
+                        $('[id$="Id"]').each(function() {
+                            const $this = $(this);
+                            const texto = $this.find('option:selected').text();
+                            if (texto && texto.includes('(ID:')) {
+                                const nombreCampo = $this.closest('.form-group').find('label').text().trim();
+                                if (nombreCampo && !camposFallidos.includes(nombreCampo)) {
+                                    camposFallidos.push(nombreCampo);
+                                }
+                            }
+                        });
+                        
+                        // Mostrar resultado
+                        if (camposActualizados.length > 0) {
+                            let mensaje = `<strong>Campos actualizados:</strong><br>${camposActualizados.join('<br>')}`;
+                            
+                            // Si hay campos fallidos, incluirlos en el mensaje
+                            if (camposFallidos.length > 0) {
+                                mensaje += `<br><br><strong class="text-warning">Campos no actualizados:</strong><br>${camposFallidos.join('<br>')}`;
+                            }
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Datos heredados',
+                                html: mensaje,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Advertencia',
+                                text: 'No se pudieron heredar los valores. Seleccione manualmente.',
+                                timer: 3000
+                            });
+                        }
                     });
                 } else {
-                    console.error('Error en la respuesta:', response);
+                    Swal.close();
+                    console.error('Error en respuesta:', response);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: 'No se pudieron obtener los datos de la categoría'
+                    });
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Error al obtener datos de categoría:', xhr, status, error);
+                Swal.close();
+                console.error('Error AJAX:', xhr, status, error);
                 Swal.fire({
-                    icon: 'warning',
+                    icon: 'error',
                     title: 'Error',
-                    text: 'No se pudieron obtener los datos de la categoría'
+                    text: 'Error al obtener datos de la categoría'
                 });
             }
         });

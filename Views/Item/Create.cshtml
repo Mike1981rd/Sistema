@@ -340,6 +340,16 @@
                                 <span asp-validation-for="CuentaAjustesId" class="text-danger"></span>
                             </div>
                         </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CuentaCostoMateriaPrimaId" class="form-label">Cuenta de Costo de Materia Prima</label>
+                                <select asp-for="CuentaCostoMateriaPrimaId" asp-items="Model.CuentasCostoMateriaPrimaDisponibles" class="form-select select2-cuenta">
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                                <span asp-validation-for="CuentaCostoMateriaPrimaId" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tab Taras -->
@@ -772,7 +782,7 @@
     <script>
         $(document).ready(function() {
             // Initialize Select2 for accounting accounts with AJAX
-            $('.select2-cuenta, #CuentaVentasId, #CuentaComprasInventariosId, #CuentaCostoVentasGastosId, #CuentaDescuentosId, #CuentaDevolucionesId, #CuentaAjustesId').each(function() {
+            $('.select2-cuenta, #CuentaVentasId, #CuentaComprasInventariosId, #CuentaCostoVentasGastosId, #CuentaDescuentosId, #CuentaDevolucionesId, #CuentaAjustesId, #CuentaCostoMateriaPrimaId').each(function() {
                 const $this = $(this);
                 
                 // Avoid initializing twice

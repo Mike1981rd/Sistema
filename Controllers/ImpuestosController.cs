@@ -419,7 +419,7 @@ namespace SistemaContable.Controllers
 
         // GET: Impuestos/Buscar
         [HttpGet]
-        public async Task<JsonResult> Buscar(string term)
+        public async Task<JsonResult> Buscar(string term, bool exactId = false)
         {
             try
             {
@@ -429,9 +429,20 @@ namespace SistemaContable.Controllers
                     return Json(new { results = new List<object>() });
                 }
 
-                var impuestos = await _context.Impuestos
-                    .Where(i => i.EmpresaId == empresaId && i.Estado && 
-                          (string.IsNullOrEmpty(term) || i.Nombre.Contains(term)))
+                IQueryable<Impuesto> query = _context.Impuestos
+                    .Where(i => i.EmpresaId == empresaId && i.Estado);
+
+                // Si exactId es true, buscar por ID exacto
+                if (exactId && !string.IsNullOrEmpty(term) && int.TryParse(term, out int impuestoId))
+                {
+                    query = query.Where(i => i.Id == impuestoId);
+                }
+                else if (!string.IsNullOrEmpty(term))
+                {
+                    query = query.Where(i => i.Nombre.Contains(term));
+                }
+
+                var impuestos = await query
                     .OrderBy(i => i.Nombre)
                     .Select(i => new { 
                         id = i.Id, 

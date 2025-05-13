@@ -95,6 +95,10 @@ namespace SistemaContable.Models.ViewModels
         public int? CuentaAjustesId { get; set; }
         public SelectList? CuentasAjustesDisponibles { get; set; }
 
+        [Display(Name = "Cuenta de Costo de Materia Prima")]
+        public int? CuentaCostoMateriaPrimaId { get; set; }
+        public SelectList? CuentasCostoMateriaPrimaDisponibles { get; set; }
+
         // Colecciones para las relaciones
         public List<ItemProveedorViewModel> Proveedores { get; set; } = new();
         public List<ItemContenedorViewModel> Contenedores { get; set; } = new();
