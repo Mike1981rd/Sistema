@@ -145,38 +145,35 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Imagen</h5>
-                                        <div class="image-upload-container">
-                                            <div class="image-preview-wrapper text-center">
-                                                <div id="imagePreview" class="mb-3" style="display: none;">
-                                                    <img id="preview" src="#" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
-                                                </div>
-                                                <div id="imageDefault" class="mb-3 p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                                    <div class="text-center text-muted">
-                                                        <i class="fas fa-image fa-4x mb-3"></i>
-                                                        <p>No hay imagen</p>
+                                        <div class="modern-image-upload">
+                                            <!-- Vista previa de imagen -->
+                                            <div class="image-preview mb-3 text-center">
+                                                @if (string.IsNullOrEmpty(Model.ImagenUrl))
+                                                {
+                                                    <div class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                        <div class="text-center text-muted">
+                                                            <i class="fas fa-image fa-4x mb-3"></i>
+                                                            <p>No hay imagen</p>
+                                                        </div>
                                                     </div>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
+                                                }
+                                            </div>
+                                            
+                                            <!-- Selector de archivo -->
+                                            <div class="file-selector mb-3">
+                                                <div class="input-group">
+                                                    <input type="file" asp-for="ItemImage" class="form-control" accept="image/*" id="imageFile">
+                                                    <button class="btn btn-outline-danger" type="button" id="clearImageBtn" style="display: @(!string.IsNullOrEmpty(Model.ImagenUrl) ? "inline-flex" : "none")">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div class="dropzone-container mb-3 text-center">
-                                                <div id="dropzone" class="dropzone-area p-3 border border-dashed rounded">
-                                                    <input asp-for="ItemImage" type="file" class="file-input" accept="image/*" hidden />
-                                                    <div class="dropzone-message">
-                                                        <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
-                                                        <p>Arrastra y suelta una imagen aquí o<br>
-                                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="browseButton">
-                                                            Seleccionar imagen
-                                                        </button></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="upload-options d-flex justify-content-between">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="cropButton" style="display: none;">
-                                                    <i class="fas fa-crop me-1"></i> Recortar
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger btn-sm" id="btnResetImage" style="display: none;">
-                                                    <i class="fas fa-trash me-1"></i> Eliminar
-                                                </button>
-                                            </div>
+                                            
+                                            <!-- Información sobre tipos de archivo -->
                                             <div class="mt-2 text-muted small">
                                                 <ul class="ps-3 mb-0">
                                                     <li>Formatos: JPG, PNG o GIF</li>

@@ -1550,4 +1550,92 @@ $(document).ready(function() {
         
         // Aquí se agregaría cualquier procesamiento automático que requieran las marcas
     });
+
+    // Función para inicializar la carga de imágenes
+    window.initImageUpload = function() {
+        console.log('Inicializando carga de imágenes simplificada...');
+        
+        // Referencias a los elementos del DOM
+        const fileInput = document.getElementById('imageFile');
+        const clearButton = document.getElementById('clearImageBtn');
+        const previewContainer = document.querySelector('.image-preview');
+        
+        if (!fileInput || !previewContainer) {
+            console.warn('No se encontraron elementos para la carga de imágenes');
+            return;
+        }
+        
+        // Manejar cambio de archivo seleccionado
+        fileInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+            
+            console.log('Archivo seleccionado:', file.name);
+            
+            // Validar el tipo de archivo
+            if (!file.type.match('image.*')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El archivo seleccionado no es una imagen válida.'
+                });
+                this.value = '';
+                return;
+            }
+            
+            // Validar el tamaño del archivo (max 800KB)
+            if (file.size > 800 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'La imagen es demasiado grande. El tamaño máximo es 800KB.'
+                });
+                this.value = '';
+                return;
+            }
+            
+            // Leer y mostrar la imagen
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Eliminar contenido anterior
+                previewContainer.innerHTML = '';
+                
+                // Crear y añadir nueva imagen
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Vista previa';
+                img.className = 'img-fluid rounded shadow-sm';
+                img.style.maxHeight = '200px';
+                previewContainer.appendChild(img);
+                
+                // Mostrar botón para limpiar
+                if (clearButton) clearButton.style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Manejar clic en botón de limpiar
+        if (clearButton) {
+            clearButton.addEventListener('click', function() {
+                // Limpiar input de archivo
+                if (fileInput) fileInput.value = '';
+                
+                // Restaurar vista de "No hay imagen"
+                previewContainer.innerHTML = `
+                    <div class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-image fa-4x mb-3"></i>
+                            <p>No hay imagen</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Ocultar botón de limpiar
+                this.style.display = 'none';
+            });
+        }
+    };
+    
+    // Inicializar carga de imágenes
+    initImageUpload();
 }); 
