@@ -1,5 +1,8 @@
 // contenedores.js - Versión mejorada con funcionalidad completa para Select2
 $(document).ready(function () {
+    // Inicializar Select2 para Proveedor
+    inicializarSelectProveedor();
+
     // Ocultar el campo Unidad de Medida (Inventario)
     $('[for="UnidadMedidaInventarioId"]').closest('.row, .form-group').hide();
 
@@ -504,3 +507,207 @@ function editContenedor(id, nombre) {
 
     $('#offcanvasContenedor').offcanvas('show');
 }
+
+// Función para inicializar el selector de proveedores
+function inicializarSelectProveedor() {
+    $('#ProveedorId').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Seleccione o cree un proveedor',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('body'),
+        ajax: {
+            url: window.location.origin + '/Clientes/Buscar',
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { 
+                    term: params.term || '',
+                    tipoCliente: 'proveedor' // Filtrar solo registros de tipo proveedor
+                };
+            },
+            processResults: function(data, params) {
+                var results = data.results || [];
+                
+                if (results.length == 0 && params.term && params.term.trim() !== '') {
+                    results.push({
+                        id: 'new',
+                        text: 'Crear proveedor: "' + params.term + '"',
+                        term: params.term,
+                        _isNew: true
+                    });
+                }
+                
+                return { results: results };
+            },
+            cache: true
+        },
+        templateResult: formatProveedorResult,
+        templateSelection: formatProveedorSelection
+    }).on('select2:select', function(e) {
+        var data = e.params.data;
+        
+        if (data.id === 'new') {
+            $(this).val(null).trigger('change');
+            abrirOffcanvasProveedor(data.term);
+        }
+    });
+}
+
+// Formateo para los resultados en el dropdown de proveedores
+function formatProveedorResult(proveedor) {
+    if (proveedor.loading) return proveedor.text;
+    
+    if (proveedor.id === 'new') {
+        return $('<div><i class="fas fa-plus-circle text-success me-1"></i>' + 
+                'Crear proveedor: "' + proveedor.term + '"</div>');
+    }
+    
+    return $('<div>' + proveedor.text + '</div>');
+}
+
+// Formateo para la selección actual con botón de edición
+function formatProveedorSelection(proveedor) {
+    if (!proveedor.id || proveedor.id === 'new') return proveedor.text;
+    
+    var $container = $('<div class="d-flex justify-content-between w-100"></div>');
+    var $nombre = $('<div>' + proveedor.text + '</div>');
+    var $editBtn = $('<button class="btn btn-link btn-sm p-0 edit-proveedor" data-id="' + 
+                    proveedor.id + '"><i class="fas fa-pencil-alt text-primary"></i></button>');
+    
+    $container.append($nombre).append($editBtn);
+    
+    $editBtn.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        editProveedor(proveedor.id);
+    });
+    
+    return $container;
+}
+
+// Función para abrir offcanvas para crear proveedor
+function abrirOffcanvasProveedor(termino) {
+    $('#ProveedorId').select2('close');
+    
+    const offcanvasElement = document.getElementById('offcanvasProveedor');
+    if (!offcanvasElement) {
+        console.error("No se encontró el offcanvas de proveedor");
+        return false;
+    }
+    
+    // Estilizar y mostrar offcanvas
+    offcanvasElement.style.width = '600px';
+    const header = offcanvasElement.querySelector('.offcanvas-header');
+    if (header) {
+        header.style.backgroundColor = '#3944BC';
+        header.style.color = 'white';
+    }
+    
+    const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+    offcanvasBS.show();
+    
+    // Cargar el formulario
+    const formContainer = document.getElementById('formProveedorContainer');
+    if (formContainer) {
+        formContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div></div>';
+        
+        // Cargar formulario via AJAX
+        $.ajax({
+            url: '/Clientes/CreatePartial',
+            type: 'GET',
+            data: { tipoCliente: 'proveedor' },
+            success: function(response) {
+                formContainer.innerHTML = response;
+                
+                // Prellenar el campo de nombre
+                setTimeout(function() {
+                    let nombreInput = formContainer.querySelector('[name="Nombre"]') || 
+                                    formContainer.querySelector('#Nombre');
+                    if (nombreInput && termino) nombreInput.value = termino;
+                }, 100);
+            }
+        });
+    }
+}
+
+// Función para editar proveedor
+function editProveedor(id) {
+    $('#ProveedorId').select2('close');
+    
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Obteniendo datos del proveedor',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+    
+    $.ajax({
+        url: `/Clientes/EditPartial/${id}`,
+        type: 'GET',
+        success: function(data) {
+            Swal.close();
+            
+            const offcanvasElement = document.getElementById('offcanvasProveedor');
+            const offcanvasBS = new bootstrap.Offcanvas(offcanvasElement);
+            offcanvasBS.show();
+            
+            const formContainer = document.getElementById('formProveedorContainer');
+            if (formContainer) {
+                formContainer.innerHTML = '<div class="text-center"><div class="spinner-border"></div></div>';
+                
+                $.ajax({
+                    url: `/Clientes/EditPartial/${id}`,
+                    type: 'GET',
+                    success: function(response) {
+                        formContainer.innerHTML = response;
+                    }
+                });
+            }
+        }
+    });
+}
+
+// Manejar guardado del proveedor
+$(document).on('click', '#btnGuardarProveedor', function(e) {
+    e.preventDefault();
+    var $form = $('#formProveedorContainer form');
+    if ($form.length === 0) return;
+    
+    var formData = $form.serialize();
+    
+    Swal.fire({
+        title: 'Guardando...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+    
+    $.ajax({
+        url: $form.attr('action'),
+        type: $form.attr('method') || 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                // Agregar la opción al select
+                var newOption = new Option(response.nombre, response.id, false, false);
+                $('#ProveedorId').append(newOption);
+                
+                // Cerrar offcanvas
+                $('#offcanvasProveedor').offcanvas('hide');
+                
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Éxito', 
+                    text: 'Proveedor guardado correctamente',
+                    timer: 3000
+                });
+            } else {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error', 
+                    text: response.message || 'No se pudo guardar el proveedor'
+                });
+            }
+        }
+    });
+});

@@ -98,15 +98,8 @@ namespace SistemaContable.Controllers
         public async Task<IActionResult> Create()
         {
             CargarViewBags();
-            
-            // Obtener la empresa actual para sus configuraciones
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            var empresa = await _context.Empresas.FindAsync(empresaId);
-            
-            // Configuración de formato decimal
-            ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
-            ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
-            
+            ViewBag.SeparadorDecimal = ",";
+            ViewBag.PrecisionDecimal = 2;
             return View();
         }
 
@@ -176,50 +169,14 @@ namespace SistemaContable.Controllers
             {
                 return NotFound();
             }
-
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null)
             {
                 return NotFound();
             }
-
             CargarViewBags();
-
-            // Cargar los textos para las cuentas contables existentes
-            if (cliente.CuentaPorCobrarId.HasValue)
-            {
-                var cuentaPorCobrar = await _context.CuentasContables.FindAsync(cliente.CuentaPorCobrarId);
-                if (cuentaPorCobrar != null)
-                {
-                    ViewData["CuentaPorCobrarTexto"] = $"{cuentaPorCobrar.Codigo} - {cuentaPorCobrar.Nombre}";
-                }
-            }
-
-            if (cliente.CuentaPorPagarId.HasValue)
-            {
-                var cuentaPorPagar = await _context.CuentasContables.FindAsync(cliente.CuentaPorPagarId);
-                if (cuentaPorPagar != null)
-                {
-                    ViewData["CuentaPorPagarTexto"] = $"{cuentaPorPagar.Codigo} - {cuentaPorPagar.Nombre}";
-                }
-            }
-
-            // Cargar datos financieros para la visualización en el formulario
-            ViewBag.CuentasPorCobrar = 0; // Se implementará en el futuro
-            ViewBag.AnticiposRecibidos = 0;
-            ViewBag.AnticiposEntregados = 0;
-            ViewBag.PorPagar = 0;
-            ViewBag.NotasCredito = 0;
-            ViewBag.NotasDebito = 0;
-            
-            // Obtener la empresa actual para sus configuraciones
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            var empresa = await _context.Empresas.FindAsync(empresaId);
-            
-            // Configuración de formato decimal
-            ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
-            ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
-
+            ViewBag.SeparadorDecimal = ",";
+            ViewBag.PrecisionDecimal = 2;
             return View(cliente);
         }
 
@@ -591,6 +548,33 @@ namespace SistemaContable.Controllers
             });
         }
 
+        // GET: Clientes/Buscar
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string term = "", string tipoCliente = "")
+        {
+            var query = _context.Clientes.AsQueryable();
+
+            if (!string.IsNullOrEmpty(term))
+            {
+                term = term.ToLower();
+                query = query.Where(c => c.NombreRazonSocial.ToLower().Contains(term));
+            }
+
+            // Filtro por tipoCliente eliminado temporalmente
+            //if (!string.IsNullOrEmpty(tipoCliente) && tipoCliente.ToLower() == "proveedor")
+            //{
+            //    query = query.Where(c => c.EsProveedor);
+            //}
+
+            var clientes = await query
+                .OrderBy(c => c.NombreRazonSocial)
+                .Take(10)
+                .Select(c => new { id = c.Id, text = c.NombreRazonSocial })
+                .ToListAsync();
+
+            return Json(new { results = clientes });
+        }
+
         private bool ClienteExists(int id)
         {
             return _context.Clientes.Any(e => e.Id == id);
@@ -691,6 +675,31 @@ namespace SistemaContable.Controllers
                 // Manejar cualquier error que ocurra al eliminar el archivo
                 // Se podría registrar en un log
             }
+        }
+
+        [HttpGet]
+        public IActionResult CreatePartial(string tipoCliente = "")
+        {
+            var model = new Cliente();
+            ViewBag.TipoIdentificacionId = new SelectList(_context.TiposIdentificacion, "Id", "Nombre");
+            ViewBag.PlazosPago = new SelectList(_context.PlazosPago, "Id", "Nombre");
+            ViewBag.TiposNcf = new SelectList(_context.ComprobantesFiscales, "Id", "Nombre");
+            // Puedes filtrar por tipoCliente si lo necesitas
+            return PartialView("~/Views/Item/_OffCanvasProveedorForm.cshtml", model);
+        }
+
+        [HttpGet]
+        public IActionResult EditPartial(int id)
+        {
+            var model = _context.Clientes.Find(id);
+            if (model == null)
+            {
+                return NotFound();
+            }
+            ViewBag.TipoIdentificacionId = new SelectList(_context.TiposIdentificacion, "Id", "Nombre");
+            ViewBag.PlazosPago = new SelectList(_context.PlazosPago, "Id", "Nombre");
+            ViewBag.TiposNcf = new SelectList(_context.ComprobantesFiscales, "Id", "Nombre");
+            return PartialView("~/Views/Item/_OffCanvasProveedorForm.cshtml", model);
         }
     }
 } 

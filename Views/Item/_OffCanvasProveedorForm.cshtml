@@ -2,19 +2,35 @@
 
 <form id="formProveedor">
     <input type="hidden" id="ProveedorId" name="Id" value="@Model?.Id" />
+    <input type="hidden" name="EsProveedor" value="true" />
 
     <div class="mb-3">
-        <label for="ProveedorNombre" class="form-label">Nombre/RazÛn Social *</label>
-        <input type="text" class="form-control" id="ProveedorNombre" name="Nombre" value="@Model?.NombreRazonSocial" required />
+        <label for="ProveedorNombreRazonSocial" class="form-label">Nombre/Raz√≥n Social *</label>
+        <input type="text" class="form-control" id="ProveedorNombreRazonSocial" name="NombreRazonSocial" value="@Model?.NombreRazonSocial" required />
     </div>
 
     <div class="mb-3">
-        <label for="ProveedorRnc" class="form-label">RNC/CÈdula</label>
-        <input type="text" class="form-control" id="ProveedorRnc" name="Rnc" value="@Model?.NumeroIdentificacion" />
+        <label for="ProveedorTipoIdentificacionId" class="form-label">Tipo de Identificaci√≥n *</label>
+        <select class="form-select select2-tipo-identificacion" id="ProveedorTipoIdentificacionId" name="TipoIdentificacionId" required>
+            <option value="">-- Seleccione --</option>
+            @if (ViewBag.TipoIdentificacionId != null)
+            {
+                foreach (var tipo in ViewBag.TipoIdentificacionId)
+                {
+                    string selected = (Model != null && Model.TipoIdentificacionId != null && Model.TipoIdentificacionId.ToString() == tipo.Value) ? " selected" : "";
+                    @: <option value="@tipo.Value"@selected>@tipo.Text</option>
+                }
+            }
+        </select>
     </div>
 
     <div class="mb-3">
-        <label for="ProveedorTelefono" class="form-label">TelÈfono</label>
+        <label for="ProveedorNumeroIdentificacion" class="form-label">N√∫mero de Identificaci√≥n *</label>
+        <input type="text" class="form-control" id="ProveedorNumeroIdentificacion" name="NumeroIdentificacion" value="@Model?.NumeroIdentificacion" required />
+    </div>
+
+    <div class="mb-3">
+        <label for="ProveedorTelefono" class="form-label">Tel√©fono</label>
         <input type="text" class="form-control" id="ProveedorTelefono" name="Telefono" value="@Model?.Telefono" />
     </div>
 
@@ -24,7 +40,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="ProveedorDireccion" class="form-label">DirecciÛn</label>
+        <label for="ProveedorDireccion" class="form-label">Direcci√≥n</label>
         <textarea class="form-control" id="ProveedorDireccion" name="Direccion" rows="2">@Model?.Direccion</textarea>
     </div>
 
@@ -36,7 +52,8 @@
             {
                 foreach (var plazo in ViewBag.PlazosPago)
                 {
-                    <option value="@plazo.Value" selected="@(Model != null && Model.PlazoPagoId.ToString() == plazo.Value)">@plazo.Text</option>
+                    string selected = (Model != null && Model.PlazoPagoId != null && Model.PlazoPagoId.ToString() == plazo.Value) ? " selected" : "";
+                    @: <option value="@plazo.Value"@selected>@plazo.Text</option>
                 }
             }
         </select>
@@ -50,7 +67,8 @@
             {
                 foreach (var tipo in ViewBag.TiposNcf)
                 {
-                    <option value="@tipo.Value" selected="@(Model != null && Model.TipoNcfId.ToString() == tipo.Value)">@tipo.Text</option>
+                    string selected = (Model != null && Model.TipoNcfId != null && Model.TipoNcfId.ToString() == tipo.Value) ? " selected" : "";
+                    @: <option value="@tipo.Value"@selected>@tipo.Text</option>
                 }
             }
         </select>
@@ -69,7 +87,7 @@
 <script>
     $(document).ready(function() {
         // Inicializar select2
-        $('#ProveedorPlazoPagoId, #ProveedorTipoNcfId').select2({
+        $('#ProveedorPlazoPagoId, #ProveedorTipoNcfId, #ProveedorTipoIdentificacionId').select2({
             theme: 'bootstrap-5',
             width: '100%',
             dropdownParent: $('#offcanvasProveedor')
@@ -77,8 +95,8 @@
 
         // Guardar proveedor
         $('#btnGuardarProveedor').click(function() {
-            // ValidaciÛn b·sica
-            if (!$('#ProveedorNombre').val()) {
+            // Validaci√≥n b√°sica
+            if (!$('#ProveedorNombreRazonSocial').val()) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -92,7 +110,7 @@
 
             // Enviar solicitud
             $.ajax({
-                url: '/Proveedor/CrearProveedorAjax',
+                url: '/Clientes/CreatePartial',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(formData),
@@ -108,7 +126,7 @@
                         // Mostrar mensaje
                         Swal.fire({
                             icon: 'success',
-                            title: '…xito',
+                            title: '√âxito',
                             text: 'Proveedor guardado correctamente',
                             toast: true,
                             position: 'top-end',
@@ -127,13 +145,13 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'OcurriÛ un error al procesar la solicitud'
+                        text: 'Ocurri√≥ un error al procesar la solicitud'
                     });
                 }
             });
         });
 
-        // FunciÛn para convertir form a objeto
+        // Funci√≥n para convertir form a objeto
         function getFormData($form) {
             var unindexed_array = $form.serializeArray();
             var indexed_array = {};

@@ -1,0 +1,71 @@
+@model SistemaContable.Models.ViewModels.ItemViewModel
+
+<!-- Conversiones de Unidades (Contenedores) -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Conversiones de Unidades</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="tablaContenedores">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 50px;">No</th>
+                        <th>Contenedor</th>
+                        <th>Etiqueta</th>
+                        <th>Cantidad</th>
+                        <th>Costo</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="contenedores-body">
+                    <!-- Las filas se cargarán dinámicamente con JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2">
+            <button type="button" id="btnAgregarContenedor" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Agregar Fila
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Proveedor Principal -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Proveedor Principal</h5>
+    </div>
+    <div class="card-body">
+        <div class="form-group mb-3">
+            <label for="ProveedorId" class="form-label">Proveedor</label>
+            <select id="ProveedorId" name="ProveedorId" class="form-control select2-proveedor" 
+                    data-placeholder="Seleccione o cree un proveedor"></select>
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas para Proveedor -->
+<div class="offcanvas offcanvas-end offcanvas-lg bg-white border-primary" tabindex="-1" id="offcanvasProveedor" aria-labelledby="offcanvasProveedorLabel">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasProveedorLabel">Proveedor</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="formProveedorContainer"></div>
+    </div>
+</div>
+
+<div class="tab-pane fade" id="tab-compras">
+    <!-- Resto del contenido de la pestaña Compras aquí... -->
+</div>
+
+@section Scripts {
+    <!-- Scripts existentes -->
+    <script src="~/js/items/compras_module.js"></script>
+    <script src="~/js/items/compras_tab.js"></script>
+    <script src="~/js/items/form-modular.js"></script>
+    
+    <!-- Nuevo script para proveedores -->
+    <script src="~/js/items/proveedor_select.js"></script>
+} 

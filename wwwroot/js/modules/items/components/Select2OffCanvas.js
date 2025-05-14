@@ -37,6 +37,14 @@ export class Select2OffCanvas {
      * Inicializa el componente
      */
     init() {
+        // Aplicar estilos al offcanvas
+        this.offCanvas.style.width = '600px';
+        const header = this.offCanvas.querySelector('.offcanvas-header');
+        if (header) {
+            header.style.backgroundColor = '#3944BC';
+            header.style.color = 'white';
+        }
+        
         // Inicializar offcanvas
         this.offCanvasBS = new bootstrap.Offcanvas(this.offCanvas);
         
@@ -174,6 +182,14 @@ export class Select2OffCanvas {
      * @private
      */
     _prepareOffCanvasForCreation(term) {
+        // Aplicar estilos al offcanvas
+        this.offCanvas.style.width = '600px';
+        const header = this.offCanvas.querySelector('.offcanvas-header');
+        if (header) {
+            header.style.backgroundColor = '#3944BC';
+            header.style.color = 'white';
+        }
+
         // Limpiar el formulario
         const form = this.offCanvas.querySelector('form');
         if (form) {
@@ -211,6 +227,14 @@ export class Select2OffCanvas {
      * @private
      */
     _prepareOffCanvasForEditing(id, name) {
+        // Aplicar estilos al offcanvas
+        this.offCanvas.style.width = '600px';
+        const header = this.offCanvas.querySelector('.offcanvas-header');
+        if (header) {
+            header.style.backgroundColor = '#3944BC';
+            header.style.color = 'white';
+        }
+
         // Obtener datos completos del item vía AJAX
         $.ajax({
             url: `${this.config.detailUrl}?id=${id}`,
