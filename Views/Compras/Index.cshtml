@@ -1,0 +1,158 @@
+@model IEnumerable<SistemaContable.Models.Compra>
+
+@{
+    ViewData["Title"] = "Compras";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h3 mb-0 text-gray-800">Compras</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Nueva Compra
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover" id="table-compras">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Proveedor</th>
+                            <th>Almacén</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Numero</td>
+                                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td>@item.Proveedor?.NombreRazonSocial</td>
+                                <td>@item.Almacen?.Nombre</td>
+                                <td class="text-end">@item.Total.ToString("N2")</td>
+                                <td>
+                                    @if (item.Estado == "Pendiente")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    }
+                                    else if (item.Estado == "Recibido")
+                                    {
+                                        <span class="badge bg-success">Recibido</span>
+                                    }
+                                    else if (item.Estado == "Anulado")
+                                    {
+                                        <span class="badge bg-danger">Anulado</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (item.Estado == "Pendiente")
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-success btn-recibir" data-id="@item.Id">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-anular" data-id="@item.Id">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para anular -->
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-labelledby="modalAnularLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAnularLabel">Confirmar Anulación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea anular esta compra? Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formAnular" asp-action="Delete" method="post">
+                    <input type="hidden" id="compraIdAnular" name="id" value="" />
+                    <button type="submit" class="btn btn-danger">Anular</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para recibir -->
+<div class="modal fade" id="modalRecibir" tabindex="-1" aria-labelledby="modalRecibirLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRecibirLabel">Confirmar Recepción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea marcar esta compra como recibida? Esta acción actualizará el inventario y no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formRecibir" asp-action="Recibir" method="post">
+                    <input type="hidden" id="compraIdRecibir" name="id" value="" />
+                    <button type="submit" class="btn btn-success">Recibir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Inicializar DataTable
+            $('#table-compras').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
+                },
+                order: [[1, 'desc']], // Ordenar por fecha descendente
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'excel', 'pdf', 'print'
+                ]
+            });
+
+            // Manejar click en botón anular
+            $('.btn-anular').click(function () {
+                const compraId = $(this).data('id');
+                $('#compraIdAnular').val(compraId);
+                $('#modalAnular').modal('show');
+            });
+
+            // Manejar click en botón recibir
+            $('.btn-recibir').click(function () {
+                const compraId = $(this).data('id');
+                $('#compraIdRecibir').val(compraId);
+                $('#modalRecibir').modal('show');
+            });
+        });
+    </script>
+} 

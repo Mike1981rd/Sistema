@@ -99,5 +99,8 @@ namespace SistemaContable.Models
 
         // Campo para el ID de empresa (multiempresa)
         public int EmpresaId { get; set; }
+
+        public bool Activo { get; set; } = true;
+        public decimal CostoEstandar { get; set; } = 0;
     }
 }

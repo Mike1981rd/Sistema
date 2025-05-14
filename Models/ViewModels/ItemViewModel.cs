@@ -114,5 +114,25 @@ namespace SistemaContable.Models.ViewModels
         
         // Para información de separador decimal
         public string? SeparadorDecimal { get; set; }
+
+        // Preferencias de compra y datos adicionales
+        [Display(Name = "Tiempo de entrega (días)")]
+        [Range(0, int.MaxValue, ErrorMessage = "El tiempo de entrega debe ser mayor o igual a 0")]
+        public int? TiempoEntrega { get; set; }
+
+        [Display(Name = "Punto de reorden")]
+        [Range(0, double.MaxValue, ErrorMessage = "El punto de reorden debe ser mayor o igual a 0")]
+        public decimal? PuntoReorden { get; set; }
+
+        [Display(Name = "Cantidad óptima de compra")]
+        [Range(0, double.MaxValue, ErrorMessage = "La cantidad óptima debe ser mayor o igual a 0")]
+        public decimal? CantidadOptima { get; set; }
+
+        [Display(Name = "Requiere orden de compra")]
+        public bool RequiereOrdenCompra { get; set; }
+
+        [Display(Name = "Notas de compra")]
+        [StringLength(500, ErrorMessage = "Las notas de compra no pueden exceder los 500 caracteres")]
+        public string? NotasCompra { get; set; }
     }
 } 

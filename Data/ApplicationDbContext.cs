@@ -74,6 +74,10 @@ namespace SistemaContable.Data
         public DbSet<ItemAlmacen> ItemAlmacenes { get; set; }
         public DbSet<ProductoVenta> ProductosVenta { get; set; }
 
+        // Compras module
+        public DbSet<Compra> Compras { get; set; }
+        public DbSet<CompraDetalle> ComprasDetalles { get; set; }
+
         public DbSet<Categoria> Categorias { get; set; }
         #pragma warning disable CS0618 // Suprimir advertencia sobre tipo obsoleto
         public DbSet<FamiliaCuentaContable> FamiliaCuentasContables { get; set; }
@@ -83,6 +87,9 @@ namespace SistemaContable.Data
         public DbSet<Almacen> Almacenes { get; set; }
         public DbSet<Impresora> Impresoras { get; set; }
         public DbSet<RutaImpresora> RutasImpresora { get; set; }
+
+        // Agregado para catálogo de contenedores
+        public DbSet<Contenedor> Contenedores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -709,6 +716,94 @@ namespace SistemaContable.Data
                       .WithMany()
                       .HasForeignKey(r => r.EmpresaId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuración para la entidad Compra
+            builder.Entity<Compra>(entity =>
+            {
+                entity.ToTable("Compras");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Numero).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Fecha).IsRequired();
+                entity.Property(e => e.Referencia).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.Observaciones).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Estado).IsRequired().HasMaxLength(20);
+                
+                // Relación con Proveedor (Cliente)
+                entity.HasOne(c => c.Proveedor)
+                      .WithMany()
+                      .HasForeignKey(c => c.ProveedorId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                // Relación con Almacén
+                entity.HasOne(c => c.Almacen)
+                      .WithMany()
+                      .HasForeignKey(c => c.AlmacenId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                // Relación con PlazoPago
+                entity.HasOne(c => c.PlazoPago)
+                      .WithMany()
+                      .HasForeignKey(c => c.PlazoPagoId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                // Relación con EntradaDiario
+                entity.HasOne(c => c.EntradaDiario)
+                      .WithMany()
+                      .HasForeignKey(c => c.EntradaDiarioId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                // Relación con Empresa
+                entity.HasOne(c => c.Empresa)
+                      .WithMany()
+                      .HasForeignKey(c => c.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para la entidad CompraDetalle
+            builder.Entity<CompraDetalle>(entity =>
+            {
+                entity.ToTable("ComprasDetalles");
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Descripcion).HasMaxLength(150).IsRequired(false);
+                entity.Property(e => e.Cantidad).HasPrecision(18, 4).IsRequired();
+                entity.Property(e => e.Precio).HasPrecision(18, 4).IsRequired();
+                entity.Property(e => e.Subtotal).HasPrecision(18, 4);
+                entity.Property(e => e.PorcentajeDescuento).HasPrecision(18, 4);
+                entity.Property(e => e.MontoDescuento).HasPrecision(18, 4);
+                entity.Property(e => e.MontoImpuesto).HasPrecision(18, 4);
+                entity.Property(e => e.Total).HasPrecision(18, 4);
+                entity.Property(e => e.FactorConversion).HasPrecision(18, 6);
+                
+                // Relación con Compra
+                entity.HasOne(d => d.Compra)
+                      .WithMany(c => c.Detalles)
+                      .HasForeignKey(d => d.CompraId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación con Item
+                entity.HasOne(d => d.Item)
+                      .WithMany()
+                      .HasForeignKey(d => d.ItemId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                // Relación con Impuesto
+                entity.HasOne(d => d.Impuesto)
+                      .WithMany()
+                      .HasForeignKey(d => d.ImpuestoId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+                      
+                // Relación con UnidadMedida
+                entity.HasOne(d => d.UnidadMedida)
+                      .WithMany()
+                      .HasForeignKey(d => d.UnidadMedidaId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

@@ -1125,6 +1125,58 @@ namespace SistemaContable.Controllers
             return View("ImprimirCodigoBarras", model);
         }
 
+        // Obtener conversiones de unidades para un item
+        [HttpGet]
+        public async Task<IActionResult> ObtenerConversiones(int id)
+        {
+            try
+            {
+                // Verificar que el item existe
+                var itemExiste = await _context.Items.AnyAsync(i => i.Id == id);
+                if (!itemExiste)
+                    return NotFound(new { message = "Item no encontrado" });
+                
+                // Consultar los ItemContenedores relacionados con este item
+                var conversiones = await _context.ItemContenedores
+                    .Where(ic => ic.ItemId == id)
+                    .Select(ic => new {
+                        id = ic.Id,
+                        contenedorId = ic.Id,
+                        contenedorNombre = ic.Nombre,
+                        etiqueta = ic.Etiqueta ?? ic.Nombre, // Usar nombre si la etiqueta es nula
+                        cantidad = ic.Factor,
+                        costo = ic.Costo
+                    })
+                    .ToListAsync();
+                
+                return Json(conversiones);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BuscarContenedores(string term = "")
+        {
+            var empresaId = _userService.GetEmpresaId();
+            var query = _context.ItemContenedores.Where(c => c.EmpresaId == empresaId);
+            
+            if (!string.IsNullOrEmpty(term))
+            {
+                term = term.ToLower();
+                query = query.Where(c => c.Nombre.ToLower().Contains(term));
+            }
+            
+            var contenedores = await query.Take(10).Select(c => new {
+                id = c.Id,
+                text = c.Nombre
+            }).ToListAsync();
+            
+            return Json(new { results = contenedores });
+        }
+
         // Mtodos privados
         private ItemViewModel PrepararViewModel(ItemViewModel viewModel = null)
         {

@@ -1,86 +1,68 @@
 @model SistemaContable.Models.ViewModels.ItemViewModel
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <label asp-for="UnidadMedidaInventarioId" class="form-label">Unidad de Medida (Inventario) *</label>
-        <div class="input-group">
-            <select asp-for="UnidadMedidaInventarioId" asp-items="Model.UnidadesMedidaDisponibles" class="form-select select2-uom" required>
-                <option value="">Seleccione una unidad</option>
+<div class="tab-pane fade" id="tab-compras" role="tabpanel">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label class="form-label" for="UnidadMedidaInventarioId">Unidad de Medida (Inventario) *</label>
+            <div class="input-group">
+                <select class="form-select select2-um" required data-val="true" data-val-required="La unidad de medida de inventario es requerida" id="UnidadMedidaInventarioId" name="UnidadMedidaInventarioId">
+                    <option value="">Seleccione una unidad</option>
+                </select>
+                <button type="button" class="btn btn-outline-primary" id="btnNuevaUnidad">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <span class="text-danger field-validation-valid" data-valmsg-for="UnidadMedidaInventarioId" data-valmsg-replace="true"></span>
+        </div>
+        <div class="col-md-6">
+            <label for="UnidadCompraId" class="form-label">Unidad de Compra Preferida</label>
+            <select id="UnidadCompraId" name="UnidadCompraId" class="form-select" disabled>
+                <option value="">Debe agregar contenedores primero</option>
             </select>
-            <button type="button" class="btn btn-outline-primary" id="btnNuevaUnidad">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
-        <span asp-validation-for="UnidadMedidaInventarioId" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label for="UnidadCompraId" class="form-label">Unidad de Compra Preferida</label>
-        <select id="UnidadCompraId" name="UnidadCompraId" class="form-select" data-contenedor-compra="@(Model.Contenedores.FirstOrDefault(c => c.EsContenedorCompra)?.Id)">
-            <option value="">Debe agregar contenedores primero</option>
-        </select>
-        <small class="text-muted">Se habilitará después de configurar los contenedores</small>
-    </div>
-</div>
-
-<!-- Unidades y Conversiones -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Conversiones de Unidades</h5>
-        <button type="button" class="btn btn-sm btn-primary" id="btnAgregarContenedor">
-            <i class="fas fa-plus me-1"></i> Agregar Fila
-        </button>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="tablaContenedores">
-                <thead class="bg-light">
-                    <tr>
-                        <th style="width: 50px;">No</th>
-                        <th>Contenedor</th>
-                        <th>Etiqueta</th>
-                        <th>Cantidad</th>
-                        <th>Costo</th>
-                        <th style="width: 50px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Las filas se agregarán dinámicamente con JavaScript -->
-                </tbody>
-            </table>
+            <small class="text-muted">Se habilitará después de configurar los contenedores</small>
         </div>
     </div>
-</div>
-
-<!-- Proveedores -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Proveedores</h5>
-        <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProveedor">
-            <i class="fas fa-plus me-1"></i> Agregar Proveedor
-        </button>
+    
+    <!-- Unidades y Conversiones -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Conversiones de Unidades</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tablaContenedores">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 50px;">No</th>
+                            <th>Contenedor</th>
+                            <th>Etiqueta</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se agregarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2">
+                <button type="button" id="btnAgregarFila" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Agregar Fila
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div id="proveedoresContainer">
-            <!-- Los proveedores se agregarán dinámicamente con JavaScript -->
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Proveedores</h5>
+        </div>
+        <div class="card-body">
+            <p>Esta sección está en desarrollo.</p>
         </div>
     </div>
 </div>
 
-<!-- Almacenes -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Distribución en Almacenes</h5>
-        <div>
-            <label asp-for="StockActual" class="form-label me-2">Stock Inicial:</label>
-            <input asp-for="StockActual" class="form-control-sm" type="number" step="0.01" min="0" value="0" id="stockActualTotal" style="width: 100px;" data-decimal="@Model.SeparadorDecimal" />
-            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="btnDistribuirStock">
-                <i class="fas fa-balance-scale me-1"></i> Distribuir
-            </button>
-        </div>
-    </div>
-    <div class="card-body">
-        <div id="almacenesContainer">
-            <!-- Los almacenes se agregarán dinámicamente con JavaScript -->
-        </div>
-    </div>
-</div>
+<!-- Contenedor oculto para IDs eliminados -->
+<div id="conversiones-eliminadas" style="display:none;"></div>

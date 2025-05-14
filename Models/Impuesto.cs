@@ -51,5 +51,7 @@ namespace SistemaContable.Models
         [Required]
         public int EmpresaId { get; set; }
         public virtual Empresa? Empresa { get; set; }
+
+        public bool Activo { get; set; } = true;
     }
 } 
