@@ -49,6 +49,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Expandir submenú de Punto de Venta para páginas de esa sección
+    const isInPOSSection = currentPath.includes('/productos');
+    
+    if (isInPOSSection) {
+        const posMenu = document.querySelector('.aurora-nav-item[data-title="Punto de Venta"]');
+        const posSubmenu = posMenu?.nextElementSibling;
+        
+        if (posMenu && posSubmenu) {
+            posMenu.classList.add('expanded');
+            posSubmenu.classList.add('show');
+            
+            // Marcar el elemento específico como activo
+            if (currentPath.includes('/productos')) {
+                const targetItem = posSubmenu.querySelector('a[href="/Productos"]');
+                if (targetItem) targetItem.classList.add('active');
+            }
+        }
+    }
+    
     // Configurar activación por URL
     function markActiveItems() {
         document.querySelectorAll('.aurora-submenu-item').forEach(item => {

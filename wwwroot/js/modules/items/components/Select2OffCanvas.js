@@ -38,11 +38,25 @@ export class Select2OffCanvas {
      */
     init() {
         // Aplicar estilos al offcanvas
-        this.offCanvas.style.width = '600px';
+        this.offCanvas.classList.remove('offcanvas-sm', 'offcanvas-md', 'offcanvas-lg');
+        this.offCanvas.style.width = '800px';  // Ancho fijo más amplio
+        
         const header = this.offCanvas.querySelector('.offcanvas-header');
         if (header) {
             header.style.backgroundColor = '#3944BC';
             header.style.color = 'white';
+            
+            // Asegurar que el título sea blanco
+            const title = header.querySelector('.offcanvas-title, h5');
+            if (title) {
+                title.classList.add('text-white');
+            }
+            
+            // Asegurar que el botón de cerrar sea visible
+            const closeBtn = header.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.classList.add('btn-close-white');
+            }
         }
         
         // Inicializar offcanvas
@@ -183,11 +197,25 @@ export class Select2OffCanvas {
      */
     _prepareOffCanvasForCreation(term) {
         // Aplicar estilos al offcanvas
-        this.offCanvas.style.width = '600px';
+        this.offCanvas.classList.remove('offcanvas-sm', 'offcanvas-md', 'offcanvas-lg');
+        this.offCanvas.style.width = '800px';  // Ancho fijo más amplio
+        
         const header = this.offCanvas.querySelector('.offcanvas-header');
         if (header) {
             header.style.backgroundColor = '#3944BC';
             header.style.color = 'white';
+            
+            // Asegurar que el título sea blanco
+            const title = header.querySelector('.offcanvas-title, h5');
+            if (title) {
+                title.classList.add('text-white');
+            }
+            
+            // Asegurar que el botón de cerrar sea visible
+            const closeBtn = header.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.classList.add('btn-close-white');
+            }
         }
 
         // Limpiar el formulario
@@ -228,11 +256,25 @@ export class Select2OffCanvas {
      */
     _prepareOffCanvasForEditing(id, name) {
         // Aplicar estilos al offcanvas
-        this.offCanvas.style.width = '600px';
+        this.offCanvas.classList.remove('offcanvas-sm', 'offcanvas-md', 'offcanvas-lg');
+        this.offCanvas.style.width = '800px';  // Ancho fijo más amplio
+        
         const header = this.offCanvas.querySelector('.offcanvas-header');
         if (header) {
             header.style.backgroundColor = '#3944BC';
             header.style.color = 'white';
+            
+            // Asegurar que el título sea blanco
+            const title = header.querySelector('.offcanvas-title, h5');
+            if (title) {
+                title.classList.add('text-white');
+            }
+            
+            // Asegurar que el botón de cerrar sea visible
+            const closeBtn = header.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.classList.add('btn-close-white');
+            }
         }
 
         // Obtener datos completos del item vía AJAX

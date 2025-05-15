@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchUrl: '/Clientes/Buscar?tipoCliente=proveedor',
         createUrl: '/Clientes/CreatePartial',
         updateUrl: '/Clientes/EditPartial',
+        detailUrl: '/Clientes/GetDetails',
         entityName: 'proveedor'
         // Puedes agregar onItemSelected, onItemSaved, etc. si lo necesitas
     });

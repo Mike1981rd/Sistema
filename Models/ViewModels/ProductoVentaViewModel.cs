@@ -10,23 +10,18 @@ namespace SistemaContable.Models.ViewModels
         
         public int ItemId { get; set; }
         
-        [Required(ErrorMessage = "El contenedor es requerido")]
         [Display(Name = "Contenedor")]
-        public int ItemContenedorId { get; set; }
+        public int? ItemContenedorId { get; set; }
         public string? ContenedorNombre { get; set; }
         
-        [Required(ErrorMessage = "El nombre del producto es requerido")]
         [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres")]
         [Display(Name = "Nombre")]
-        public string Nombre { get; set; }
+        public string? Nombre { get; set; }
         
-        [Required(ErrorMessage = "La cantidad es requerida")]
         [Range(0.001, double.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero")]
         [Display(Name = "Cantidad")]
         public decimal Cantidad { get; set; } = 1;
         
-        [Required(ErrorMessage = "El precio de venta es requerido")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor que cero")]
         [Display(Name = "Precio de Venta")]
         public decimal PrecioVenta { get; set; }
         

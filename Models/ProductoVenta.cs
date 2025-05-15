@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,46 +11,87 @@ namespace SistemaContable.Models
         public int Id { get; set; }
 
         [Required]
+        [StringLength(100)]
+        public string Nombre { get; set; }
+        
+        [StringLength(20)]
+        public string? NombreCortoTPV { get; set; }
+        
+        [StringLength(500)]
+        public string? Descripcion { get; set; }
+        
+        [StringLength(50)]
+        public string? PLU { get; set; }
+        
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioVenta { get; set; }
+        
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Costo { get; set; }
+        
+        public string? ImagenUrl { get; set; }
+        
+        [StringLength(7)]
+        public string? ColorBotonTPV { get; set; }
+        
+        public int OrdenClasificacion { get; set; } = 0;
+        
+        public bool EsActivo { get; set; } = true;
+        
+        public bool PermiteModificadores { get; set; } = true;
+        
+        public bool RequierePuntoCoccion { get; set; } = false;
+        
+        // Relaciones existentes
+        [Required]
         public int ItemId { get; set; }
         [ForeignKey("ItemId")]
         public virtual Item? Item { get; set; }
 
-        [Required]
-        public int ItemContenedorId { get; set; }
+        public int? ItemContenedorId { get; set; }
         [ForeignKey("ItemContenedorId")]
         public virtual ItemContenedor? ItemContenedor { get; set; }
 
+        // Relaciones de categorï¿½a e impuesto
         [Required]
-        [StringLength(100)]
-        public string Nombre { get; set; }
-
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal Cantidad { get; set; } = 1;
-
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal PrecioVenta { get; set; }
-
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal Costo { get; set; }
-
-        // Calculado: Costo * Cantidad
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal CostoTotal { get; set; }
-
+        public int CategoriaId { get; set; }
+        [ForeignKey("CategoriaId")]
+        public virtual Categoria? Categoria { get; set; }
+        
         public int? ImpuestoId { get; set; }
         [ForeignKey("ImpuestoId")]
         public virtual Impuesto? Impuesto { get; set; }
+        
+        public int? RutaImpresoraId { get; set; }
+        [ForeignKey("RutaImpresoraId")]
+        public virtual RutaImpresora? RutaImpresora { get; set; }
 
-        // Indica si este producto está disponible para venta
+        // Nuevas colecciones de navegaciï¿½n
+        public virtual ICollection<VarianteProducto>? Variantes { get; set; }
+        public virtual ICollection<ProductoModificadorGrupo>? ProductoModificadorGrupos { get; set; }
+        public virtual ICollection<RecetaIngrediente>? IngredientesDeEsteProducto { get; set; }
+        public virtual ICollection<RecetaIngrediente>? ApareceComoIngredienteEn { get; set; }
+        public virtual ICollection<PaqueteComponente>? ComponentesDeEstePaquete { get; set; }
+        public virtual ICollection<PaqueteComponente>? ApareceComoComponenteEn { get; set; }
+
+        // Campos adicionales para compatibilidad
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal Cantidad { get; set; } = 1;
+        
+        // Calculado: Costo * Cantidad
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal CostoTotal { get; set; }
+        
+        // Indica si este producto estÃ¡ disponible para venta
         public bool DisponibleParaVenta { get; set; } = true;
-
-        // Indica si requiere preparación (útil para restaurantes)
+        
+        // Indica si requiere preparaciÃ³n (Ãºtil para restaurantes)
         public bool RequierePreparacion { get; set; }
-
-        // Tiempo estimado de preparación (en minutos)
+        
+        // Tiempo estimado de preparaciÃ³n (en minutos)
         public int? TiempoPreparacion { get; set; }
-
-        // Auditoría
+        
+        // Auditorï¿½a
         public int? UsuarioCreacionId { get; set; }
         public int? UsuarioModificacionId { get; set; }
 

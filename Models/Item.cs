@@ -39,8 +39,7 @@ namespace SistemaContable.Models
         [ForeignKey("MarcaId")]
         public virtual Marca? Marca { get; set; }
 
-        [Required(ErrorMessage = "La unidad de medida es requerida")]
-        public int UnidadMedidaInventarioId { get; set; }
+        public int? UnidadMedidaInventarioId { get; set; }
         [ForeignKey("UnidadMedidaInventarioId")]
         public virtual UnidadMedida? UnidadMedidaInventario { get; set; }
 

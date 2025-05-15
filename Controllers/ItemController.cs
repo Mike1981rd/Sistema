@@ -18,6 +18,7 @@ using Npgsql.Internal;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using SistemaContable.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace SistemaContable.Controllers
 {
@@ -27,17 +28,20 @@ namespace SistemaContable.Controllers
         private readonly IWebHostEnvironment _hostEnvironment;
         private readonly IUserService _userService;
         private readonly IEmpresaService _empresaService;
+        private readonly ILogger<ItemController> _logger;
 
         public ItemController(
             ApplicationDbContext context,
             IWebHostEnvironment hostEnvironment,
             IUserService userService,
-            IEmpresaService empresaService)
+            IEmpresaService empresaService,
+            ILogger<ItemController> logger)
         {
             _context = context;
             _hostEnvironment = hostEnvironment;
             _userService = userService;
             _empresaService = empresaService;
+            _logger = logger;
         }
 
         // GET: Item
@@ -223,11 +227,21 @@ namespace SistemaContable.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ItemViewModel viewModel)
         {
+            _logger.LogInformation("Iniciando creación de item");
             var empresaId = _userService.GetEmpresaId();
 
             // Si el modelo no es v�lido, preparar de nuevo y devolver la vista
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Modelo inválido en creación de item");
+                
+                // Log de errores específicos
+                foreach (var modelError in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning($"Error de validación: {modelError.ErrorMessage}");
+                }
+                
+                TempData["Error"] = "Por favor verifique los campos requeridos.";
                 viewModel = PrepararViewModel(viewModel);
                 return View(viewModel);
             }
@@ -285,8 +299,19 @@ namespace SistemaContable.Controllers
             }
 
             // A�adir item a contexto
-            _context.Add(item);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Add(item);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Item guardado exitosamente con ID: {item.Id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al guardar item principal");
+                TempData["Error"] = $"Error al guardar el item: {ex.Message}";
+                viewModel = PrepararViewModel(viewModel);
+                return View(viewModel);
+            }
 
             // Procesar colecci�n de proveedores
             if (viewModel.Proveedores != null && viewModel.Proveedores.Any())
@@ -406,10 +431,20 @@ namespace SistemaContable.Controllers
                 _context.ProductosVenta.Add(productoVenta);
             }
 
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Item creado correctamente.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Item {item.Id} creado completamente con todas sus relaciones");
+                TempData["Success"] = "Item creado correctamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al guardar relaciones del item {item.Id}");
+                TempData["Error"] = $"Error al guardar los datos adicionales: {ex.Message}";
+                viewModel = PrepararViewModel(viewModel);
+                return View(viewModel);
+            }
         }
 
         // GET: Item/Edit/5
@@ -418,6 +453,8 @@ namespace SistemaContable.Controllers
             var empresaId = _userService.GetEmpresaId();
 
             var item = await _context.Items
+                .Include(i => i.Categoria)
+                .Include(i => i.Marca)
                 .Include(i => i.Proveedores)
                     .ThenInclude(p => p.Proveedor)
                 .Include(i => i.Proveedores)
@@ -1196,33 +1233,33 @@ namespace SistemaContable.Controllers
                 };
             }
 
-            // Cargar listas de selección
+            // Cargar listas de selección con valores seleccionados si existen
             viewModel.CategoriasDisponibles = new SelectList(
                 _context.Categorias
                     .Where(c => c.EmpresaId == empresaId && c.Estado)
                     .OrderBy(c => c.Nombre),
-                "Id", "Nombre"
+                "Id", "Nombre", viewModel.CategoriaId
             );
 
             viewModel.MarcasDisponibles = new SelectList(
                 _context.Marcas
                     .Where(m => m.EmpresaId == empresaId && m.Estado)
                     .OrderBy(m => m.Nombre),
-                "Id", "Nombre"
+                "Id", "Nombre", viewModel.MarcaId
             );
 
             viewModel.UnidadesMedidaDisponibles = new SelectList(
                 _context.UnidadesMedida
                     .Where(u => u.EmpresaId == empresaId && u.Estado)
                     .OrderBy(u => u.Nombre),
-                "Id", "Nombre"
+                "Id", "Nombre", viewModel.UnidadMedidaInventarioId
             );
 
             viewModel.ImpuestosDisponibles = new SelectList(
                 _context.Impuestos
                     .Where(i => i.EmpresaId == empresaId && i.Estado)
                     .OrderBy(i => i.Nombre),
-                "Id", "Nombre"
+                "Id", "Nombre", viewModel.ImpuestoId
             );
 
             // Listas de cuentas contables
@@ -1232,15 +1269,16 @@ namespace SistemaContable.Controllers
                 .Select(c => new { Id = c.Id, Nombre = $"{c.Codigo} - {c.Nombre}" })
                 .ToList();
 
-            viewModel.CuentasVentasDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasComprasInventariosDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasCostoVentasGastosDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasDescuentosDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasDevolucionesDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasAjustesDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
-            viewModel.CuentasCostoMateriaPrimaDisponibles = new SelectList(cuentasContables, "Id", "Nombre");
+            viewModel.CuentasVentasDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaVentasId);
+            viewModel.CuentasComprasInventariosDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaComprasInventariosId);
+            viewModel.CuentasCostoVentasGastosDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaCostoVentasGastosId);
+            viewModel.CuentasDescuentosDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaDescuentosId);
+            viewModel.CuentasDevolucionesDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaDevolucionesId);
+            viewModel.CuentasAjustesDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaAjustesId);
+            viewModel.CuentasCostoMateriaPrimaDisponibles = new SelectList(cuentasContables, "Id", "Nombre", viewModel.CuentaCostoMateriaPrimaId);
 
             // Lista de proveedores (usando Cliente con EsProveedor=true)
+            // En el caso de proveedores, se seleccionan individualmente por cada ItemProveedor
             viewModel.ProveedoresDisponibles = new SelectList(
                 _context.Clientes
                     .Where(p => p.EmpresaId == empresaId && p.EsProveedor)

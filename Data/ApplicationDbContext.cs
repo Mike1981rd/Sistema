@@ -90,6 +90,14 @@ namespace SistemaContable.Data
 
         // Agregado para catálogo de contenedores
         public DbSet<Contenedor> Contenedores { get; set; }
+        
+        // Nuevas entidades para TPV
+        public DbSet<VarianteProducto> VariantesProducto { get; set; }
+        public DbSet<GrupoModificadores> GruposModificadores { get; set; }
+        public DbSet<Modificador> Modificadores { get; set; }
+        public DbSet<ProductoModificadorGrupo> ProductosModificadoresGrupos { get; set; }
+        public DbSet<RecetaIngrediente> RecetasIngredientes { get; set; }
+        public DbSet<PaqueteComponente> PaquetesComponentes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -805,6 +813,182 @@ namespace SistemaContable.Data
                       .HasForeignKey(d => d.UnidadMedidaId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+            
+            // Configuración para ProductoVenta
+            builder.Entity<ProductoVenta>(entity =>
+            {
+                entity.ToTable("ProductosVenta");
+                entity.HasKey(e => e.Id);
+                
+                // Configuración de precisión para decimales
+                entity.Property(e => e.PrecioVenta).HasPrecision(18, 2);
+                entity.Property(e => e.Costo).HasPrecision(18, 2);
+                entity.Property(e => e.Cantidad).HasPrecision(18, 4);
+                entity.Property(e => e.CostoTotal).HasPrecision(18, 4);
+                
+                // Índice único para PLU
+                entity.HasIndex(p => p.PLU)
+                      .IsUnique()
+                      .HasFilter("\"PLU\" IS NOT NULL");
+                      
+                // Relaciones
+                entity.HasOne(p => p.Categoria)
+                      .WithMany()
+                      .HasForeignKey(p => p.CategoriaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(p => p.Impuesto)
+                      .WithMany()
+                      .HasForeignKey(p => p.ImpuestoId)
+                      .OnDelete(DeleteBehavior.SetNull)
+                      .IsRequired(false);
+                      
+                entity.HasOne(p => p.RutaImpresora)
+                      .WithMany()
+                      .HasForeignKey(p => p.RutaImpresoraId)
+                      .OnDelete(DeleteBehavior.SetNull)
+                      .IsRequired(false);
+                      
+                // Relación uno a muchos con VarianteProducto
+                entity.HasMany(p => p.Variantes)
+                      .WithOne(v => v.ProductoPadre)
+                      .HasForeignKey(v => v.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación muchos a muchos con GrupoModificadores a través de ProductoModificadorGrupo
+                entity.HasMany(p => p.ProductoModificadorGrupos)
+                      .WithOne(pmg => pmg.Producto)
+                      .HasForeignKey(pmg => pmg.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para VarianteProducto
+            builder.Entity<VarianteProducto>(entity =>
+            {
+                entity.ToTable("VariantesProducto");
+                entity.HasKey(e => e.Id);
+                
+                // Configuración de precisión para decimales
+                entity.Property(e => e.PrecioAdicionalOAbsoluto).HasPrecision(18, 2);
+                
+                // Índice único para PLUVariante
+                entity.HasIndex(v => v.PLUVariante)
+                      .IsUnique()
+                      .HasFilter("\"PLUVariante\" IS NOT NULL");
+                      
+                // Convertir enum a string en la base de datos
+                entity.Property(e => e.AjustePrecioTipo)
+                      .HasConversion<string>();
+                      
+                entity.HasOne(v => v.ProductoPadre)
+                      .WithMany(p => p.Variantes)
+                      .HasForeignKey(v => v.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para GrupoModificadores
+            builder.Entity<GrupoModificadores>(entity =>
+            {
+                entity.ToTable("GruposModificadores");
+                entity.HasKey(e => e.Id);
+                
+                // Convertir enum a string en la base de datos
+                entity.Property(e => e.TipoVisualizacionTPV)
+                      .HasConversion<string>();
+                      
+                entity.HasMany(g => g.Modificadores)
+                      .WithOne(m => m.GrupoModificadores)
+                      .HasForeignKey(m => m.GrupoModificadoresId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasMany(g => g.ProductoModificadorGrupos)
+                      .WithOne(pmg => pmg.GrupoModificadores)
+                      .HasForeignKey(pmg => pmg.GrupoModificadoresId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para Modificador
+            builder.Entity<Modificador>(entity =>
+            {
+                entity.ToTable("Modificadores");
+                entity.HasKey(e => e.Id);
+                
+                // Configuración de precisión para decimales
+                entity.Property(e => e.PrecioAdicional).HasPrecision(18, 2);
+                entity.Property(e => e.CantidadConsumida).HasPrecision(18, 4);
+                
+                entity.HasOne(m => m.GrupoModificadores)
+                      .WithMany(g => g.Modificadores)
+                      .HasForeignKey(m => m.GrupoModificadoresId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(m => m.ProductoConsumido)
+                      .WithMany()
+                      .HasForeignKey(m => m.ProductoConsumidoId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+            });
+            
+            // Configuración para ProductoModificadorGrupo (relación muchos a muchos)
+            builder.Entity<ProductoModificadorGrupo>(entity =>
+            {
+                entity.ToTable("ProductosModificadoresGrupos");
+                entity.HasKey(pmg => new { pmg.ProductoId, pmg.GrupoModificadoresId });
+                
+                entity.HasOne(pmg => pmg.Producto)
+                      .WithMany(p => p.ProductoModificadorGrupos)
+                      .HasForeignKey(pmg => pmg.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(pmg => pmg.GrupoModificadores)
+                      .WithMany(g => g.ProductoModificadorGrupos)
+                      .HasForeignKey(pmg => pmg.GrupoModificadoresId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para RecetaIngrediente
+            builder.Entity<RecetaIngrediente>(entity =>
+            {
+                entity.ToTable("RecetasIngredientes");
+                entity.HasKey(e => e.Id);
+                
+                // Configuración de precisión para decimales
+                entity.Property(e => e.Cantidad).HasPrecision(18, 4);
+                
+                entity.HasOne(ri => ri.ProductoCompuesto)
+                      .WithMany(p => p.IngredientesDeEsteProducto)
+                      .HasForeignKey(ri => ri.ProductoCompuestoId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(ri => ri.IngredienteProducto)
+                      .WithMany(p => p.ApareceComoIngredienteEn)
+                      .HasForeignKey(ri => ri.IngredienteProductoId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // Configuración para PaqueteComponente
+            builder.Entity<PaqueteComponente>(entity =>
+            {
+                entity.ToTable("PaquetesComponentes");
+                entity.HasKey(e => e.Id);
+                
+                // Configuración de precisión para decimales
+                entity.Property(e => e.PrecioComponenteEnPaquete).HasPrecision(18, 2);
+                
+                entity.HasOne(pc => pc.ProductoPaquete)
+                      .WithMany(p => p.ComponentesDeEstePaquete)
+                      .HasForeignKey(pc => pc.ProductoPaqueteId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(pc => pc.ComponenteProducto)
+                      .WithMany(p => p.ApareceComoComponenteEn)
+                      .HasForeignKey(pc => pc.ComponenteProductoId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            
+            
+            
         }
 
         private void ConvertDatesToUtc()

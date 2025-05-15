@@ -1,0 +1,71 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace SistemaContable.ViewModels.Productos
+{
+    /// <summary>
+    /// DTO para crear un nuevo producto
+    /// </summary>
+    public class ProductoCrearDto
+    {
+        [Required(ErrorMessage = "El nombre es requerido")]
+        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres")]
+        public string Nombre { get; set; }
+        
+        [StringLength(20, ErrorMessage = "El nombre corto no puede exceder los 20 caracteres")]
+        public string? NombreCortoTPV { get; set; }
+        
+        [StringLength(500, ErrorMessage = "La descripción no puede exceder los 500 caracteres")]
+        public string? Descripcion { get; set; }
+        
+        [StringLength(50, ErrorMessage = "El PLU no puede exceder los 50 caracteres")]
+        public string? PLU { get; set; }
+        
+        [Required(ErrorMessage = "El precio de venta es requerido")]
+        [Range(0, double.MaxValue, ErrorMessage = "El precio de venta debe ser mayor o igual a 0")]
+        public decimal PrecioVenta { get; set; }
+        
+        [Required(ErrorMessage = "El costo es requerido")]
+        [Range(0, double.MaxValue, ErrorMessage = "El costo debe ser mayor o igual a 0")]
+        public decimal Costo { get; set; }
+        
+        public string? ImagenUrl { get; set; }
+        
+        [StringLength(7, ErrorMessage = "El color debe ser un código hexadecimal de 7 caracteres")]
+        [RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "El color debe ser un código hexadecimal válido (ej: #FF0000)")]
+        public string? ColorBotonTPV { get; set; }
+        
+        public int OrdenClasificacion { get; set; } = 0;
+        
+        public bool EsActivo { get; set; } = true;
+        
+        public bool PermiteModificadores { get; set; } = true;
+        
+        public bool RequierePuntoCoccion { get; set; } = false;
+        
+        // Relaciones
+        [Required(ErrorMessage = "El ID del item es requerido")]
+        public int ItemId { get; set; }
+        
+        public int? ItemContenedorId { get; set; }
+        
+        [Required(ErrorMessage = "La categoría es requerida")]
+        public int CategoriaId { get; set; }
+        
+        public int? ImpuestoId { get; set; }
+        
+        public int? RutaImpresoraId { get; set; }
+        
+        // Campos adicionales
+        public decimal Cantidad { get; set; } = 1;
+        
+        public bool DisponibleParaVenta { get; set; } = true;
+        
+        public bool RequierePreparacion { get; set; } = false;
+        
+        public int? TiempoPreparacion { get; set; }
+        
+        [Required(ErrorMessage = "El ID de empresa es requerido")]
+        public int EmpresaId { get; set; }
+    }
+}

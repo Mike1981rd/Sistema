@@ -568,7 +568,11 @@ $(document).ready(function() {
     }
 
     // Inicializar Select2 para Categoría
-    $('#CategoriaId').select2({
+    var $categoriaSelect = $('#CategoriaId');
+    var categoriaInicial = $categoriaSelect.val();
+    var categoriaTextoInicial = $categoriaSelect.find('option:selected').text();
+    
+    $categoriaSelect.select2({
         theme: 'bootstrap-5',
         placeholder: 'Seleccione o cree una categoría',
         allowClear: true,
@@ -621,9 +625,20 @@ $(document).ready(function() {
             abrirOffcanvasCategoria(data.term);
         }
     });
+    
+    // Si hay un valor inicial, cargarlo en Select2
+    if (categoriaInicial && categoriaTextoInicial && categoriaTextoInicial !== 'Seleccione una categoría') {
+        console.log('Cargando categoría inicial:', categoriaInicial, categoriaTextoInicial);
+        var newOption = new Option(categoriaTextoInicial, categoriaInicial, true, true);
+        $categoriaSelect.append(newOption).trigger('change');
+    }
 
     // Inicializar Select2 para Marca
-    $('#MarcaId').select2({
+    var $marcaSelect = $('#MarcaId');
+    var marcaInicial = $marcaSelect.val();
+    var marcaTextoInicial = $marcaSelect.find('option:selected').text();
+    
+    $marcaSelect.select2({
         theme: 'bootstrap-5',
         placeholder: 'Seleccione o cree una marca',
         allowClear: true,
@@ -676,9 +691,20 @@ $(document).ready(function() {
             abrirOffcanvasMarca(data.term);
         }
     });
+    
+    // Si hay un valor inicial, cargarlo en Select2
+    if (marcaInicial && marcaTextoInicial && marcaTextoInicial !== 'Genérica') {
+        console.log('Cargando marca inicial:', marcaInicial, marcaTextoInicial);
+        var newOption = new Option(marcaTextoInicial, marcaInicial, true, true);
+        $marcaSelect.append(newOption).trigger('change');
+    }
 
     // Inicializar Select2 para Impuesto
-    $('#ImpuestoId').select2({
+    var $impuestoSelect = $('#ImpuestoId');
+    var impuestoInicial = $impuestoSelect.val();
+    var impuestoTextoInicial = $impuestoSelect.find('option:selected').text();
+    
+    $impuestoSelect.select2({
         theme: 'bootstrap-5',
         placeholder: 'Seleccione un impuesto',
         allowClear: true,
@@ -716,6 +742,13 @@ $(document).ready(function() {
             return data.text;
         }
     });
+    
+    // Si hay un valor inicial, cargarlo en Select2
+    if (impuestoInicial && impuestoTextoInicial && impuestoTextoInicial !== 'Seleccione un impuesto') {
+        console.log('Cargando impuesto inicial:', impuestoInicial, impuestoTextoInicial);
+        var newOption = new Option(impuestoTextoInicial, impuestoInicial, true, true);
+        $impuestoSelect.append(newOption).trigger('change');
+    }
 
     // Manejar clics en botones de edición
     $(document).on('click', '.edit-item', function(e) {
@@ -783,7 +816,9 @@ $(document).ready(function() {
         }
     });
 
-    // Manejar el envío del formulario
+    // COMENTADO: Usar submit normal del formulario HTML en lugar de AJAX
+    // para soportar multipart/form-data (imágenes)
+    /*
     $('#itemForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -825,6 +860,7 @@ $(document).ready(function() {
             }
         });
     });
+    */
 
     // Función para validar el formulario
     function validateForm() {

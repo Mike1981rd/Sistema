@@ -1,17 +1,17 @@
 @model SistemaContable.Models.ViewModels.ItemViewModel
 
 <div class="alert alert-info mb-4">
-    <i class="fas fa-info-circle me-2"></i> Configure cómo se venderá este producto. Seleccione el contenedor, precio y otras opciones.
+    <i class="fas fa-info-circle me-2"></i> Configure cï¿½mo se venderï¿½ este producto. Seleccione el contenedor, precio y otras opciones.
 </div>
 
 <div class="row mb-3">
     <div class="col-md-6">
         <label for="ProductoVenta_Nombre" class="form-label">Nombre del Producto *</label>
-        <input type="text" id="ProductoVenta_Nombre" name="ProductoVenta.Nombre" class="form-control" value="@Model.Nombre" required />
+        <input type="text" id="ProductoVenta_Nombre" name="ProductoVenta.Nombre" class="form-control" value="@Model.Nombre" />
     </div>
     <div class="col-md-6">
         <label for="ProductoVenta_ItemContenedorId" class="form-label">Contenedor de Venta *</label>
-        <select id="ProductoVenta_ItemContenedorId" name="ProductoVenta.ItemContenedorId" class="form-select" required>
+        <select id="ProductoVenta_ItemContenedorId" name="ProductoVenta.ItemContenedorId" class="form-select">
             <option value="">Debe agregar contenedores primero</option>
         </select>
     </div>
@@ -20,7 +20,7 @@
 <div class="row mb-3">
     <div class="col-md-4">
         <label for="ProductoVenta_Cantidad" class="form-label">Cantidad *</label>
-        <input type="number" id="ProductoVenta_Cantidad" name="ProductoVenta.Cantidad" class="form-control" value="1" min="0.001" step="0.001" required data-decimal="@Model.SeparadorDecimal" />
+        <input type="number" id="ProductoVenta_Cantidad" name="ProductoVenta.Cantidad" class="form-control" value="1" min="0.001" step="0.001" data-decimal="@Model.SeparadorDecimal" />
     </div>
     <div class="col-md-4">
         <label for="ProductoVenta_Costo" class="form-label">Costo</label>
@@ -28,7 +28,7 @@
     </div>
     <div class="col-md-4">
         <label for="ProductoVenta_PrecioVenta" class="form-label">Precio de Venta *</label>
-        <input type="number" id="ProductoVenta_PrecioVenta" name="ProductoVenta.PrecioVenta" class="form-control" value="0" min="0" step="0.01" required data-decimal="@Model.SeparadorDecimal" />
+        <input type="number" id="ProductoVenta_PrecioVenta" name="ProductoVenta.PrecioVenta" class="form-control" value="0" min="0" step="0.01" data-decimal="@Model.SeparadorDecimal" />
     </div>
 </div>
 
@@ -42,22 +42,22 @@
     <div class="col-md-4">
         <label for="ProductoVenta_DisponibleParaVenta" class="form-label d-block">Disponible para Venta</label>
         <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="ProductoVenta_DisponibleParaVenta" name="ProductoVenta.DisponibleParaVenta" checked>
-            <label class="form-check-label" for="ProductoVenta_DisponibleParaVenta">Sí</label>
+            @Html.CheckBoxFor(m => m.ProductoVenta.DisponibleParaVenta, new { @class = "form-check-input" })
+            <label class="form-check-label" for="ProductoVenta_DisponibleParaVenta">Sï¿½</label>
         </div>
     </div>
     <div class="col-md-4">
-        <label for="ProductoVenta_RequierePreparacion" class="form-label d-block">Requiere Preparación</label>
+        <label for="ProductoVenta_RequierePreparacion" class="form-label d-block">Requiere Preparaciï¿½n</label>
         <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="ProductoVenta_RequierePreparacion" name="ProductoVenta.RequierePreparacion">
-            <label class="form-check-label" for="ProductoVenta_RequierePreparacion">Sí</label>
+            @Html.CheckBoxFor(m => m.ProductoVenta.RequierePreparacion, new { @class = "form-check-input" })
+            <label class="form-check-label" for="ProductoVenta_RequierePreparacion">Sï¿½</label>
         </div>
     </div>
 </div>
 
 <div class="row mb-3" id="tiempoPreparacionRow" style="display: none;">
     <div class="col-md-4">
-        <label for="ProductoVenta_TiempoPreparacion" class="form-label">Tiempo de Preparación (minutos)</label>
+        <label for="ProductoVenta_TiempoPreparacion" class="form-label">Tiempo de Preparaciï¿½n (minutos)</label>
         <input type="number" id="ProductoVenta_TiempoPreparacion" name="ProductoVenta.TiempoPreparacion" class="form-control" value="0" min="0" step="1" />
     </div>
 </div>

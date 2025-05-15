@@ -1,0 +1,130 @@
+@{
+    ViewData["Title"] = "Test Select2 Categorías";
+}
+
+<div class="container mt-4">
+    <h2>Test de Select2 Categorías</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Select2 Normal (control)</label>
+                <select class="form-select" id="testNormal">
+                    <option value="">Seleccione una opción</option>
+                    <option value="1">Opción 1</option>
+                    <option value="2">Opción 2</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Select2 con AJAX (categorías)</label>
+                <select class="form-select" id="testCategoria">
+                    <option value="">Seleccione una categoría</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4>Estado de la aplicación:</h4>
+            <ul id="status"></ul>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="testAjax()">Test AJAX Manual</button>
+            <button class="btn btn-warning" onclick="location.reload()">Recargar Página</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#status').append('<li>jQuery cargado: ' + (typeof jQuery !== 'undefined') + '</li>');
+            $('#status').append('<li>Select2 cargado: ' + (typeof $.fn.select2 !== 'undefined') + '</li>');
+            
+            // Inicializar Select2 normal
+            $('#testNormal').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+            
+            $('#status').append('<li>Select2 normal inicializado</li>');
+            
+            // Inicializar Select2 con AJAX
+            $('#testCategoria').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar o crear categoría',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: window.location.origin + '/Categoria/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        console.log("Enviando búsqueda:", params.term);
+                        return {
+                            term: params.term || ''
+                        };
+                    },
+                    processResults: function(data, params) {
+                        console.log("Resultados recibidos:", data);
+                        var results = data.results || [];
+                        
+                        if (results.length == 0 && params.term && params.term.trim() !== '') {
+                            results.push({
+                                id: 'new',
+                                text: 'Crear: "' + params.term + '"'
+                            });
+                        }
+                        
+                        return {
+                            results: results
+                        };
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error AJAX:", error);
+                        console.error("Estado:", status);
+                        console.error("Respuesta:", xhr.responseText);
+                        $('#status').append('<li class="text-danger">Error AJAX: ' + error + '</li>');
+                    }
+                },
+                minimumInputLength: 0
+            });
+            
+            $('#status').append('<li>Select2 con AJAX inicializado</li>');
+            
+            // Monitorear eventos
+            $('#testCategoria').on('select2:open', function() {
+                $('#status').append('<li>Select2 abierto</li>');
+            });
+        });
+        
+        function testAjax() {
+            console.log("Test AJAX manual");
+            $.ajax({
+                url: window.location.origin + '/Categoria/Buscar',
+                data: { term: '' },
+                success: function(data) {
+                    console.log("Éxito:", data);
+                    $('#status').append('<li class="text-success">AJAX exitoso: ' + JSON.stringify(data) + '</li>');
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    $('#status').append('<li class="text-danger">AJAX error: ' + error + '</li>');
+                }
+            });
+        }
+    </script>
+}
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+}

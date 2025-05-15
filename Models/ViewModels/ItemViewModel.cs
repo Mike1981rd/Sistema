@@ -57,9 +57,8 @@ namespace SistemaContable.Models.ViewModels
         public decimal Rendimiento { get; set; } = 100;
 
         // Segunda pestaña - Compras
-        [Required(ErrorMessage = "La unidad de medida de inventario es requerida")]
         [Display(Name = "Unidad de Medida (Inventario)")]
-        public int UnidadMedidaInventarioId { get; set; }
+        public int? UnidadMedidaInventarioId { get; set; }
         public SelectList? UnidadesMedidaDisponibles { get; set; }
 
         [Display(Name = "Nivel Mínimo")]
