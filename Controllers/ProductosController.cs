@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemaContable.Data;
 using SistemaContable.Models;
+using SistemaContable.Models.Enums;
 using SistemaContable.Services;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,8 +41,11 @@ namespace SistemaContable.Controllers
         public async Task<IActionResult> Create()
         {
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            Console.WriteLine($"=== Create Action - EmpresaId: {empresaId} ===");
+            
             if (empresaId <= 0)
             {
+                Console.WriteLine("=== EmpresaId inválido, redirigiendo ===");
                 return RedirectToAction("Index", "Empresas");
             }
             
@@ -70,6 +74,38 @@ namespace SistemaContable.Controllers
         /// </summary>
         public IActionResult TestSimple()
         {
+            return View();
+        }
+        
+        /// <summary>
+        /// Test de impuestos
+        /// </summary>
+        public async Task<IActionResult> TestImpuestos()
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var totalImpuestos = await _context.Impuestos.CountAsync();
+            var impuestosEmpresa = await _context.Impuestos.Where(i => i.EmpresaId == empresaId).CountAsync();
+            
+            var impuestos = await _context.Impuestos
+                .Select(i => new 
+                { 
+                    i.Id, 
+                    i.Nombre, 
+                    i.EmpresaId, 
+                    i.Activo, 
+                    i.Estado 
+                })
+                .ToListAsync();
+            
+            // Query sin filtros para verificar
+            var todosSinFiltro = await _context.Impuestos.ToListAsync();
+            
+            ViewBag.EmpresaId = empresaId;
+            ViewBag.TotalImpuestos = totalImpuestos;
+            ViewBag.ImpuestosEmpresa = impuestosEmpresa;
+            ViewBag.TodosImpuestos = impuestos;
+            ViewBag.TodosSinFiltro = todosSinFiltro;
+            
             return View();
         }
 
@@ -174,9 +210,50 @@ namespace SistemaContable.Controllers
         
         private async Task CargarDatosViewBag(int empresaId)
         {
-            // Cargar impuestos
+            Console.WriteLine($"=== CargarDatosViewBag - EmpresaId: {empresaId} ===");
+            
+            // Verificar cuántos impuestos existen en total
+            var totalImpuestos = await _context.Impuestos.CountAsync();
+            Console.WriteLine($"=== Total impuestos en la base de datos: {totalImpuestos} ===");
+            
+            // Verificar cuántos impuestos hay para esta empresa
+            var impuestosEmpresa = await _context.Impuestos
+                .Where(i => i.EmpresaId == empresaId)
+                .CountAsync();
+            Console.WriteLine($"=== Impuestos para empresa {empresaId}: {impuestosEmpresa} ===");
+            
+            // Cargar impuestos con porcentajes (sin filtrar por Activo para diagnosticar)
             var impuestos = await _context.Impuestos
-                .Where(i => i.EmpresaId == empresaId && i.Activo)
+                .Where(i => i.EmpresaId == empresaId)
+                .OrderBy(i => i.Nombre)
+                .Select(i => new 
+                { 
+                    Id = i.Id,
+                    Nombre = i.Nombre,
+                    Porcentaje = i.Porcentaje ?? 0
+                })
+                .ToListAsync();
+                
+            Console.WriteLine($"=== Impuestos encontrados: {impuestos.Count} ===");
+            
+            ViewBag.Impuestos = impuestos.Select(i => new SelectListItem 
+            { 
+                Value = i.Id.ToString(), 
+                Text = $"{i.Nombre} ({i.Porcentaje}%)" 
+            }).ToList();
+            
+            ViewBag.ImpuestosPorcentajes = impuestos.ToDictionary(i => i.Id.ToString(), i => i.Porcentaje);
+            
+            Console.WriteLine($"=== ViewBag.Impuestos count: {((List<SelectListItem>)ViewBag.Impuestos).Count} ===");
+            Console.WriteLine($"=== ViewBag.ImpuestosPorcentajes count: {((Dictionary<string, decimal>)ViewBag.ImpuestosPorcentajes).Count} ===");
+            
+            // Agregar EmpresaId al ViewBag para debugging
+            ViewBag.EmpresaId = empresaId;
+            
+            // Cargar impuestos de propina (filtrar por tipo Propina_legal)
+            var impuestosPropina = await _context.Impuestos
+                .Where(i => i.EmpresaId == empresaId && 
+                       i.Tipo == TipoImpuesto.Propina_legal)
                 .OrderBy(i => i.Nombre)
                 .Select(i => new SelectListItem 
                 { 
@@ -184,7 +261,7 @@ namespace SistemaContable.Controllers
                     Text = i.Nombre 
                 })
                 .ToListAsync();
-            ViewBag.Impuestos = impuestos;
+            ViewBag.ImpuestosPropina = impuestosPropina;
             
             // Cargar rutas de impresión
             var rutasImpresora = await _context.RutasImpresora

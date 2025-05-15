@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Test de Impuestos";
+}
+
+<div class="container">
+    <h1>Test de Impuestos</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Información General</h3>
+                </div>
+                <div class="card-body">
+                    <p>Empresa ID: <strong>@ViewBag.EmpresaId</strong></p>
+                    <p>Total de Impuestos en DB: <strong>@ViewBag.TotalImpuestos</strong></p>
+                    <p>Impuestos para esta Empresa: <strong>@ViewBag.ImpuestosEmpresa</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Todos los Impuestos</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Empresa ID</th>
+                                <th>Activo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.TodosImpuestos != null)
+                            {
+                                foreach(var imp in ViewBag.TodosImpuestos)
+                                {
+                                    <tr>
+                                        <td>@imp.Id</td>
+                                        <td>@imp.Nombre</td>
+                                        <td>@imp.EmpresaId</td>
+                                        <td>@imp.Activo</td>
+                                        <td>@imp.Estado</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5">No hay impuestos en la base de datos</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

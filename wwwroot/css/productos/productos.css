@@ -298,3 +298,349 @@
 #offcanvasCategoria .offcanvas-header .btn-close {
     filter: brightness(0) invert(1);
 }
+
+/* Estilos para el componente de carga de imágenes */
+.image-uploader-card {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    background-color: #f8f9fa;
+    width: 100%;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-uploader-card:hover {
+    border-color: #0d6efd;
+    background-color: #f0f0f0;
+}
+
+.image-uploader-card.dragover {
+    border-color: #0d6efd;
+    background-color: #e8f0fe;
+    transform: scale(1.02);
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-placeholder i {
+    font-size: 48px;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.upload-placeholder p {
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+.upload-placeholder span {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+#imagenPreview {
+    max-width: 100%;
+    max-height: 300px;
+    margin-bottom: 15px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilo para inputs file */
+input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+/* Estilos para mejorar la alineación de campos */
+.align-fields-row {
+    display: flex;
+    align-items: flex-start;
+}
+
+.align-fields-row .col-md-6 {
+    display: flex;
+    flex-direction: column;
+}
+
+.align-fields-row .form-label {
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.375rem;
+}
+
+.field-error-space {
+    min-height: 1.2em;
+    display: block;
+}
+
+/* Estilos para el selector de color Pickr */
+.color-picker-trigger-button {
+    width: 40px;
+    height: auto;
+    border-left: none !important;
+    cursor: pointer;
+    background-color: #ffffff;
+    transition: opacity 0.2s ease;
+}
+
+.color-picker-trigger-button:hover {
+    opacity: 0.8;
+}
+
+/* Asegurar que el panel de Pickr se muestre correctamente */
+.pickr .pcr-app {
+    z-index: 1060;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Ajustar padding del input para no solaparse con el botón */
+.input-group > .form-control {
+    padding-right: 5px;
+}
+
+/* Tema de Pickr personalizado si es necesario */
+.pickr .pcr-selection .pcr-color-preview {
+    border-radius: 4px;
+}
+
+.pickr .pcr-selection .pcr-color-preview .pcr-selected-color-indicator {
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* Estilos del tema classic de Pickr */
+.pcr-app[theme="classic"] {
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+.pcr-app .pcr-selection .pcr-color-chooser,
+.pcr-app .pcr-selection .pcr-color-opacity {
+    border-radius: 4px;
+}
+
+.pcr-app .pcr-selection .pcr-picker {
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+}
+
+.pcr-app .pcr-swatches {
+    margin-top: 10px;
+}
+
+.pcr-app .pcr-swatches .pcr-swatch {
+    margin: 0.3rem;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.pcr-app .pcr-swatches .pcr-swatch:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+}
+
+.pcr-app .pcr-interaction {
+    padding: 10px;
+}
+
+.pcr-app .pcr-interaction .pcr-result {
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.pcr-app .pcr-save {
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 4px;
+    padding: 5px 15px;
+    border: none;
+    font-weight: 500;
+}
+
+.pcr-app .pcr-save:hover {
+    background-color: #0b5ed7;
+}
+
+/* Estilos para la sección de opciones */
+.options-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+}
+
+.options-section h4 {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.options-container {
+    background-color: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e9ecef;
+}
+
+.option-toggle-group {
+    padding: 0.5rem 0;
+}
+
+.option-toggle-group:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.option-toggle-group .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+}
+
+.option-toggle-group .form-check-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.option-toggle-group .form-check-label:hover {
+    color: #212529;
+}
+
+/* Estilo cuando el switch está activado */
+.option-toggle-group .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .options-container {
+        padding: 1rem;
+    }
+    
+    .option-toggle-group .form-check-input {
+        width: 2.5rem;
+        height: 1.25rem;
+    }
+    
+    .option-toggle-group .form-check-label {
+        font-size: 0.9rem;
+    }
+}
+
+/* Estilos para la sección de precios dinámicos */
+.price-row {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.price-row:hover {
+    background-color: #e9ecef;
+}
+
+.price-row .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.price-row .h4 {
+    color: #6c757d;
+    font-weight: 600;
+    user-select: none;
+}
+
+.price-row .btn-eliminar-precio {
+    transition: transform 0.2s ease;
+}
+
+.price-row .btn-eliminar-precio:hover {
+    transform: scale(1.1);
+}
+
+#btnAddPriceRow {
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+}
+
+/* Estilos para contenedor de impuestos */
+.impuestos-container {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.impuestos-container .form-check {
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.impuestos-container .form-check:last-child {
+    border-bottom: none;
+}
+
+.impuestos-container .form-check:hover {
+    background-color: #f8f9fa;
+}
+
+.impuestos-container .form-check-input {
+    cursor: pointer;
+}
+
+.impuestos-container .form-check-label {
+    cursor: pointer;
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+/* Sección de costo y margen */
+.border-top {
+    border-color: #dee2e6 !important;
+}
+
+/* Animación para añadir/eliminar filas */
+.price-row {
+    animation: fadeInRow 0.3s ease-in-out;
+}
+
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
