@@ -1076,12 +1076,12 @@ namespace SistemaContable.Controllers
                     return Json(new { results = new List<object>() });
                 }
                 
-                // Buscar cuentas contables que coincidan con el término
+                // Buscar cuentas contables que coincidan con el término (case-insensitive)
                 var cuentas = await _context.CuentasContables
                     .Where(c => c.EmpresaId == empresaId && c.Activo &&
-                           (EF.Functions.Like(c.Codigo, $"%{term}%") || 
-                            EF.Functions.Like(c.Nombre, $"%{term}%") || 
-                           (c.Descripcion != null && EF.Functions.Like(c.Descripcion, $"%{term}%"))))
+                           (EF.Functions.ILike(c.Codigo, $"%{term}%") || 
+                            EF.Functions.ILike(c.Nombre, $"%{term}%") || 
+                           (c.Descripcion != null && EF.Functions.ILike(c.Descripcion, $"%{term}%"))))
                     .OrderBy(c => c.Codigo)
                     .Take(20) // Limitar resultados
                     .ToListAsync();

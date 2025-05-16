@@ -47,17 +47,24 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="inventario-tab" data-bs-toggle="tab" data-bs-target="#inventario" type="button" role="tab" aria-controls="inventario" aria-selected="false">
-                                    <i class="fas fa-boxes"></i> Inventario
+                                    <i class="fas fa-utensils"></i> Receta
                                 </button>
                             </li>
+                            @* Ocultar temporalmente la pestaña de variantes
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="variantes-tab" data-bs-toggle="tab" data-bs-target="#variantes" type="button" role="tab" aria-controls="variantes" aria-selected="false">
                                     <i class="fas fa-th-list"></i> Variantes
                                 </button>
                             </li>
+                            *@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="modificadores-tab" data-bs-toggle="tab" data-bs-target="#modificadores" type="button" role="tab" aria-controls="modificadores" aria-selected="false">
                                     <i class="fas fa-sliders-h"></i> Modificadores
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="contabilidad-tab" data-bs-toggle="tab" data-bs-target="#contabilidad" type="button" role="tab" aria-controls="contabilidad" aria-selected="false">
+                                    <i class="fas fa-calculator"></i> Contabilidad
                                 </button>
                             </li>
                         </ul>
@@ -356,6 +363,7 @@
                                 </div>
                             </div>
 
+                            @* Ocultar temporalmente el contenido de variantes
                             <!-- Pestaña 5: Variantes -->
                             <div class="tab-pane fade" id="variantes" role="tabpanel" aria-labelledby="variantes-tab">
                                 <div class="mt-3">
@@ -370,6 +378,7 @@
                                     </div>
                                 </div>
                             </div>
+                            *@
 
                             <!-- Pestaña 6: Modificadores -->
                             <div class="tab-pane fade" id="modificadores" role="tabpanel" aria-labelledby="modificadores-tab">
@@ -382,6 +391,64 @@
                                     </div>
                                     <div id="listaGruposModificadores">
                                         <p class="text-muted">No hay grupos de modificadores asignados</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pestaña 7: Contabilidad -->
+                            <div class="tab-pane fade" id="contabilidad" role="tabpanel" aria-labelledby="contabilidad-tab">
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i> Las cuentas contables se heredan de la categoría seleccionada. Puede personalizarlas para este producto específico.
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="cuentaVentasId" class="form-label">Cuenta de Ventas</label>
+                                        <select id="cuentaVentasId" name="CuentaVentasId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cuentaComprasInventariosId" class="form-label">Cuenta de Compras/Inventarios</label>
+                                        <select id="cuentaComprasInventariosId" name="CuentaComprasInventariosId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="cuentaCostoVentasGastosId" class="form-label">Cuenta de Costo de Ventas</label>
+                                        <select id="cuentaCostoVentasGastosId" name="CuentaCostoVentasGastosId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cuentaDescuentosId" class="form-label">Cuenta de Descuentos</label>
+                                        <select id="cuentaDescuentosId" name="CuentaDescuentosId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="cuentaDevolucionesId" class="form-label">Cuenta de Devoluciones</label>
+                                        <select id="cuentaDevolucionesId" name="CuentaDevolucionesId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cuentaAjustesId" class="form-label">Cuenta de Ajustes</label>
+                                        <select id="cuentaAjustesId" name="CuentaAjustesId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="cuentaCostoMateriaPrimaId" class="form-label">Cuenta de Costo de Materia Prima</label>
+                                        <select id="cuentaCostoMateriaPrimaId" name="CuentaCostoMateriaPrimaId" class="form-select select2-cuenta-contable">
+                                            <option value="">Seleccione una cuenta</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>

@@ -17,6 +17,9 @@ $(document).ready(function() {
     // Inicializar selector de color Pickr
     initColorPicker();
     
+    // Inicializar Select2 para cuentas contables
+    initCuentasContablesSelect2();
+    
     // Evento para el botón de edición en la selección (después de seleccionar)
     $(document).on('click', '.edit-categoria', function(e) {
         e.preventDefault();
@@ -783,6 +786,80 @@ function initPricingSystem() {
         });
         return preciosData;
     };
+}
+
+// Función para inicializar selectores de cuentas contables
+function initCuentasContablesSelect2() {
+    // Inicializar cada selector de cuentas
+    $('.select2-cuenta-contable').each(function() {
+        const $this = $(this);
+        const cuentaInicial = $this.val();
+        const cuentaTextoInicial = $this.find('option:selected').text();
+        
+        $this.select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Buscar cuenta contable...',
+            allowClear: true,
+            minimumInputLength: 1,
+            language: {
+                inputTooShort: function() {
+                    return "Ingrese al menos 1 caracter para buscar";
+                },
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            },
+            ajax: {
+                url: '/Productos/BuscarCuentasContables',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        term: params.term || ''
+                    };
+                },
+                processResults: function(data) {
+                    return data;
+                },
+                cache: true
+            },
+            templateResult: formatCuentaResult,
+            templateSelection: formatCuentaSelection
+        });
+        
+        // Si hay un valor inicial, cargarlo
+        if (cuentaInicial && cuentaTextoInicial) {
+            const newOption = new Option(cuentaTextoInicial, cuentaInicial, true, true);
+            $this.append(newOption).trigger('change');
+        }
+    });
+}
+
+// Función para formatear resultados de búsqueda de cuentas
+function formatCuentaResult(cuenta) {
+    if (!cuenta.id) {
+        return cuenta.text;
+    }
+    
+    const $resultado = $(
+        '<div class="select2-result">' +
+            '<span class="badge bg-secondary me-2">' + (cuenta.codigo || '') + '</span>' +
+            '<span>' + (cuenta.nombre || cuenta.text) + '</span>' +
+        '</div>'
+    );
+    return $resultado;
+}
+
+// Función para formatear la selección de cuenta
+function formatCuentaSelection(cuenta) {
+    if (!cuenta.id) {
+        return cuenta.text;
+    }
+    return cuenta.text;
 }
 
 // IMPORTANTE: Exponer las funciones globalmente para que funcionen los eventos onclick

@@ -5,7 +5,8 @@
       "Bash(mkdir:*)",
       "Bash(rm:*)",
       "Bash(ls:*)",
-      "Bash(dotnet run)"
+      "Bash(dotnet run)",
+      "Bash(dotnet ef migrations add:*)"
     ],
     "deny": []
   }

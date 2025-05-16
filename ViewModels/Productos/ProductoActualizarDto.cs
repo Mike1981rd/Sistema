@@ -66,5 +66,27 @@ namespace SistemaContable.ViewModels.Productos
         public bool RequierePreparacion { get; set; }
         
         public int? TiempoPreparacion { get; set; }
+        
+        // Propiedades de Contabilidad
+        [Display(Name = "Cuenta de Ventas")]
+        public int? CuentaVentasId { get; set; }
+        
+        [Display(Name = "Cuenta de Compras/Inventarios")]
+        public int? CuentaComprasInventariosId { get; set; }
+        
+        [Display(Name = "Cuenta de Costo de Ventas")]
+        public int? CuentaCostoVentasGastosId { get; set; }
+        
+        [Display(Name = "Cuenta de Descuentos")]
+        public int? CuentaDescuentosId { get; set; }
+        
+        [Display(Name = "Cuenta de Devoluciones")]
+        public int? CuentaDevolucionesId { get; set; }
+        
+        [Display(Name = "Cuenta de Ajustes")]
+        public int? CuentaAjustesId { get; set; }
+        
+        [Display(Name = "Cuenta de Costo de Materia Prima")]
+        public int? CuentaCostoMateriaPrimaId { get; set; }
     }
 }

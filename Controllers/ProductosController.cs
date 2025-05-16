@@ -275,5 +275,57 @@ namespace SistemaContable.Controllers
                 .ToListAsync();
             ViewBag.RutasImpresora = rutasImpresora;
         }
+        
+        // Acción para buscar cuentas contables (para Select2)
+        [HttpGet]
+        public async Task<IActionResult> BuscarCuentasContables(string term)
+        {
+            try
+            {
+                // Asegurarse de que term no sea null
+                term = term ?? string.Empty;
+                
+                Console.WriteLine($"[ProductosController] Buscando cuentas contables con término: '{term}'");
+                
+                if (string.IsNullOrEmpty(term))
+                {
+                    return Json(new { results = new List<object>() });
+                }
+                
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return Json(new { results = new List<object>() });
+                }
+                
+                // Buscar cuentas contables que coincidan con el término (case-insensitive)
+                var cuentas = await _context.CuentasContables
+                    .Where(c => c.EmpresaId == empresaId && c.Activo &&
+                           (EF.Functions.ILike(c.Codigo, $"%{term}%") || 
+                            EF.Functions.ILike(c.Nombre, $"%{term}%") || 
+                           (c.Descripcion != null && EF.Functions.ILike(c.Descripcion, $"%{term}%"))))
+                    .OrderBy(c => c.Codigo)
+                    .Take(20) // Limitar resultados
+                    .ToListAsync();
+                
+                Console.WriteLine($"[ProductosController] Encontradas {cuentas.Count()} cuentas contables para devolver al cliente");
+                
+                // Asegurarnos de que los datos estén en el formato esperado por Select2
+                var results = cuentas.Select(c => new
+                {
+                    id = c.Id,
+                    text = $"{c.Codigo} - {c.Nombre}", // Este es el texto que se muestra en el select
+                    codigo = c.Codigo,
+                    nombre = c.Nombre
+                }).ToList();
+                
+                return Json(new { results = results });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al buscar cuentas contables: {ex.Message}");
+                return Json(new { results = new List<object>() });
+            }
+        }
     }
 }

@@ -97,5 +97,34 @@ namespace SistemaContable.Models
 
         // Campo para el ID de empresa (multiempresa)
         public int EmpresaId { get; set; }
+        
+        // Propiedades de Contabilidad
+        public int? CuentaVentasId { get; set; }
+        [ForeignKey("CuentaVentasId")]
+        public virtual CuentaContable? CuentaVentas { get; set; }
+        
+        public int? CuentaComprasInventariosId { get; set; }
+        [ForeignKey("CuentaComprasInventariosId")]
+        public virtual CuentaContable? CuentaComprasInventarios { get; set; }
+        
+        public int? CuentaCostoVentasGastosId { get; set; }
+        [ForeignKey("CuentaCostoVentasGastosId")]
+        public virtual CuentaContable? CuentaCostoVentasGastos { get; set; }
+        
+        public int? CuentaDescuentosId { get; set; }
+        [ForeignKey("CuentaDescuentosId")]
+        public virtual CuentaContable? CuentaDescuentos { get; set; }
+        
+        public int? CuentaDevolucionesId { get; set; }
+        [ForeignKey("CuentaDevolucionesId")]
+        public virtual CuentaContable? CuentaDevoluciones { get; set; }
+        
+        public int? CuentaAjustesId { get; set; }
+        [ForeignKey("CuentaAjustesId")]
+        public virtual CuentaContable? CuentaAjustes { get; set; }
+        
+        public int? CuentaCostoMateriaPrimaId { get; set; }
+        [ForeignKey("CuentaCostoMateriaPrimaId")]
+        public virtual CuentaContable? CuentaCostoMateriaPrima { get; set; }
     }
 }
