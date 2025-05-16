@@ -28,7 +28,351 @@ $(document).ready(function() {
         var nombre = $(this).data('name');
         editCategoria(id, nombre);
     });
+    
+    // Agregar manejo de herencia de categorías
+    initCategoriaInheritance();
 });
+
+// Función para manejar la herencia de datos desde la categoría
+function initCategoriaInheritance() {
+    let ultimaCategoriaCreada = null;
+    
+    $('#categoriaId').off('change.inheritance').on('change.inheritance', function() {
+        const categoriaId = $(this).val();
+        
+        if (!categoriaId) return;
+        
+        // Verificar si es una categoría recién creada
+        const dataItem = $('#categoriaId').select2('data')[0];
+        
+        if (ultimaCategoriaCreada && ultimaCategoriaCreada.id == categoriaId) {
+            console.log('Omitiendo procesamiento para categoría recién creada:', categoriaId);
+            return;
+        }
+        
+        if (dataItem && (dataItem._isNew || dataItem.id === 'new')) {
+            console.log('Omitiendo procesamiento para categoría nueva:', dataItem);
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Obteniendo datos de la categoría',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Limpiar valores anteriores
+        const selectsToReset = [
+            '#impuestoId',
+            '#cuentaVentasId',
+            '#cuentaComprasInventariosId',
+            '#cuentaCostoVentasGastosId',
+            '#cuentaDescuentosId',
+            '#cuentaDevolucionesId',
+            '#cuentaAjustesId',
+            '#cuentaCostoMateriaPrimaId'
+        ];
+        
+        selectsToReset.forEach(selector => {
+            const $select = $(selector);
+            if ($select.length > 0) {
+                $select.val(null).trigger('change');
+            }
+        });
+        
+        // Obtener datos de la categoría
+        $.ajax({
+            url: `/Productos/ObtenerDatosCategoria/${categoriaId}`,
+            type: 'GET',
+            success: function(response) {
+                console.log('Respuesta categoría:', response);
+                
+                if (response && response.success) {
+                    let camposActualizados = [];
+                    let promesasPendientes = [];
+                    
+                    // Función para precargar una opción en un select2
+                    function precargarYSeleccionarOpcion(selector, valorId, nombreCampo, urlBusqueda) {
+                        return new Promise((resolve) => {
+                            if (!valorId) {
+                                resolve(false);
+                                return;
+                            }
+                            
+                            const $select = $(selector);
+                            if ($select.length === 0) {
+                                console.log(`Selector ${selector} no encontrado`);
+                                resolve(false);
+                                return;
+                            }
+                            
+                            console.log(`Precargando ${nombreCampo} con ID ${valorId}`);
+                            
+                            // Limpiar opción previa
+                            $select.find(`option[value="${valorId}"]`).remove();
+                            
+                            // Crear opción temporal
+                            const nuevaOpcion = new Option(`${nombreCampo} (ID: ${valorId})`, valorId, true, true);
+                            $select.append(nuevaOpcion);
+                            $select.val(valorId).trigger('change');
+                            camposActualizados.push(nombreCampo);
+                            
+                            // Configurar la llamada AJAX según el tipo de campo
+                            let ajaxUrl = urlBusqueda;
+                            let ajaxData = {};
+                            
+                            // Para cuentas contables
+                            if (selector.includes('cuenta') || selector.includes('Cuenta')) {
+                                ajaxData = { term: valorId, exactId: true };
+                            }
+                            // Para impuestos  
+                            else if (selector.includes('impuesto')) {
+                                ajaxData = { term: valorId, exactId: true };
+                            }
+                            // Para rutas de impresión
+                            else if (selector.includes('rutaImpresora')) {
+                                ajaxData = { term: valorId };
+                            }
+                            
+                            // Buscar detalles completos
+                            $.ajax({
+                                url: ajaxUrl,
+                                type: 'GET',
+                                data: ajaxData,
+                                success: function(data) {
+                                    console.log(`Respuesta para ${nombreCampo}:`, data);
+                                    let nombreDescriptivo = null;
+                                    
+                                    // Manejar respuesta de cuentas contables (array directo)
+                                    if (Array.isArray(data) && data.length > 0) {
+                                        const item = data[0];
+                                        if (item.codigo && item.nombre) {
+                                            nombreDescriptivo = `${item.codigo} - ${item.nombre}`;
+                                        }
+                                    }
+                                    // Manejar respuesta con results
+                                    else if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+                                        const item = data.results[0];
+                                        if (item.text) {
+                                            nombreDescriptivo = item.text;
+                                        } else if (item.nombre) {
+                                            nombreDescriptivo = item.nombre;
+                                        }
+                                    }
+                                    // Manejar objeto simple
+                                    else if (data && typeof data === 'object' && !Array.isArray(data)) {
+                                        if (data.text) {
+                                            nombreDescriptivo = data.text;
+                                        } else if (data.nombre) {
+                                            nombreDescriptivo = data.nombre;
+                                        }
+                                    }
+                                    
+                                    if (nombreDescriptivo) {
+                                        console.log(`Actualizando texto a: ${nombreDescriptivo}`);
+                                        const $option = $select.find(`option[value="${valorId}"]`);
+                                        if ($option.length) {
+                                            $option.text(nombreDescriptivo);
+                                            $select.trigger('change');
+                                            
+                                            // Actualizar el texto mostrado en el select2
+                                            setTimeout(() => {
+                                                const $rendered = $select.next('.select2-container').find('.select2-selection__rendered');
+                                                if ($rendered.length) {
+                                                    $rendered.text(nombreDescriptivo);
+                                                    $rendered.attr('title', nombreDescriptivo);
+                                                }
+                                            }, 50);
+                                        }
+                                    }
+                                    resolve(true);
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error(`Error al buscar detalles para ${nombreCampo}:`, error);
+                                    resolve(false);
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Actualizar impuestos en la pestaña de precios
+                    const $firstImpuestoSelect = $('.select2-impuestos').first();
+                    if ($firstImpuestoSelect.length > 0) {
+                        // Array para guardar los IDs de impuestos a seleccionar
+                        let impuestosParaSeleccionar = [];
+                        
+                        // Agregar impuesto regular si existe
+                        if (response.impuestoId) {
+                            console.log(`Heredando impuesto ID: ${response.impuestoId} a la pestaña de precios`);
+                            impuestosParaSeleccionar.push(response.impuestoId);
+                        }
+                        
+                        // Agregar impuesto de propina si existe
+                        if (response.propinaImpuestoId) {
+                            console.log(`Heredando impuesto de propina ID: ${response.propinaImpuestoId} a la pestaña de precios`);
+                            impuestosParaSeleccionar.push(response.propinaImpuestoId);
+                        }
+                        
+                        // Si hay impuestos para seleccionar, procesar
+                        if (impuestosParaSeleccionar.length > 0) {
+                            promesasPendientes.push(
+                                new Promise((resolve) => {
+                                    // Limpiar selección actual
+                                    $firstImpuestoSelect.val(null).trigger('change');
+                                    
+                                    // Promesas para cargar cada impuesto
+                                    let promesasImpuestos = impuestosParaSeleccionar.map(impuestoId => {
+                                        return new Promise((resolveImpuesto) => {
+                                            $.ajax({
+                                                url: `/Impuestos/Buscar?term=${impuestoId}&exactId=true`,
+                                                type: 'GET',
+                                                success: function(data) {
+                                                    if (data.results && data.results.length > 0) {
+                                                        const impuestoOption = data.results[0];
+                                                        // Crear la opción si no existe
+                                                        if (!$firstImpuestoSelect.find(`option[value="${impuestoOption.id}"]`).length) {
+                                                            const newOption = new Option(impuestoOption.text, impuestoOption.id, false, false);
+                                                            $firstImpuestoSelect.append(newOption);
+                                                        }
+                                                        
+                                                        // IMPORTANTE: Extraer y guardar el porcentaje del impuesto
+                                                        // El texto tiene formato "Nombre X%" - necesitamos extraer el X
+                                                        const match = impuestoOption.text.match(/(\d+(?:\.\d+)?)\s*%/);
+                                                        if (match) {
+                                                            const porcentaje = parseFloat(match[1]);
+                                                            window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                                                            window.impuestosDataGlobal[impuestoOption.id] = porcentaje;
+                                                            console.log(`Guardando porcentaje del impuesto ${impuestoOption.id}: ${porcentaje}%`);
+                                                        }
+                                                    }
+                                                    resolveImpuesto();
+                                                },
+                                                error: function() {
+                                                    console.error(`Error al cargar impuesto ${impuestoId}`);
+                                                    resolveImpuesto();
+                                                }
+                                            });
+                                        });
+                                    });
+                                    
+                                    // Esperar a que todos los impuestos se carguen y luego seleccionarlos
+                                    Promise.all(promesasImpuestos).then(() => {
+                                        const selectedValues = impuestosParaSeleccionar.map(id => id.toString());
+                                        $firstImpuestoSelect.val(selectedValues).trigger('change');
+                                        if (response.impuestoId) camposActualizados.push('Impuesto');
+                                        if (response.propinaImpuestoId) camposActualizados.push('Impuesto de Propina');
+                                        
+                                        // Disparar el cálculo del precio total después de seleccionar los impuestos
+                                        setTimeout(() => {
+                                            $firstImpuestoSelect.trigger('select2:select');
+                                        }, 100);
+                                        
+                                        resolve(true);
+                                    });
+                                })
+                            );
+                        }
+                    }
+                    
+                    // Actualizar ruta de impresión
+                    if (response.rutaImpresoraId) {
+                        console.log(`Heredando ruta de impresión ID: ${response.rutaImpresoraId}`);
+                        // Para rutas de impresión, simplemente seleccionar el valor ya que las opciones están precargadas
+                        const $rutaSelect = $('#rutaImpresoraId');
+                        if ($rutaSelect.length > 0) {
+                            $rutaSelect.val(response.rutaImpresoraId).trigger('change');
+                            camposActualizados.push('Ruta de Impresión');
+                        }
+                    }
+                    
+                    // Actualizar cuentas contables
+                    if (response.cuentaVentasId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaVentasId', response.cuentaVentasId, 'Cuenta de Ventas',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaVentasId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaComprasInventariosId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaComprasInventariosId', response.cuentaComprasInventariosId, 'Cuenta de Compras/Inventarios',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaComprasInventariosId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaCostoVentasGastosId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaCostoVentasGastosId', response.cuentaCostoVentasGastosId, 'Cuenta de Costo de Ventas',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaCostoVentasGastosId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaDescuentosId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaDescuentosId', response.cuentaDescuentosId, 'Cuenta de Descuentos',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaDescuentosId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaDevolucionesId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaDevolucionesId', response.cuentaDevolucionesId, 'Cuenta de Devoluciones',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaDevolucionesId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaAjustesId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaAjustesId', response.cuentaAjustesId, 'Cuenta de Ajustes',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaAjustesId}&exactId=true`)
+                        );
+                    }
+                    
+                    if (response.cuentaCostoMateriaPrimaId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#cuentaCostoMateriaPrimaId', response.cuentaCostoMateriaPrimaId, 'Cuenta de Costo de Materia Prima',
+                                `/Productos/BuscarCuentasContables?term=${response.cuentaCostoMateriaPrimaId}&exactId=true`)
+                        );
+                    }
+                    
+                    // Esperar a que todas las promesas terminen
+                    Promise.all(promesasPendientes).then(() => {
+                        Swal.close();
+                        
+                        if (camposActualizados.length > 0) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Datos heredados',
+                                html: `<strong>Campos actualizados:</strong><br>${camposActualizados.join('<br>')}`,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        }
+                    });
+                } else {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: 'No se pudieron obtener los datos de la categoría'
+                    });
+                }
+            },
+            error: function() {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al obtener datos de la categoría'
+                });
+            }
+        });
+    });
+}
 
 function initCategoriasSelect2() {
     // Código clonado exactamente de form.js del módulo Items
@@ -541,7 +885,12 @@ function initPricingSystem() {
     const priceRowsContainer = document.getElementById('priceRowsContainer');
     const btnAddPriceRow = document.getElementById('btnAddPriceRow');
     let priceRowIndex = 0;
-    let impuestosDataGlobal = {}; // Store global para impuestos
+    
+    // Hacer el store de impuestos realmente global
+    if (!window.impuestosDataGlobal) {
+        window.impuestosDataGlobal = {};
+    }
+    let impuestosDataGlobal = window.impuestosDataGlobal;
 
     console.log('Iniciando sistema de precios...');
 
@@ -579,6 +928,7 @@ function initPricingSystem() {
                         // Almacenar los porcentajes en el store global
                         data.forEach(item => {
                             impuestosDataGlobal[item.id] = parseFloat(item.porcentaje);
+                            window.impuestosDataGlobal[item.id] = parseFloat(item.porcentaje);
                         });
                         return {
                             results: data.map(item => ({

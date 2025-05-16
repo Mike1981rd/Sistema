@@ -289,6 +289,35 @@ namespace SistemaContable.Controllers
             return View(viewModel);
         }
 
+        // GET: RutaImpresora/Buscar
+        public async Task<IActionResult> Buscar(string term)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return Json(new { results = new object[0] });
+            }
+
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                return Json(new { results = new object[0] });
+            }
+
+            var rutas = await _context.RutasImpresora
+                .Where(r => r.EmpresaId == empresaId &&
+                           r.Estado &&
+                           EF.Functions.ILike(r.Nombre, $"%{term}%"))
+                .Select(r => new
+                {
+                    id = r.Id,
+                    text = r.Nombre
+                })
+                .Take(10)
+                .ToListAsync();
+
+            return Json(new { results = rutas });
+        }
+
         // POST: RutaImpresora/ToggleEstado/5
         [HttpPost]
         public async Task<IActionResult> ToggleEstado(int id)

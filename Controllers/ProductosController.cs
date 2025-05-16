@@ -278,29 +278,50 @@ namespace SistemaContable.Controllers
         
         // Acción para buscar cuentas contables (para Select2)
         [HttpGet]
-        public async Task<IActionResult> BuscarCuentasContables(string term)
+        public async Task<IActionResult> BuscarCuentasContables(string term, bool exactId = false)
         {
             try
             {
                 // Asegurarse de que term no sea null
                 term = term ?? string.Empty;
                 
-                Console.WriteLine($"[ProductosController] Buscando cuentas contables con término: '{term}'");
+                Console.WriteLine($"[ProductosController] Buscando cuentas contables con término: '{term}', exactId: {exactId}");
+                
+                // Si exactId es true y tenemos un número válido, buscar por ID exacto
+                if (exactId && int.TryParse(term, out int cuentaId))
+                {
+                    var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                    var cuenta = await _context.CuentasContables
+                        .Where(c => c.Id == cuentaId && c.EmpresaId == empresaId)
+                        .Select(c => new {
+                            id = c.Id,
+                            codigo = c.Codigo,
+                            nombre = c.Nombre
+                        })
+                        .FirstOrDefaultAsync();
+                    
+                    if (cuenta != null)
+                    {
+                        // Devolver como array para Items compatibility
+                        return Json(new[] { cuenta });
+                    }
+                    return Json(new object[0]);
+                }
                 
                 if (string.IsNullOrEmpty(term))
                 {
                     return Json(new { results = new List<object>() });
                 }
                 
-                var empresaId = await _empresaService.ObtenerEmpresaActualId();
-                if (empresaId <= 0)
+                var empresaId2 = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId2 <= 0)
                 {
                     return Json(new { results = new List<object>() });
                 }
                 
                 // Buscar cuentas contables que coincidan con el término (case-insensitive)
                 var cuentas = await _context.CuentasContables
-                    .Where(c => c.EmpresaId == empresaId && c.Activo &&
+                    .Where(c => c.EmpresaId == empresaId2 && c.Activo &&
                            (EF.Functions.ILike(c.Codigo, $"%{term}%") || 
                             EF.Functions.ILike(c.Nombre, $"%{term}%") || 
                            (c.Descripcion != null && EF.Functions.ILike(c.Descripcion, $"%{term}%"))))
@@ -326,6 +347,50 @@ namespace SistemaContable.Controllers
                 Console.WriteLine($"Error al buscar cuentas contables: {ex.Message}");
                 return Json(new { results = new List<object>() });
             }
+        }
+        
+        // GET: Productos/ObtenerDatosCategoria/{id}
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDatosCategoria(int id)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var categoria = await _context.Categorias
+                .Where(c => c.Id == id && c.EmpresaId == empresaId)
+                .Select(c => new {
+                    impuestoId = c.ImpuestoId,
+                    propinaImpuestoId = c.PropinaImpuestoId,
+                    rutaImpresoraId = c.RutaImpresoraId,
+                    cuentaVentasId = c.CuentaVentasId,
+                    cuentaComprasInventariosId = c.CuentaComprasInventariosId,
+                    cuentaCostoVentasGastosId = c.CuentaCostoVentasGastosId,
+                    cuentaDescuentosId = c.CuentaDescuentosId,
+                    cuentaDevolucionesId = c.CuentaDevolucionesId,
+                    cuentaAjustesId = c.CuentaAjustesId,
+                    cuentaCostoMateriaPrimaId = c.CuentaCostoMateriaPrimaId
+                })
+                .FirstOrDefaultAsync();
+            
+            if (categoria == null)
+                return Json(new { success = false });
+            
+            Console.WriteLine($"[ProductosController] ObtenerDatosCategoria ID={id}: " +
+                         $"impuestoId={categoria.impuestoId}, " +
+                         $"cuentaVentasId={categoria.cuentaVentasId}, " +
+                         $"cuentaComprasInventariosId={categoria.cuentaComprasInventariosId}");
+            
+            return Json(new {
+                success = true,
+                impuestoId = categoria.impuestoId,
+                propinaImpuestoId = categoria.propinaImpuestoId,
+                rutaImpresoraId = categoria.rutaImpresoraId,
+                cuentaVentasId = categoria.cuentaVentasId,
+                cuentaComprasInventariosId = categoria.cuentaComprasInventariosId,
+                cuentaCostoVentasGastosId = categoria.cuentaCostoVentasGastosId,
+                cuentaDescuentosId = categoria.cuentaDescuentosId,
+                cuentaDevolucionesId = categoria.cuentaDevolucionesId,
+                cuentaAjustesId = categoria.cuentaAjustesId,
+                cuentaCostoMateriaPrimaId = categoria.cuentaCostoMateriaPrimaId
+            });
         }
     }
 }
