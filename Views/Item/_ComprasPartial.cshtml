@@ -227,20 +227,37 @@ function initializeProveedores() {
             btnAgregarProveedor.disabled = true;
             
             // Actualizar listeners de radio buttons
-            updateRadioListeners();
+            if (typeof window.updateRadioListeners === 'function') {
+                window.updateRadioListeners();
+            } else if (typeof updateRadioListeners === 'function') {
+                updateRadioListeners();
+            }
             
             // Inicializar Select2 para el nuevo contenedor del proveedor
-            initializeContenedorSelect(newRow);
+            if (typeof window.initializeContenedorSelect === 'function') {
+                window.initializeContenedorSelect(newRow);
+            } else if (typeof initializeContenedorSelect === 'function') {
+                initializeContenedorSelect(newRow);
+            } else {
+                console.warn('initializeContenedorSelect no está disponible (línea 233)');
+            }
             
             // Asegurar que se carguen los contenedores disponibles
             setTimeout(() => {
-                populateContenedorOptions(newRow.querySelector('.select2-contenedor-proveedor'));
+                const select = newRow.querySelector('.select2-contenedor-proveedor');
+                if (typeof window.populateContenedorOptions === 'function') {
+                    window.populateContenedorOptions(select);
+                } else if (typeof populateContenedorOptions === 'function') {
+                    populateContenedorOptions(select);
+                } else {
+                    console.warn('populateContenedorOptions no está disponible aún');
+                }
             }, 500);
         });
     }, 500);
     
     // Función para actualizar radio buttons
-    function updateRadioListeners() {
+    window.updateRadioListeners = function() {
         const radios = document.querySelectorAll('input[name="proveedorPrincipal"]');
         radios.forEach(radio => {
             radio.addEventListener('change', function() {
@@ -265,7 +282,7 @@ function initializeProveedores() {
     }
     
     // Función para inicializar select2 de contenedor
-    function initializeContenedorSelect(row) {
+    window.initializeContenedorSelect = function(row) {
         const select = row.querySelector('.select2-contenedor-proveedor');
         if (!select) return;
         
@@ -281,7 +298,7 @@ function initializeProveedores() {
     }
     
     // Función para poblar opciones de contenedores
-    function populateContenedorOptions(select) {
+    window.populateContenedorOptions = function(select) {
         // Limpiar opciones actuales
         $(select).empty();
         $(select).append('<option value="">Seleccione contenedor</option>');
@@ -454,12 +471,38 @@ window.cargarProveedoresExistentes = function(proveedoresData) {
         });
         
         // Inicializar Select2 y cargar el contenedor guardado
-        initializeContenedorSelect(newRow);
+        if (typeof window.initializeContenedorSelect === 'function') {
+            window.initializeContenedorSelect(newRow);
+        } else if (typeof initializeContenedorSelect === 'function') {
+            initializeContenedorSelect(newRow);
+        } else {
+            console.warn('initializeContenedorSelect no está disponible aún, intentando inicialización alternativa');
+            // Inicialización directa como respaldo
+            const $select = $(newRow).find('.select2-contenedor-proveedor');
+            if ($select.length > 0) {
+                $select.select2({
+                    placeholder: 'Seleccione contenedor',
+                    theme: 'bootstrap-5',
+                    width: '100%'
+                });
+                
+                // Si necesitamos cargar contenedores, lo hacemos aquí
+                if (typeof populateContenedorOptions === 'function') {
+                    populateContenedorOptions($select[0]);
+                }
+            }
+        }
         
         // Esperar un poco y luego cargar los contenedores disponibles y seleccionar el guardado
         setTimeout(() => {
             const select = newRow.querySelector('.select2-contenedor-proveedor');
-            populateContenedorOptions(select);
+            if (typeof window.populateContenedorOptions === 'function') {
+                window.populateContenedorOptions(select);
+            } else if (typeof populateContenedorOptions === 'function') {
+                populateContenedorOptions(select);
+            } else {
+                console.warn('populateContenedorOptions no está disponible (línea 481)');
+            }
             
             // Seleccionar el contenedor guardado si existe
             if (proveedorData.unidadMedidaCompraId) {
@@ -468,7 +511,13 @@ window.cargarProveedoresExistentes = function(proveedoresData) {
         }, 750);
     });
     
-    updateRadioListeners();
+    if (typeof window.updateRadioListeners === 'function') {
+        window.updateRadioListeners();
+    } else if (typeof updateRadioListeners === 'function') {
+        updateRadioListeners();
+    } else {
+        console.warn('updateRadioListeners no está disponible aún');
+    }
 };
 
 // Iniciar cuando el DOM esté listo
