@@ -664,11 +664,76 @@ namespace SistemaContable.Controllers
             {
                 return NotFound();
             }
-
+            
             var empresaId = _userService.GetEmpresaId();
+
+            // Debug: Log datos recibidos usando TempData para visualización
+            string debugInfo = "";
+            if (viewModel.Contenedores != null)
+            {
+                debugInfo = $"Recibidos {viewModel.Contenedores.Count} contenedores en el viewModel\n";
+                for (int i = 0; i < viewModel.Contenedores.Count; i++)
+                {
+                    var cont = viewModel.Contenedores[i];
+                    debugInfo += $"Contenedor [{i}]: UnidadMedidaId={cont.UnidadMedidaId}, Nombre='{cont.Nombre}', Factor={cont.Factor}, Costo={cont.Costo}\n";
+                }
+                
+                // Listar las UnidadesMedida disponibles para debug
+                var unidadesDisponibles = await _context.UnidadesMedida
+                    .Where(u => u.EmpresaId == empresaId)
+                    .OrderBy(u => u.Id)
+                    .Select(u => new { u.Id, u.Nombre })
+                    .ToListAsync();
+                    
+                debugInfo += "\nUnidades de Medida disponibles en la empresa:\n";
+                foreach (var um in unidadesDisponibles)
+                {
+                    debugInfo += $"  ID={um.Id}, Nombre='{um.Nombre}'\n";
+                }
+            }
+            else
+            {
+                debugInfo = "viewModel.Contenedores es null";
+            }
+            TempData["DebugContenedores"] = debugInfo;
+
+            // Temporalmente, ignorar completamente ProductoVenta (como en Create)
+            viewModel.ProductoVenta = null;
+            
+            // Remover validación de ProductoVenta y proveedores problemáticos
+            var keysToRemove = ModelState.Keys
+                .Where(k => k.StartsWith("ProductoVenta") || 
+                           k.Contains("PrecioCompra") ||
+                           k.Contains("PrecioVenta"))
+                .ToList();
+                
+            // Si hay proveedores vacíos (sin ProveedorId), remover sus validaciones
+            if (viewModel.Proveedores != null)
+            {
+                for (int i = 0; i < viewModel.Proveedores.Count; i++)
+                {
+                    if (viewModel.Proveedores[i].ProveedorId <= 0)
+                    {
+                        keysToRemove.AddRange(ModelState.Keys.Where(k => k.StartsWith($"Proveedores[{i}]")).ToList());
+                    }
+                }
+            }
+                
+            foreach (var key in keysToRemove)
+            {
+                ModelState.Remove(key);
+            }
+            
+            // Remover errores de campos vacíos
+            var emptyFieldErrors = ModelState.Where(x => x.Value.Errors.Any(e => e.ErrorMessage == "The value '' is invalid.")).ToList();
+            foreach (var error in emptyFieldErrors)
+            {
+                ModelState.Remove(error.Key);
+            }
 
             if (!ModelState.IsValid)
             {
+                TempData["Error"] = "Por favor verifique los campos requeridos.";
                 viewModel = PrepararViewModel(viewModel);
                 return View(viewModel);
             }
@@ -745,15 +810,129 @@ namespace SistemaContable.Controllers
                 item.ImagenUrl = "/images/items/" + uniqueFileName;
             }
 
-            // Actualizar proveedores: eliminar los existentes y a�adir los nuevos
+            // Primero actualizar contenedores (antes de proveedores)
+            System.Diagnostics.Debug.WriteLine($"Contenedores existentes antes de eliminar: {item.Contenedores.Count}");
+            _context.ItemContenedores.RemoveRange(item.Contenedores);
+            await _context.SaveChangesAsync(); // Guardar la eliminación antes de agregar nuevos
+            System.Diagnostics.Debug.WriteLine("Contenedores existentes eliminados");
+
+            if (viewModel.Contenedores != null && viewModel.Contenedores.Any())
+            {
+                System.Diagnostics.Debug.WriteLine($"Procesando {viewModel.Contenedores.Count} contenedores para Item ID: {item.Id}");
+                
+                int orden = 1;
+                int contenedoresGuardados = 0;
+                
+                foreach (var contenedorVM in viewModel.Contenedores)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Procesando contenedor {orden}: UnidadMedidaId={contenedorVM.UnidadMedidaId}, Nombre={contenedorVM.Nombre}, Factor={contenedorVM.Factor}");
+                    
+                    // Validar que la unidad de medida existe
+                    // Primero buscar con empresa
+                    var unidadMedida = await _context.UnidadesMedida
+                        .Where(u => u.Id == contenedorVM.UnidadMedidaId && u.EmpresaId == empresaId)
+                        .FirstOrDefaultAsync();
+                    
+                    if (unidadMedida == null)
+                    {
+                        // Si no se encuentra con la empresa, buscar sin filtro de empresa
+                        unidadMedida = await _context.UnidadesMedida
+                            .Where(u => u.Id == contenedorVM.UnidadMedidaId)
+                            .FirstOrDefaultAsync();
+                        
+                        if (unidadMedida != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"UnidadMedida con ID {contenedorVM.UnidadMedidaId} existe pero para empresa {unidadMedida.EmpresaId}, no para {empresaId}. Usándola de todos modos para debug.");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"UnidadMedida con ID {contenedorVM.UnidadMedidaId} no existe en absoluto");
+                            orden++;
+                            continue;
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"UnidadMedida {contenedorVM.UnidadMedidaId} validada, creando ItemContenedor...");
+                    
+                    var itemContenedor = new ItemContenedor
+                    {
+                        EmpresaId = empresaId,
+                        ItemId = item.Id,
+                        UnidadMedidaId = contenedorVM.UnidadMedidaId,
+                        Nombre = contenedorVM.Nombre,
+                        Etiqueta = contenedorVM.Etiqueta,
+                        ContenedorSuperiorId = contenedorVM.ContenedorSuperiorId,
+                        Factor = contenedorVM.Factor,
+                        Costo = contenedorVM.Costo,
+                        EsPrincipal = orden == 1, // El primer contenedor es el principal
+                        EsContenedorCompra = contenedorVM.EsContenedorCompra,
+                        Orden = orden
+                    };
+
+                    _context.ItemContenedores.Add(itemContenedor);
+                    contenedoresGuardados++;
+                    System.Diagnostics.Debug.WriteLine($"ItemContenedor agregado al contexto. Total agregados: {contenedoresGuardados}");
+                    orden++;
+                }
+
+                try
+                {
+                    // Guardar contenedores inmediatamente
+                    await _context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"SaveChanges ejecutado. Se esperaban guardar {contenedoresGuardados} contenedores");
+                    
+                    // Verificar lo que se guardó realmente
+                    var contenedoresGuardadosRealmente = await _context.ItemContenedores
+                        .Where(c => c.ItemId == item.Id && c.EmpresaId == empresaId)
+                        .CountAsync();
+                        
+                    System.Diagnostics.Debug.WriteLine($"Verificación: Contenedores en DB para Item {item.Id}: {contenedoresGuardadosRealmente}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error al guardar contenedores: {ex.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
+                    throw;
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"No se recibieron contenedores para Item ID: {item.Id}");
+            }
+
+            // Ahora actualizar proveedores (después de guardar contenedores)
             _context.ItemProveedores.RemoveRange(item.Proveedores);
 
             if (viewModel.Proveedores != null && viewModel.Proveedores.Any())
             {
                 foreach (var proveedorVM in viewModel.Proveedores)
                 {
-                    if (proveedorVM.ProveedorId > 0)
+                    if (proveedorVM.ProveedorId > 0 && proveedorVM.UnidadMedidaCompraId > 0)
                     {
+                        // Validar que la unidad de medida existe
+                        var unidadMedidaExiste = await _context.UnidadesMedida
+                            .AnyAsync(u => u.Id == proveedorVM.UnidadMedidaCompraId);
+                        
+                        if (!unidadMedidaExiste)
+                        {
+                            // Si no existe, intentar buscar como contenedor del item
+                            var contenedor = await _context.ItemContenedores
+                                .FirstOrDefaultAsync(c => c.ItemId == item.Id && c.Id == proveedorVM.UnidadMedidaCompraId);
+                            
+                            if (contenedor != null)
+                            {
+                                // Es un contenedor, usar su UnidadMedidaId
+                                proveedorVM.UnidadMedidaCompraId = contenedor.UnidadMedidaId;
+                            }
+                            else
+                            {
+                                continue; // No se pudo resolver, omitir este proveedor
+                            }
+                        }
+                        
                         var itemProveedor = new ItemProveedor
                         {
                             EmpresaId = empresaId,
@@ -771,35 +950,6 @@ namespace SistemaContable.Controllers
                         _context.ItemProveedores.Add(itemProveedor);
                     }
                 }
-            }
-
-            // Actualizar contenedores
-            _context.ItemContenedores.RemoveRange(item.Contenedores);
-
-            if (viewModel.Contenedores != null && viewModel.Contenedores.Any())
-            {
-                int orden = 1;
-                foreach (var contenedorVM in viewModel.Contenedores)
-                {
-                    var itemContenedor = new ItemContenedor
-                    {
-                        EmpresaId = empresaId,
-                        ItemId = item.Id,
-                        UnidadMedidaId = contenedorVM.UnidadMedidaId,
-                        Nombre = contenedorVM.Nombre,
-                        Etiqueta = contenedorVM.Etiqueta,
-                        ContenedorSuperiorId = contenedorVM.ContenedorSuperiorId,
-                        Factor = contenedorVM.Factor,
-                        Costo = contenedorVM.Costo,
-                        EsPrincipal = contenedorVM.EsPrincipal,
-                        EsContenedorCompra = contenedorVM.EsContenedorCompra,
-                        Orden = orden++
-                    };
-
-                    _context.ItemContenedores.Add(itemContenedor);
-                }
-
-                await _context.SaveChangesAsync();
             }
 
             // Actualizar taras
@@ -888,6 +1038,18 @@ namespace SistemaContable.Controllers
                 {
                     throw;
                 }
+            }
+            catch (DbUpdateException ex)
+            {
+                TempData["Error"] = $"Error al guardar: {ex.InnerException?.Message ?? ex.Message}";
+                viewModel = PrepararViewModel(viewModel);
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error inesperado: {ex.Message}";
+                viewModel = PrepararViewModel(viewModel);
+                return View(viewModel);
             }
 
             TempData["SuccessMessage"] = "Item actualizado correctamente.";
@@ -1556,8 +1718,9 @@ namespace SistemaContable.Controllers
                     id = c.Id,
                     itemId = c.ItemId,
                     unidadMedidaId = c.UnidadMedidaId,
-                    unidadMedidaNombre = c.UnidadMedida != null ? $"{c.UnidadMedida.Nombre} ({c.UnidadMedida.Abreviatura})" : "",
-                    cantidad = c.Factor,
+                    unidadMedidaNombre = c.UnidadMedida != null ? c.UnidadMedida.Nombre : "",
+                    nombre = c.Nombre, // Added the actual container name
+                    factor = c.Factor, // Changed from "cantidad" to "factor"
                     etiqueta = c.Etiqueta,
                     costo = c.Costo
                 })

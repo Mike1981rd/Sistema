@@ -25,6 +25,14 @@
     <form asp-action="Edit" method="post" enctype="multipart/form-data" id="itemForm">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
+        
+        @if (TempData["DebugContenedores"] != null)
+        {
+            <div class="alert alert-info">
+                <h5>Debug Info:</h5>
+                <pre>@TempData["DebugContenedores"]</pre>
+            </div>
+        }
 
         <!-- Nav tabs con estilo Underline -->
         <div class="card mb-4">
@@ -286,6 +294,41 @@
             const itemId = '@Model.Id'; // Crucial para el modo edición
             let proveedoresCargados = false; // Control para la carga de proveedores existentes
 
+            // Función para cargar contenedores existentes del ítem (específico del modo Edit)
+            function cargarContenedoresDelItem(itemId) {
+                console.log('Edit.cshtml: Cargando contenedores para item:', itemId);
+                const waitForFunction = setInterval(function() {
+                    if (typeof window.cargarContenedoresExistentes === 'function') {
+                        clearInterval(waitForFunction);
+                        $.ajax({
+                            url: `/Item/ObtenerContenedores/${itemId}`,
+                            type: 'GET',
+                            success: function(data) {
+                                if (data && data.length > 0) {
+                                    const contenedoresData = data.map(c => ({
+                                        id: c.id,
+                                        unidadMedidaId: c.unidadMedidaId,
+                                        nombre: c.nombre || c.unidadMedidaNombre, // Use the container name or fall back to unit name
+                                        etiqueta: c.etiqueta,
+                                        factor: c.factor,
+                                        costo: c.costo
+                                    }));
+                                    window.cargarContenedoresExistentes(contenedoresData);
+                                }
+                            },
+                            error: function(err) {
+                                console.error('Error al cargar contenedores del item:', err);
+                            }
+                        });
+                    } else {
+                        // Puede que la función aún no esté lista si el script de contenedores carga con retraso
+                        console.log("Edit.cshtml: Esperando a window.cargarContenedoresExistentes...");
+                    }
+                }, 200); // Revisa cada 200ms
+                // Timeout para evitar bucles infinitos si la función nunca aparece
+                setTimeout(() => clearInterval(waitForFunction), 10000);
+            }
+
             // Función para cargar proveedores existentes del ítem (específico del modo Edit)
             function cargarProveedoresDelItem(itemId) {
                 console.log('Edit.cshtml: Cargando proveedores para item:', itemId);
@@ -389,10 +432,19 @@
                 }
                 // Podrías agregar lógica similar para la pestaña de compras si es necesario
                 if ($(e.target).attr('href') === '#tab-compras') {
-                    if (itemId && typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
-                         window.initializeProveedores(); // Asegura que el UI de la tabla esté listo
-                         cargarProveedoresDelItem(itemId);
-                         proveedoresCargados = true;
+                    // Cargar contenedores primero, luego proveedores
+                    if (itemId) {
+                        // Cargar contenedores
+                        cargarContenedoresDelItem(itemId);
+                        
+                        // Cargar proveedores después de un pequeño delay para asegurar que los contenedores estén listos
+                        setTimeout(function() {
+                            if (typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
+                                window.initializeProveedores(); // Asegura que el UI de la tabla esté listo
+                                cargarProveedoresDelItem(itemId);
+                                proveedoresCargados = true;
+                            }
+                        }, 500);
                     }
                 }
             });
@@ -417,6 +469,20 @@
             }
             
             $('#itemForm').on('submit', function(e) {
+                // Debug: mostrar qué contenedores se están enviando
+                console.log('=== DEBUG SUBMIT ===');
+                let contenedoresCount = 0;
+                $('#contenedores-body tr').each(function(index) {
+                    const inputs = $(this).find('input, select').filter('[name*="Contenedores"]');
+                    console.log(`Fila ${index}:`);
+                    inputs.each(function() {
+                        console.log(`  ${$(this).attr('name')} = ${$(this).val()}`);
+                    });
+                    contenedoresCount++;
+                });
+                console.log(`Total contenedores a enviar: ${contenedoresCount}`);
+                console.log('==================');
+                
                 prepareFormForSubmission();
                 // Desactivar campos de ProductoVenta antes del submit (lógica de Create.cshtml)
                 $('[name^="ProductoVenta."]').each(function() {
@@ -443,15 +509,21 @@
                 if ($('#tab-contabilidad').hasClass('active') || $('#tab-contabilidad').is(':visible')) {
                     cargarCuentasContables();
                 }
-                 // Cargar proveedores si la pestaña de compras es la activa al cargar y tenemos un itemId
+                 // Cargar contenedores y proveedores si la pestaña de compras es la activa al cargar y tenemos un itemId
                 if (itemId && ($('#tab-compras').hasClass('active') || $('#tab-compras').is(':visible'))) {
-                     if (typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
-                         window.initializeProveedores();
-                         cargarProveedoresDelItem(itemId);
-                         proveedoresCargados = true;
-                     } else if (!window.initializeProveedores) {
-                         console.warn("Edit.cshtml: initializeProveedores no está disponible al cargar la pestaña de compras activa.");
-                     }
+                    // Cargar contenedores primero
+                    cargarContenedoresDelItem(itemId);
+                    
+                    // Cargar proveedores después de un delay
+                    setTimeout(function() {
+                        if (typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
+                            window.initializeProveedores();
+                            cargarProveedoresDelItem(itemId);
+                            proveedoresCargados = true;
+                        } else if (!window.initializeProveedores) {
+                            console.warn("Edit.cshtml: initializeProveedores no está disponible al cargar la pestaña de compras activa.");
+                        }
+                    }, 500);
                 } else if (itemId && !$('#tab-compras').hasClass('active') && !$('#tab-compras').is(':visible')) {
                     // Si no está activa, la lógica 'shown.bs.tab' se encargará cuando se active
                 }

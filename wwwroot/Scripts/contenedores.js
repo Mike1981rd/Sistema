@@ -176,6 +176,10 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
         function agregarFilaContenedor(datos = null) {
             const filas = $('#contenedores-body tr').length;
             const esLaPrimera = filas === 0;
+            console.log(`Agregando fila de contenedor. Filas actuales: ${filas}, Es la primera: ${esLaPrimera}`);
+            if (datos) {
+                console.log('Datos recibidos:', datos);
+            }
 
             // Crear fila HTML
             const html = `
@@ -229,7 +233,7 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
                 placeholder: 'Seleccione un contenedor',
                 width: '100%',
                 ajax: {
-                    url: '/Contenedor/Buscar',
+                    url: '/UnidadMedida/Buscar',
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -244,7 +248,7 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
                         if (results.length === 0 && params.term && params.term.trim() !== '') {
                             results.push({
                                 id: 'new',
-                                text: 'Crear contenedor: "' + params.term + '"',
+                                text: 'Crear unidad: "' + params.term + '"',
                                 term: params.term
                             });
                         }
@@ -267,7 +271,7 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
                 templateSelection: formatContenedorSelection
             }).on('select2:select', function (e) {
                 if (e.params.data.id === 'new') {
-                    // Crear nuevo contenedor
+                    // Crear nueva unidad de medida
                     const term = e.params.data.term;
                     abrirOffcanvasContenedor(term);
                     
@@ -317,6 +321,7 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
 
         // Renumerar las filas
         function renumerarFilas() {
+            console.log('Renumerando filas de contenedores...');
             $('#contenedores-body tr').each(function (index) {
                 // Actualizar el número visible
                 $(this).find('td:first').text(index + 1);
@@ -326,10 +331,14 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
                 
                 // Actualizar nombres de campos
                 $(this).find('[name^="Contenedores["]').each(function() {
-                    const nameParts = $(this).attr('name').split('.');
-                    $(this).attr('name', `Contenedores[${index}].${nameParts[1]}`);
+                    const oldName = $(this).attr('name');
+                    const nameParts = oldName.split('.');
+                    const newName = `Contenedores[${index}].${nameParts[1]}`;
+                    $(this).attr('name', newName);
+                    console.log(`Renombrando: ${oldName} -> ${newName}`);
                 });
             });
+            console.log(`Renumeración completa. Total de filas: ${$('#contenedores-body tr').length}`);
         }
 
         // Actualizar etiqueta basada en el contenedor seleccionado
@@ -435,12 +444,15 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
             
             // Si no hay contenedores, agregar uno vacío
             if (!contenedores || contenedores.length === 0) {
+                console.log('No hay contenedores, agregando uno vacío');
                 agregarFilaContenedor();
                 return;
             }
             
+            console.log(`Cargando ${contenedores.length} contenedores existentes`);
             // Agregar cada contenedor
-            contenedores.forEach(function(contenedor) {
+            contenedores.forEach(function(contenedor, index) {
+                console.log(`Agregando contenedor ${index}:`, contenedor);
                 agregarFilaContenedor({
                     id: contenedor.id,
                     unidadMedidaId: contenedor.unidadMedidaId,
@@ -454,6 +466,14 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
             // Actualizar la UI
             actualizarBotonesEliminar();
             renumerarFilas();
+            
+            // Verificar el estado final
+            console.log(`Total de contenedores cargados: ${$('#contenedores-body tr').length}`);
+            $('#contenedores-body tr').each(function(index) {
+                const nombre = $(this).find('[name$=".Nombre"]').val();
+                const unidadId = $(this).find('[name$=".UnidadMedidaId"]').val();
+                console.log(`Contenedor ${index}: nombre="${nombre}", unidadMedidaId="${unidadId}"`);
+            });
         };
         console.log('contenedores.js: Después de definir window.cargarContenedoresExistentes');
 
@@ -473,35 +493,34 @@ console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
                 }
                 
                 $.ajax({
-                    url: '/Contenedor/Create',
+                    url: '/UnidadMedida/Create',
                     type: 'POST',
                     data: {
-                        Id: id,
-                        Nombre: nombre
+                        nombre: nombre
                     },
                     success: function(response) {
                         if (response.success) {
                             // Guardar referencia para evitar doble procesamiento
                             ultimoContenedorCreado = {
-                                id: response.data.id,
-                                nombre: response.data.nombre
+                                id: response.id,
+                                nombre: response.nombre
                             };
                             
                             // Cerrar offcanvas
                             bootstrap.Offcanvas.getInstance($('#offcanvasContenedor')).hide();
                             
                             // Agregar opción al select activo
-                            const option = new Option(response.data.nombre, response.data.id, true, true);
+                            const option = new Option(response.nombre, response.id, true, true);
                             $('.contenedor-select:focus').append(option).trigger('change');
                             
                             // Actualizar etiqueta
                             actualizarEtiqueta($('.contenedor-select:focus').closest('tr'));
                         } else {
-                            alert(response.message || 'Error al guardar el contenedor');
+                            alert(response.message || 'Error al guardar la unidad de medida');
                         }
                     },
                     error: function() {
-                        alert('Error al guardar el contenedor');
+                        alert('Error al guardar la unidad de medida');
                     }
                 });
             });
