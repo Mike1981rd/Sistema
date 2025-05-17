@@ -52,5 +52,98 @@ namespace SistemaContable.Controllers
                 return Json(new { error = ex.Message });
             }
         }
+
+        // GET: UnidadMedida/Buscar
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string term = "")
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                var query = _context.UnidadesMedida.Where(u => u.EmpresaId == empresaId && u.Estado);
+                
+                if (!string.IsNullOrEmpty(term))
+                {
+                    term = term.ToLower();
+                    query = query.Where(u => 
+                        u.Nombre.ToLower().Contains(term) || 
+                        u.Abreviatura.ToLower().Contains(term)
+                    );
+                }
+                
+                var unidades = await query
+                    .OrderBy(u => u.Nombre)
+                    .Select(u => new { id = u.Id, text = u.Nombre })
+                    .Take(10)
+                    .ToListAsync();
+
+                return Json(new { results = unidades });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en Buscar: {ex.Message}");
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // POST: UnidadMedida/Create
+        [HttpPost]
+        public async Task<IActionResult> Create(string nombre)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                    return Json(new { success = false, message = "El nombre es requerido" });
+
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                
+                var unidad = new UnidadMedida 
+                { 
+                    Nombre = nombre,
+                    Abreviatura = nombre.Length > 5 ? nombre.Substring(0, 5) : nombre,
+                    EmpresaId = empresaId,
+                    Estado = true
+                };
+                
+                _context.UnidadesMedida.Add(unidad);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, id = unidad.Id, nombre = unidad.Nombre });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en Create: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // POST: UnidadMedida/Edit/{id}
+        [HttpPost]
+        [Route("UnidadMedida/Edit/{id}")]
+        public async Task<IActionResult> Edit(int id, string nombre)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                    return Json(new { success = false, message = "El nombre es requerido" });
+
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                var unidad = await _context.UnidadesMedida
+                    .FirstOrDefaultAsync(u => u.Id == id && u.EmpresaId == empresaId);
+                
+                if (unidad == null)
+                    return Json(new { success = false, message = "Unidad de medida no encontrada" });
+
+                unidad.Nombre = nombre;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, id = unidad.Id, nombre = unidad.Nombre });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en Edit: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 } 

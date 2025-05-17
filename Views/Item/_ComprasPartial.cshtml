@@ -59,13 +59,14 @@
                             <input type="checkbox" disabled />
                         </th>
                         <th>Nombre</th>
+                        <th>Contenedor</th>
                         <th style="width: 100px;">Estado</th>
                         <th style="width: 50px;"></th>
                     </tr>
                 </thead>
                 <tbody id="proveedores-body">
                     <tr id="sinProveedores" class="text-center">
-                        <td colspan="4">
+                        <td colspan="5">
                             <p class="text-muted my-3">No hay proveedores agregados</p>
                         </td>
                     </tr>
@@ -189,6 +190,16 @@ function initializeProveedores() {
                     ${proveedorText}
                     <input type="hidden" name="Proveedores[${proveedores.length}].ProveedorId" value="${proveedorId}" />
                     <input type="hidden" name="Proveedores[${proveedores.length}].EsPrincipal" value="${isPrincipal}" class="es-principal" />
+                    <input type="hidden" name="Proveedores[${proveedores.length}].PrecioCompra" value="0.01" />
+                    <input type="hidden" name="Proveedores[${proveedores.length}].FactorConversion" value="1" />
+                </td>
+                <td>
+                    <select name="Proveedores[${proveedores.length}].UnidadMedidaCompraId" 
+                            class="form-select select2-contenedor-proveedor" 
+                            data-proveedor-index="${proveedores.length}"
+                            required>
+                        <option value="">Seleccione contenedor</option>
+                    </select>
                 </td>
                 <td>
                     <span class="badge bg-${isPrincipal ? 'success' : 'secondary'}">
@@ -217,6 +228,14 @@ function initializeProveedores() {
             
             // Actualizar listeners de radio buttons
             updateRadioListeners();
+            
+            // Inicializar Select2 para el nuevo contenedor del proveedor
+            initializeContenedorSelect(newRow);
+            
+            // Asegurar que se carguen los contenedores disponibles
+            setTimeout(() => {
+                populateContenedorOptions(newRow.querySelector('.select2-contenedor-proveedor'));
+            }, 500);
         });
     }, 500);
     
@@ -244,6 +263,71 @@ function initializeProveedores() {
             });
         });
     }
+    
+    // Función para inicializar select2 de contenedor
+    function initializeContenedorSelect(row) {
+        const select = row.querySelector('.select2-contenedor-proveedor');
+        if (!select) return;
+        
+        // Poblar opciones con los contenedores actuales del item
+        populateContenedorOptions(select);
+        
+        // Inicializar Select2
+        $(select).select2({
+            placeholder: 'Seleccione contenedor',
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+    }
+    
+    // Función para poblar opciones de contenedores
+    function populateContenedorOptions(select) {
+        // Limpiar opciones actuales
+        $(select).empty();
+        $(select).append('<option value="">Seleccione contenedor</option>');
+        
+        // Obtener contenedores actuales de la tabla de contenedores
+        const contenedoresTable = document.getElementById('contenedores-body');
+        if (contenedoresTable) {
+            const contenedorRows = contenedoresTable.querySelectorAll('tr');
+            
+            contenedorRows.forEach((row, index) => {
+                // Buscar el select de contenedor en esta fila - buscar por la clase correcta
+                const contenedorSelect = row.querySelector('.contenedor-select');
+                if (contenedorSelect) {
+                    const selectedOption = contenedorSelect.selectedOptions[0];
+                    if (selectedOption && selectedOption.value) {
+                        // El value del select ya contiene el ID de la unidad de medida
+                        const unidadMedidaId = selectedOption.value;
+                        
+                        // Crear opción para este contenedor
+                        const option = new Option(selectedOption.text, unidadMedidaId, false, false);
+                        $(select).append(option);
+                    }
+                }
+            });
+        }
+    }
+    
+    // Función global para actualizar contenedores en proveedores cuando cambien
+    window.actualizarContenedoresProveedores = function() {
+        // Actualizar todas las listas de contenedores en proveedores
+        const selectsContenedor = document.querySelectorAll('.select2-contenedor-proveedor');
+        selectsContenedor.forEach(select => {
+            // Guardar valor actual
+            const currentValue = $(select).val();
+            
+            // Repoblar opciones
+            populateContenedorOptions(select);
+            
+            // Restaurar valor si aún existe
+            if (currentValue && $(select).find(`option[value="${currentValue}"]`).length > 0) {
+                $(select).val(currentValue).trigger('change');
+            } else {
+                $(select).val('').trigger('change');
+            }
+        });
+    };
     
     // Función global para eliminar proveedor
     window.eliminarProveedor = function(rowId, proveedorId) {
@@ -307,6 +391,85 @@ function initializeProveedores() {
         setTimeout(initializeProveedores, 100);
     }
 }
+
+// Función global para cargar proveedores existentes
+window.cargarProveedoresExistentes = function(proveedoresData) {
+    if (!proveedoresData || proveedoresData.length === 0) return;
+    
+    proveedores = [];
+    proveedorCount = 0;
+    
+    // Limpiar tabla existente
+    $('#proveedores-body').empty();
+    
+    proveedoresData.forEach((proveedorData, index) => {
+        // Ocultar mensaje vacío
+        $('#sinProveedores').hide();
+        
+        // Crear nueva fila
+        const newRow = document.createElement('tr');
+        const isPrincipal = proveedorData.esPrincipal;
+        const rowId = 'proveedor-' + proveedorCount++;
+        
+        newRow.id = rowId;
+        newRow.innerHTML = `
+            <td class="text-center">
+                <input type="radio" name="proveedorPrincipal" value="${proveedorData.proveedorId}" 
+                       ${isPrincipal ? 'checked' : ''} class="form-check-input" />
+            </td>
+            <td>
+                ${proveedorData.nombreProveedor || 'Proveedor ' + proveedorData.proveedorId}
+                <input type="hidden" name="Proveedores[${index}].ProveedorId" value="${proveedorData.proveedorId}" />
+                <input type="hidden" name="Proveedores[${index}].EsPrincipal" value="${isPrincipal}" class="es-principal" />
+                <input type="hidden" name="Proveedores[${index}].PrecioCompra" value="${proveedorData.precioCompra || '0.01'}" />
+                <input type="hidden" name="Proveedores[${index}].FactorConversion" value="${proveedorData.factorConversion || '1'}" />
+            </td>
+            <td>
+                <select name="Proveedores[${index}].UnidadMedidaCompraId" 
+                        class="form-select select2-contenedor-proveedor" 
+                        data-proveedor-index="${index}"
+                        required>
+                    <option value="">Seleccione contenedor</option>
+                </select>
+            </td>
+            <td>
+                <span class="badge bg-${isPrincipal ? 'success' : 'secondary'}">
+                    ${isPrincipal ? 'Principal' : 'Secundario'}
+                </span>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-link text-danger" onclick="eliminarProveedor('${rowId}', '${proveedorData.proveedorId}')">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </td>
+        `;
+        
+        $('#proveedores-body').append(newRow);
+        
+        // Agregar al array
+        proveedores.push({
+            id: proveedorData.proveedorId.toString(),
+            nombre: proveedorData.nombreProveedor || 'Proveedor ' + proveedorData.proveedorId,
+            isPrincipal: isPrincipal
+        });
+        
+        // Inicializar Select2 y cargar el contenedor guardado
+        initializeContenedorSelect(newRow);
+        
+        // Esperar un poco y luego cargar los contenedores disponibles y seleccionar el guardado
+        setTimeout(() => {
+            const select = newRow.querySelector('.select2-contenedor-proveedor');
+            populateContenedorOptions(select);
+            
+            // Seleccionar el contenedor guardado si existe
+            if (proveedorData.unidadMedidaCompraId) {
+                $(select).val(proveedorData.unidadMedidaCompraId).trigger('change');
+            }
+        }, 750);
+    });
+    
+    updateRadioListeners();
+};
 
 // Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {

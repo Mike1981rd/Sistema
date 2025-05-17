@@ -394,7 +394,7 @@ namespace SistemaContable.Controllers
 
                 var marcas = await _context.Marcas
                     .Where(m => m.EmpresaId == empresaId && m.Estado && 
-                          (string.IsNullOrEmpty(term) || m.Nombre.Contains(term)))
+                          (string.IsNullOrEmpty(term) || m.Nombre.ToLower().Contains(term.ToLower())))
                     .OrderBy(m => m.Nombre)
                     .Select(m => new { 
                         id = m.Id, 
@@ -414,7 +414,11 @@ namespace SistemaContable.Controllers
         [HttpGet]
         public async Task<JsonResult> Obtener(int id)
         {
-            var marca = await _context.Marcas.FindAsync(id);
+            var empresaId = HttpContext.Session.GetInt32("EmpresaId") ?? await _empresaService.ObtenerEmpresaActualId();
+            var marca = await _context.Marcas
+                .Where(m => m.Id == id && m.EmpresaId == empresaId)
+                .FirstOrDefaultAsync();
+                
             if (marca == null)
                 return Json(new { success = false, message = "No encontrada" });
 
@@ -426,5 +430,6 @@ namespace SistemaContable.Controllers
                 estado = marca.Estado
             });
         }
+
     }
 } 

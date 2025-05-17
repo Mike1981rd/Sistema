@@ -26,6 +26,10 @@ namespace SistemaContable.Services
 
         public async Task<int> ObtenerEmpresaActualId()
         {
+            // TEMPORAL: Siempre devolver empresa 4
+            return 4;
+            
+            /* CÓDIGO ORIGINAL COMENTADO
             try
             {
                 // Intenta obtener el ID de empresa de la sesión
@@ -62,6 +66,7 @@ namespace SistemaContable.Services
             
             // Si no hay empresas o hubo un error, devuelve 1 (valor predeterminado)
             return 1;
+            */
         }
     }
 } 

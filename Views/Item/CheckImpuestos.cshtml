@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Verificar Impuestos";
+    var db = Context.RequestServices.GetService<SistemaContable.Data.ApplicationDbContext>();
+    var empresaId = 4;
+    
+    // Obtener impuestos
+    var todosImpuestos = db.Impuestos.Where(i => i.EmpresaId == empresaId).ToList();
+    var impuestosActivos = db.Impuestos.Where(i => i.EmpresaId == empresaId && i.Activo).ToList();
+    var impuestosConEstado = db.Impuestos.Where(i => i.EmpresaId == empresaId && i.Estado).ToList();
+}
+
+<div class="container mt-4">
+    <h1>Verificación de Impuestos</h1>
+    
+    <div class="alert alert-info">
+        <p>EmpresaId: <strong>@empresaId</strong></p>
+        <p>Total de impuestos: <strong>@todosImpuestos.Count</strong></p>
+        <p>Impuestos con Activo = true: <strong>@impuestosActivos.Count</strong></p>
+        <p>Impuestos con Estado = true: <strong>@impuestosConEstado.Count</strong></p>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Todos los Impuestos</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>EmpresaId</th>
+                        <th>Activo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var imp in todosImpuestos)
+                {
+                    <tr>
+                        <td>@imp.Id</td>
+                        <td>@imp.Nombre</td>
+                        <td>@imp.EmpresaId</td>
+                        <td>@imp.Activo</td>
+                        <td>@imp.Estado</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

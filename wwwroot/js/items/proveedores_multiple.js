@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${proveedorText}
                 <input type="hidden" name="Proveedores[${proveedores.length}].ProveedorId" value="${proveedorId}" />
                 <input type="hidden" name="Proveedores[${proveedores.length}].EsPrincipal" value="${isPrincipal}" class="es-principal" />
+                <input type="hidden" name="Proveedores[${proveedores.length}].NombreCompra" value="${proveedorText}" />
+                <input type="hidden" name="Proveedores[${proveedores.length}].PrecioCompra" value="0.01" />
+                <input type="hidden" name="Proveedores[${proveedores.length}].FactorConversion" value="1" />
             </td>
             <td>
                 <span class="badge bg-${isPrincipal ? 'success' : 'secondary'}">
@@ -142,6 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Función para reindexar los campos hidden después de eliminar
+    function reindexarProveedores() {
+        const rows = document.querySelectorAll('#proveedores-body tr');
+        rows.forEach((row, index) => {
+            const hiddenInputs = row.querySelectorAll('input[type="hidden"]');
+            hiddenInputs.forEach(input => {
+                // Actualizar el índice en el nombre del campo
+                input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
+            });
+        });
+    }
+    
     // Función global para eliminar proveedor
     window.eliminarProveedor = function(rowId, proveedorId) {
         Swal.fire({
@@ -178,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Re-indexar los inputs
+                reindexarProveedores();
                 updateInputIndexes();
                 
                 Swal.fire({
@@ -206,4 +222,75 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // Función para inicializar con datos existentes (para el modo edición)
+    window.initProveedoresWithData = function(proveedoresExistentes) {
+        console.log('Inicializando proveedores con datos existentes:', proveedoresExistentes);
+        
+        if (!proveedoresExistentes || proveedoresExistentes.length === 0) return;
+        
+        // Ocultar mensaje de sin proveedores
+        if (sinProveedores) {
+            sinProveedores.style.display = 'none';
+        }
+        
+        // Limpiar tabla existente (excepto el mensaje de sin proveedores)
+        const filas = tablaProveedores.querySelectorAll('tr:not(#sinProveedores)');
+        filas.forEach(fila => fila.remove());
+        
+        // Resetear arrays
+        proveedores = [];
+        proveedorCount = 0;
+        
+        // Agregar cada proveedor existente
+        proveedoresExistentes.forEach((proveedor, index) => {
+            const rowId = 'proveedor-' + proveedorCount++;
+            const newRow = document.createElement('tr');
+            
+            newRow.id = rowId;
+            newRow.innerHTML = `
+                <td class="text-center">
+                    <input type="radio" name="proveedorPrincipal" value="${proveedor.proveedorId}" 
+                           ${proveedor.esPrincipal ? 'checked' : ''} class="form-check-input" />
+                </td>
+                <td>
+                    ${proveedor.proveedorNombre || 'Proveedor ' + proveedor.proveedorId}
+                    <input type="hidden" name="Proveedores[${index}].ProveedorId" value="${proveedor.proveedorId}" />
+                    <input type="hidden" name="Proveedores[${index}].EsPrincipal" value="${proveedor.esPrincipal}" class="es-principal" />
+                    <input type="hidden" name="Proveedores[${index}].NombreCompra" value="${proveedor.nombreCompra || ''}" />
+                    <input type="hidden" name="Proveedores[${index}].CodigoProveedor" value="${proveedor.codigoProveedor || ''}" />
+                    <input type="hidden" name="Proveedores[${index}].PrecioCompra" value="${proveedor.precioCompra || 0}" />
+                    <input type="hidden" name="Proveedores[${index}].UnidadMedidaCompraId" value="${proveedor.unidadMedidaCompraId || ''}" />
+                    <input type="hidden" name="Proveedores[${index}].FactorConversion" value="${proveedor.factorConversion || 1}" />
+                </td>
+                <td>
+                    <span class="badge bg-${proveedor.esPrincipal ? 'success' : 'secondary'}">
+                        ${proveedor.esPrincipal ? 'Principal' : 'Secundario'}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarProveedor('${rowId}', '${proveedor.proveedorId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tablaProveedores.appendChild(newRow);
+            
+            // Agregar al array interno
+            proveedores.push({
+                id: proveedor.proveedorId,
+                nombre: proveedor.proveedorNombre,
+                isPrincipal: proveedor.esPrincipal
+            });
+        });
+        
+        // Actualizar listeners de radio buttons
+        updateRadioListeners();
+    };
+    
+    // Hacer la función disponible globalmente también
+    window.initializeProveedoresModule = function() {
+        console.log('initializeProveedoresModule llamado');
+    };
 });

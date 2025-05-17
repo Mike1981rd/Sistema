@@ -1,0 +1,168 @@
+@{
+    ViewData["Title"] = "Test Select2";
+}
+
+<div class="container mt-4">
+    <h2>Test Select2 Functionality</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Category Select2</div>
+                <div class="card-body">
+                    <label for="testCategoriaId">Category:</label>
+                    <select id="testCategoriaId" class="form-select">
+                        <option value="">Select a category</option>
+                    </select>
+                    <div class="mt-2">
+                        <button class="btn btn-primary" onclick="testCategoryChange()">Test Change Event</button>
+                        <button class="btn btn-info" onclick="getCategoryData()">Get Current Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Brand Select2</div>
+                <div class="card-body">
+                    <label for="testMarcaId">Brand:</label>
+                    <select id="testMarcaId" class="form-select">
+                        <option value="">Select a brand</option>
+                    </select>
+                    <div class="mt-2">
+                        <button class="btn btn-info" onclick="getBrandData()">Get Current Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Console Output</div>
+                <div class="card-body">
+                    <pre id="consoleOutput" style="height: 200px; overflow-y: auto; background: #f4f4f4; padding: 10px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Override console.log to show in our output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const output = document.getElementById('consoleOutput');
+            output.innerHTML += args.join(' ') + '\n';
+            output.scrollTop = output.scrollHeight;
+        };
+        
+        $(document).ready(function() {
+            console.log("Initializing test page...");
+            
+            // Initialize Category Select2
+            $('#testCategoriaId').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select or create a category',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/Categoria/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { term: params.term || '' };
+                    },
+                    processResults: function(data, params) {
+                        console.log("Category data received:", data);
+                        var results = data.results || [];
+                        
+                        // Add option to create new
+                        if (results.length == 0 && params.term && params.term.trim() !== '') {
+                            results.push({
+                                id: 'new',
+                                text: 'Create category: "' + params.term + '"',
+                                term: params.term
+                            });
+                        }
+                        
+                        return { results: results };
+                    },
+                    cache: true
+                }
+            }).on('select2:select', function(e) {
+                console.log("Category selected:", e.params.data);
+                
+                if (e.params.data.id === 'new') {
+                    console.log("Would open create dialog for:", e.params.data.term);
+                    $(this).val(null).trigger('change');
+                }
+            });
+            
+            // Initialize Brand Select2
+            $('#testMarcaId').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select or create a brand',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/api/Marcas/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { term: params.term || '' };
+                    },
+                    processResults: function(data, params) {
+                        console.log("Brand data received:", data);
+                        var results = data.results || [];
+                        
+                        // Add option to create new
+                        if (results.length == 0 && params.term && params.term.trim() !== '') {
+                            results.push({
+                                id: 'new',
+                                text: 'Create brand: "' + params.term + '"',
+                                term: params.term
+                            });
+                        }
+                        
+                        return { results: results };
+                    },
+                    cache: true
+                }
+            }).on('select2:select', function(e) {
+                console.log("Brand selected:", e.params.data);
+                
+                if (e.params.data.id === 'new') {
+                    console.log("Would open create dialog for:", e.params.data.term);
+                    $(this).val(null).trigger('change');
+                }
+            });
+            
+            console.log("Test page initialized");
+        });
+        
+        function testCategoryChange() {
+            $('#testCategoriaId').val(1).trigger('change');
+            console.log("Triggered category change to ID 1");
+        }
+        
+        function getCategoryData() {
+            const data = $('#testCategoriaId').select2('data');
+            console.log("Current category data:", data);
+        }
+        
+        function getBrandData() {
+            const data = $('#testMarcaId').select2('data');
+            console.log("Current brand data:", data);
+        }
+    </script>
+}

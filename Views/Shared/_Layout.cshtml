@@ -120,18 +120,22 @@
                     <a href="/Almacen" class="aurora-submenu-item" data-title="Almacenes">
                         <i class="fas fa-warehouse me-2"></i>Almacenes
                     </a>
+                    <!-- Ocultando Impresoras, Categorías y Ajustes
                     <a href="/Impresora/Index" class="aurora-submenu-item" data-title="Impresoras">
                         <i class="fas fa-print me-2"></i>Impresoras
                     </a>
+                    -->
                     <a href="/inventario/servicios" class="aurora-submenu-item" data-title="Items">
                         <i class="fas fa-box me-2"></i>Items
                     </a>
+                    <!-- 
                     <a href="/inventario/categorias" class="aurora-submenu-item" data-title="Categorías">
                         <i class="fas fa-tags me-2"></i>Categorías
                     </a>
                     <a href="/inventario/ajustes" class="aurora-submenu-item" data-title="Ajustes">
                         <i class="fas fa-sliders-h me-2"></i>Ajustes
                     </a>
+                    -->
                 </div>
                 
                 <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Punto de Venta">
@@ -241,6 +245,7 @@
                     </div>
                 </div>
                 <div class="aurora-header-actions">
+                    @Html.Partial("_EmpresaActualPartial")
                     <div class="aurora-header-icon">
                         <i class="fas fa-bell"></i>
                         <span class="aurora-notification-badge"></span>
@@ -430,5 +435,6 @@
             }, 500); // Esperar a que todo esté completamente cargado
         });
     </script>
+    @Html.Partial("_SetEmpresaPartial")
 </body>
 </html>

@@ -63,7 +63,7 @@ $(document).ready(function() {
                 <td>
                     <input type="number" class="form-control ${esLaPrimera ? 'costo-base' : 'costo-derivado'}" 
                            name="ItemContenedores[${filas}].Costo" 
-                           value="${datos ? datos.costo || '0.00' : '0.00'}"
+                           value="${datos ? datos.costo || '' : ''}"
                            min="0" step="0.01"
                            ${!esLaPrimera ? 'readonly' : ''}>
                 </td>

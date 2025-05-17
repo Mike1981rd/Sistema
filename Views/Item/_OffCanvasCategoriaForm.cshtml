@@ -132,91 +132,107 @@
 </form>
 
 <script>
-    $(document).ready(function() {
-        // Inicializar select2
-        $('.select2-familia, .select2-impuesto, .select2-cuenta').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#offcanvasCategoria')
-        });
+    // Esperar hasta que jQuery esté disponible
+    (function checkJQuery() {
+        if (typeof jQuery === 'undefined') {
+            console.log('Esperando jQuery para el formulario de categoría...');
+            setTimeout(checkJQuery, 100);
+            return;
+        }
         
-        // Guardar categoría
-        $('#btnGuardarCategoria').click(function() {
-            // Validación básica
-            if (!$('#CategoriaNombre').val()) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'El nombre de la categoría es requerido'
-                });
-                return;
-            }
+        // Ahora jQuery está disponible, podemos proceder
+        jQuery(document).ready(function($) {
+            console.log('Inicializando formulario de categoría');
             
-            // Preparar datos
-            var formData = $('#formCategoria').serialize();
-            
-            // Enviar solicitud
-            $.ajax({
-                url: '/Item/CrearCategoria',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(getFormData($('#formCategoria'))),
-                success: function(response) {
-                    if (response.success) {
-                        // Agregar al dropdown y seleccionar
-                        var newOption = new Option(response.nombre, response.id, true, true);
-                        $('#CategoriaId').append(newOption).trigger('change');
-                        
-                        // Actualizar cuentas contables heredadas
-                        $('#ImpuestoId').val(response.impuestoId).trigger('change');
-                        $('#CuentaVentasId').val(response.cuentaVentasId).trigger('change');
-                        $('#CuentaComprasInventariosId').val(response.cuentaComprasInventariosId).trigger('change');
-                        $('#CuentaCostoVentasGastosId').val(response.cuentaCostoVentasGastosId).trigger('change');
-                        $('#CuentaDescuentosId').val(response.cuentaDescuentosId).trigger('change');
-                        $('#CuentaDevolucionesId').val(response.cuentaDevolucionesId).trigger('change');
-                        $('#CuentaAjustesId').val(response.cuentaAjustesId).trigger('change');
-                        
-                        // Cerrar offcanvas
-                        $('#offcanvasCategoria').offcanvas('hide');
-                        
-                        // Mostrar mensaje
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: 'Categoría guardada correctamente',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'No se pudo guardar la categoría'
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Ocurrió un error al procesar la solicitud'
+            // Inicializar select2 solo si aún no se ha inicializado
+            $('.select2-familia, .select2-impuesto, .select2-cuenta').each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        dropdownParent: $('#offcanvasCategoria')
                     });
                 }
             });
-        });
-        
-        // Función para convertir form a objeto
-        function getFormData($form) {
-            var unindexed_array = $form.serializeArray();
-            var indexed_array = {};
             
-            $.map(unindexed_array, function(n, i) {
-                indexed_array[n['name']] = n['value'];
+            // Guardar categoría
+            $('#btnGuardarCategoria').click(function() {
+                // Validación básica
+                if (!$('#CategoriaNombre').val()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El nombre de la categoría es requerido'
+                    });
+                    return;
+                }
+                
+                // Preparar datos
+                var formData = $('#formCategoria').serialize();
+                
+                // Enviar solicitud
+                $.ajax({
+                    url: '/Item/CrearCategoria',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(getFormData($('#formCategoria'))),
+                    success: function(response) {
+                        if (response.success) {
+                            // Agregar al dropdown y seleccionar
+                            var newOption = new Option(response.nombre, response.id, true, true);
+                            $('#CategoriaId').append(newOption).trigger('change');
+                            
+                            // Actualizar cuentas contables heredadas
+                            $('#ImpuestoId').val(response.impuestoId).trigger('change');
+                            $('#CuentaVentasId').val(response.cuentaVentasId).trigger('change');
+                            $('#CuentaComprasInventariosId').val(response.cuentaComprasInventariosId).trigger('change');
+                            $('#CuentaCostoVentasGastosId').val(response.cuentaCostoVentasGastosId).trigger('change');
+                            $('#CuentaDescuentosId').val(response.cuentaDescuentosId).trigger('change');
+                            $('#CuentaDevolucionesId').val(response.cuentaDevolucionesId).trigger('change');
+                            $('#CuentaAjustesId').val(response.cuentaAjustesId).trigger('change');
+                            
+                            // Cerrar offcanvas
+                            $('#offcanvasCategoria').offcanvas('hide');
+                            
+                            // Mostrar mensaje
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Éxito',
+                                text: 'Categoría guardada correctamente',
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'No se pudo guardar la categoría'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un error al procesar la solicitud'
+                        });
+                    }
+                });
             });
             
-            return indexed_array;
-        }
-    });
+            // Función para convertir form a objeto
+            function getFormData($form) {
+                var unindexed_array = $form.serializeArray();
+                var indexed_array = {};
+                
+                $.map(unindexed_array, function(n, i) {
+                    indexed_array[n['name']] = n['value'];
+                });
+                
+                return indexed_array;
+            }
+        });
+    })();
 </script>

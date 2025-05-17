@@ -1,0 +1,458 @@
+@model SistemaContable.Models.ViewModels.ItemViewModel
+
+<!-- Proveedores -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Proveedores</h5>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-end mb-3">
+            <div class="col-md-4">
+                <label for="ProveedorId" class="form-label">Seleccionar Proveedor</label>
+                <select id="ProveedorId" name="ProveedorId" class="form-control select2-proveedor" 
+                        data-placeholder="Seleccione o cree un proveedor"></select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="btnAgregarProveedor" class="btn btn-sm w-100 btn-custom-primary" disabled>
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tabla de proveedores -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="tablaProveedores">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" disabled />
+                        </th>
+                        <th>Nombre</th>
+                        <th>Contenedor</th>
+                        <th style="width: 100px;">Estado</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="proveedores-body">
+                    <tr id="sinProveedores" class="text-center">
+                        <td colspan="5">
+                            <p class="text-muted my-3">No hay proveedores agregados</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas para Proveedor -->
+<div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="offcanvasProveedor" aria-labelledby="offcanvasProveedorLabel">
+    <div class="offcanvas-header text-white" style="background-color: #3944BC;">
+        <h5 id="offcanvasProveedorLabel" class="text-white">Proveedor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="formProveedorContainer"></div>
+    </div>
+</div>
+
+<style>
+    .btn-custom-primary {
+        background-color: #0A1172 !important;
+        color: #FFFFFF !important;
+        border-color: #0A1172 !important;
+    }
+    
+    .btn-custom-primary:hover:not(:disabled) {
+        background-color: #080E5C !important;
+        color: #FFFFFF !important;
+        border-color: #080E5C !important;
+    }
+    
+    .btn-custom-primary:focus,
+    .btn-custom-primary:active {
+        background-color: #0A1172 !important;
+        color: #FFFFFF !important;
+        border-color: #0A1172 !important;
+        box-shadow: 0 0 0 0.25rem rgba(10, 17, 114, 0.25) !important;
+    }
+    
+    .btn-custom-primary:disabled {
+        background-color: #0A1172 !important;
+        color: #FFFFFF !important;
+        border-color: #0A1172 !important;
+        opacity: 0.65;
+    }
+</style>
+
+<script type="text/javascript">
+// Función para inicializar cuando todo esté listo
+function initializeProveedores() {
+    console.log('Intentando inicializar proveedores...');
+    
+    // Verificar que jQuery esté disponible
+    if (typeof jQuery !== 'undefined') {
+        console.log('jQuery encontrado');
+        jQuery(function($) {
+            console.log('Dentro del jQuery ready');
+            // Funcionalidad de proveedores múltiples
+            let proveedores = [];
+            let proveedorCount = 0;
+            
+            const btnAgregarProveedor = document.getElementById('btnAgregarProveedor');
+            const selectProveedor = document.getElementById('ProveedorId');
+            const tablaProveedores = document.getElementById('proveedores-body');
+            const sinProveedores = document.getElementById('sinProveedores');
+            
+            // Inicialización después de un pequeño delay
+            setTimeout(() => {
+                // Habilitar/deshabilitar botón según selección
+                $('#ProveedorId').on('select2:select', function(e) {
+                    btnAgregarProveedor.disabled = false;
+                });
+                
+                $('#ProveedorId').on('select2:clear select2:unselect', function(e) {
+                    btnAgregarProveedor.disabled = true;
+                });
+                
+                // Manejar click en el botón agregar
+                btnAgregarProveedor.addEventListener('click', function() {
+                    const proveedorId = $('#ProveedorId').val();
+                    const proveedorData = $('#ProveedorId').select2('data');
+                    const proveedorText = proveedorData && proveedorData[0] ? proveedorData[0].text : '';
+                    
+                    if (!proveedorId) return;
+                    
+                    // Verificar duplicados
+                    if (proveedores.find(p => p.id === proveedorId)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Proveedor duplicado',
+                            text: 'Este proveedor ya ha sido agregado',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        return;
+                    }
+                    
+                    // Ocultar mensaje vacío
+                    sinProveedores.style.display = 'none';
+                    
+                    // Crear nueva fila
+                    const newRow = document.createElement('tr');
+                    const isPrincipal = proveedores.length === 0;
+                    const rowId = 'proveedor-' + proveedorCount++;
+                    
+                    newRow.id = rowId;
+                    newRow.innerHTML = `
+                        <td class="text-center">
+                            <input type="radio" name="proveedorPrincipal" value="${proveedorId}" 
+                                   ${isPrincipal ? 'checked' : ''} class="form-check-input" />
+                        </td>
+                        <td>
+                            ${proveedorText}
+                            <input type="hidden" name="Proveedores[${proveedores.length}].ProveedorId" value="${proveedorId}" />
+                            <input type="hidden" name="Proveedores[${proveedores.length}].EsPrincipal" value="${isPrincipal}" class="es-principal" />
+                            <input type="hidden" name="Proveedores[${proveedores.length}].PrecioCompra" value="0.01" />
+                            <input type="hidden" name="Proveedores[${proveedores.length}].FactorConversion" value="1" />
+                        </td>
+                        <td>
+                            <select name="Proveedores[${proveedores.length}].UnidadMedidaCompraId" 
+                                    class="form-select select2-contenedor-proveedor" 
+                                    data-proveedor-index="${proveedores.length}"
+                                    required>
+                                <option value="">Seleccione contenedor</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="badge bg-${isPrincipal ? 'success' : 'secondary'}">
+                                ${isPrincipal ? 'Principal' : 'Secundario'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-link text-danger" onclick="eliminarProveedor('${rowId}', '${proveedorId}')">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tablaProveedores.appendChild(newRow);
+                    
+                    // Agregar al array
+                    proveedores.push({
+                        id: proveedorId,
+                        nombre: proveedorText,
+                        isPrincipal: isPrincipal
+                    });
+                    
+                    // Limpiar select
+                    $('#ProveedorId').val(null).trigger('change');
+                    btnAgregarProveedor.disabled = true;
+                    
+                    // Actualizar listeners de radio buttons
+                    updateRadioListeners();
+                    
+                    // Inicializar Select2 para el nuevo contenedor del proveedor
+                    initializeContenedorSelect(newRow);
+                    
+                    // Asegurar que se carguen los contenedores disponibles
+                    setTimeout(() => {
+                        if (window.actualizarContenedoresProveedores) {
+                            window.actualizarContenedoresProveedores();
+                        } else {
+                            populateContenedorOptions(newRow.querySelector('.select2-contenedor-proveedor'));
+                        }
+                    }, 500);
+                });
+            }, 500);
+            
+            // Función para actualizar radio buttons
+            function updateRadioListeners() {
+                const radios = document.querySelectorAll('input[name="proveedorPrincipal"]');
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.checked) {
+                            document.querySelectorAll('#proveedores-body tr').forEach(row => {
+                                const isPrincipalInput = row.querySelector('.es-principal');
+                                const badge = row.querySelector('.badge');
+                                const isChecked = row.querySelector('input[type="radio"]').checked;
+                                
+                                if (isPrincipalInput) {
+                                    isPrincipalInput.value = isChecked;
+                                }
+                                
+                                if (badge) {
+                                    badge.className = 'badge bg-' + (isChecked ? 'success' : 'secondary');
+                                    badge.textContent = isChecked ? 'Principal' : 'Secundario';
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+            
+            // Función para inicializar select2 de contenedor
+            function initializeContenedorSelect(row) {
+                const select = row.querySelector('.select2-contenedor-proveedor');
+                if (!select) return;
+                
+                // Poblar opciones con los contenedores actuales del item
+                populateContenedorOptions(select);
+                
+                // Inicializar Select2
+                $(select).select2({
+                    placeholder: 'Seleccione contenedor',
+                    theme: 'bootstrap-5',
+                    width: '100%'
+                });
+            }
+            
+            // Función para poblar opciones de contenedores
+            function populateContenedorOptions(select) {
+                // Limpiar opciones actuales
+                $(select).empty();
+                $(select).append('<option value="">Seleccione contenedor</option>');
+                
+                // Obtener contenedores actuales de la tabla de contenedores
+                const tablaContenedores = document.getElementById('tablaContenedores');
+                if (tablaContenedores) {
+                    const contenedorRows = tablaContenedores.querySelectorAll('tbody tr');
+                    
+                    contenedorRows.forEach((row, index) => {
+                        // Buscar el select de contenedor en esta fila - buscar por la clase correcta
+                        const contenedorSelect = row.querySelector('.contenedor-select');
+                        if (contenedorSelect) {
+                            const selectedOption = contenedorSelect.selectedOptions[0];
+                            if (selectedOption && selectedOption.value) {
+                                // El value del select ya contiene el ID de la unidad de medida
+                                const unidadMedidaId = selectedOption.value;
+                                
+                                // Crear opción para este contenedor
+                                const option = new Option(selectedOption.text, unidadMedidaId, false, false);
+                                $(select).append(option);
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Función global para actualizar contenedores en proveedores cuando cambien
+            window.actualizarContenedoresProveedores = function() {
+                // Actualizar todas las listas de contenedores en proveedores
+                const selectsContenedor = document.querySelectorAll('.select2-contenedor-proveedor');
+                selectsContenedor.forEach(select => {
+                    // Guardar valor actual
+                    const currentValue = $(select).val();
+                    
+                    // Repoblar opciones
+                    populateContenedorOptions(select);
+                    
+                    // Restaurar valor si aún existe
+                    if (currentValue && $(select).find(`option[value="${currentValue}"]`).length > 0) {
+                        $(select).val(currentValue).trigger('change');
+                    } else {
+                        $(select).val('').trigger('change');
+                    }
+                });
+            };
+            
+            // Función global para eliminar proveedor
+            window.eliminarProveedor = function(rowId, proveedorId) {
+                Swal.fire({
+                    title: '¿Eliminar proveedor?',
+                    text: "¿Está seguro de que desea eliminar este proveedor?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const row = document.getElementById(rowId);
+                        const wasPrincipal = row.querySelector('input[type="radio"]').checked;
+                        row.remove();
+                        
+                        proveedores = proveedores.filter(p => p.id !== proveedorId);
+                        
+                        if (wasPrincipal && proveedores.length > 0) {
+                            const firstRadio = document.querySelector('input[name="proveedorPrincipal"]');
+                            if (firstRadio) {
+                                firstRadio.checked = true;
+                                firstRadio.dispatchEvent(new Event('change'));
+                            }
+                        }
+                        
+                        if (proveedores.length === 0) {
+                            sinProveedores.style.display = '';
+                        }
+                        
+                        // Re-indexar inputs
+                        const rows = document.querySelectorAll('#proveedores-body tr:not(#sinProveedores)');
+                        rows.forEach((row, index) => {
+                            const inputs = row.querySelectorAll('input[type="hidden"]');
+                            inputs.forEach(input => {
+                                const name = input.name;
+                                if (name.includes('Proveedores[')) {
+                                    input.name = name.replace(/Proveedores\[\d+\]/, `Proveedores[${index}]`);
+                                }
+                            });
+                        });
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminado',
+                            text: 'El proveedor ha sido eliminado',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                });
+            };
+            
+            // Función global para cargar proveedores existentes
+            window.cargarProveedoresExistentes = function(proveedoresData) {
+                if (!proveedoresData || proveedoresData.length === 0) return;
+                
+                proveedores = [];
+                proveedorCount = 0;
+                
+                // Limpiar tabla existente
+                $('#proveedores-body').empty();
+                
+                proveedoresData.forEach((proveedorData, index) => {
+                    // Ocultar mensaje vacío
+                    $('#sinProveedores').hide();
+                    
+                    // Crear nueva fila
+                    const newRow = document.createElement('tr');
+                    const isPrincipal = proveedorData.esPrincipal;
+                    const rowId = 'proveedor-' + proveedorCount++;
+                    
+                    newRow.id = rowId;
+                    newRow.innerHTML = `
+                        <td class="text-center">
+                            <input type="radio" name="proveedorPrincipal" value="${proveedorData.proveedorId}" 
+                                   ${isPrincipal ? 'checked' : ''} class="form-check-input" />
+                        </td>
+                        <td>
+                            ${proveedorData.nombreProveedor || 'Proveedor ' + proveedorData.proveedorId}
+                            <input type="hidden" name="Proveedores[${index}].ProveedorId" value="${proveedorData.proveedorId}" />
+                            <input type="hidden" name="Proveedores[${index}].EsPrincipal" value="${isPrincipal}" class="es-principal" />
+                            <input type="hidden" name="Proveedores[${index}].PrecioCompra" value="${proveedorData.precioCompra || '0.01'}" />
+                            <input type="hidden" name="Proveedores[${index}].FactorConversion" value="${proveedorData.factorConversion || '1'}" />
+                        </td>
+                        <td>
+                            <select name="Proveedores[${index}].UnidadMedidaCompraId" 
+                                    class="form-select select2-contenedor-proveedor" 
+                                    data-proveedor-index="${index}"
+                                    required>
+                                <option value="">Seleccione contenedor</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="badge bg-${isPrincipal ? 'success' : 'secondary'}">
+                                ${isPrincipal ? 'Principal' : 'Secundario'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-link text-danger" onclick="eliminarProveedor('${rowId}', '${proveedorData.proveedorId}')">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    $('#proveedores-body').append(newRow);
+                    
+                    // Agregar al array
+                    proveedores.push({
+                        id: proveedorData.proveedorId.toString(),
+                        nombre: proveedorData.nombreProveedor || 'Proveedor ' + proveedorData.proveedorId,
+                        isPrincipal: isPrincipal
+                    });
+                    
+                    // Inicializar Select2 y cargar el contenedor guardado
+                    initializeContenedorSelect(newRow);
+                    
+                    // Esperar un poco y luego cargar los contenedores disponibles y seleccionar el guardado
+                    setTimeout(() => {
+                        const select = newRow.querySelector('.select2-contenedor-proveedor');
+                        
+                        // Verificar si ya existe la función actualizarContenedoresProveedores
+                        if (window.actualizarContenedoresProveedores) {
+                            window.actualizarContenedoresProveedores();
+                        } else {
+                            populateContenedorOptions(select);
+                        }
+                        
+                        // Seleccionar el contenedor guardado si existe
+                        if (proveedorData.unidadMedidaCompraId) {
+                            $(select).val(proveedorData.unidadMedidaCompraId).trigger('change');
+                        }
+                    }, 750);
+                });
+                
+                updateRadioListeners();
+            };
+        });
+    } else {
+        console.log('jQuery no disponible aún, esperando...');
+        // Si no están listos, esperar e intentar de nuevo
+        setTimeout(initializeProveedores, 100);
+    }
+}
+
+// Iniciar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    console.log('Esperando a que el DOM se cargue...');
+    document.addEventListener('DOMContentLoaded', initializeProveedores);
+} else {
+    console.log('DOM ya está cargado, iniciando...');
+    // DOM ya está cargado
+    initializeProveedores();
+}
+</script>

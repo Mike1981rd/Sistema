@@ -57,32 +57,25 @@
                     </li>
                 </ul>
 
-                <!-- Tab content - Igual que en Create pero con datos precargados -->
+                <!-- Tab content - Inline como en Create -->
                 <div class="tab-content mt-4">
                     <!-- Tab Información -->
                     <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
                         <div class="row">
                             <div class="col-md-8">
-                                <!-- Campos iguales a Create.cshtml con valores del modelo -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label asp-for="Codigo" class="form-label">Código</label>
-                                        <input asp-for="Codigo" class="form-control" />
+                                        <label asp-for="Codigo" class="form-label">Código (Automático)</label>
+                                        <input asp-for="Codigo" class="form-control bg-light" readonly />
                                         <span asp-validation-for="Codigo" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-6">
                                         <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
                                         <div class="input-group">
                                             <input asp-for="CodigoBarras" class="form-control" />
-                                            <button type="button" class="btn btn-outline-secondary" id="generarCodigoBarras">
+                                            <button type="button" class="btn btn-outline-secondary" id="generarCodigoBarras" title="Generar código">
                                                 <i class="fas fa-barcode"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-info" id="imprimirCodigoBarras" @(string.IsNullOrEmpty(Model.CodigoBarras) ? "disabled" : "")>
-                                                <i class="fas fa-print"></i>
-                                            </button>
-                                        </div>
-                                        <div id="codigoBarrasPreview" class="mt-2 text-center" style="@(string.IsNullOrEmpty(Model.CodigoBarras) ? "display: none;" : "")">
-                                            <svg id="barcode"></svg>
                                         </div>
                                         <span asp-validation-for="CodigoBarras" class="text-danger"></span>
                                     </div>
@@ -110,7 +103,6 @@
                                         <span asp-validation-for="MarcaId" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <!-- Resto de campos igual que en Create.cshtml -->
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <label asp-for="Descripcion" class="form-label">Descripción</label>
@@ -128,7 +120,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label asp-for="Rendimiento" class="form-label">Rendimiento (%)</label>
-                                        <input asp-for="Rendimiento" class="form-control" type="number" step="0.01" min="0" max="100" data-decimal="@Model.SeparadorDecimal" />
+                                        <input asp-for="Rendimiento" class="form-control" type="number" step="0.01" min="0" max="100" value="100" data-decimal="@Model.SeparadorDecimal" />
                                         <small class="text-muted">Porcentaje del producto que se mantiene después de procesarlo</small>
                                         <span asp-validation-for="Rendimiento" class="text-danger"></span>
                                     </div>
@@ -137,7 +129,7 @@
                                     <div class="col-md-6">
                                         <label asp-for="Estado" class="form-label">Estado</label>
                                         <select asp-for="Estado" class="form-select">
-                                            <option value="true">Activo</option>
+                                            <option value="true" selected>Activo</option>
                                             <option value="false">Inactivo</option>
                                         </select>
                                         <span asp-validation-for="Estado" class="text-danger"></span>
@@ -145,43 +137,38 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <!-- Imagen con previsualización si ya existe -->
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Imagen</h5>
-                                        <div class="image-upload-container">
-                                            <div class="image-preview-wrapper text-center">
-                                                <div id="imagePreview" class="mb-3" style="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "")">
-                                                    <img id="preview" src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
-                                                </div>
-                                                <div id="imageDefault" class="mb-3 p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="@(!string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "") height: 200px;">
-                                                    <div class="text-center text-muted">
-                                                        <i class="fas fa-image fa-4x mb-3"></i>
-                                                        <p>No hay imagen</p>
+                                        <div class="modern-image-upload">
+                                            <!-- Vista previa de imagen -->
+                                            <div class="image-preview mb-3 text-center">
+                                                @if (string.IsNullOrEmpty(Model.ImagenUrl))
+                                                {
+                                                    <div class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                        <div class="text-center text-muted">
+                                                            <i class="fas fa-image fa-4x mb-3"></i>
+                                                            <p>No hay imagen</p>
+                                                        </div>
                                                     </div>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
+                                                }
+                                            </div>
+                                            
+                                            <!-- Selector de archivo -->
+                                            <div class="file-selector mb-3">
+                                                <div class="input-group">
+                                                    <input type="file" asp-for="ItemImage" class="form-control" accept="image/*" id="imageFile">
+                                                    <button class="btn btn-outline-danger" type="button" id="clearImageBtn" style="display: @(!string.IsNullOrEmpty(Model.ImagenUrl) ? "inline-flex" : "none")">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div class="dropzone-container mb-3 text-center">
-                                                <div id="dropzone" class="dropzone-area p-3 border border-dashed rounded">
-                                                    <input type="hidden" asp-for="ImagenUrl" />
-                                                    <input asp-for="ItemImage" type="file" class="file-input" accept="image/*" hidden />
-                                                    <div class="dropzone-message">
-                                                        <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
-                                                        <p>Arrastra y suelta una imagen aquí o<br>
-                                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="browseButton">
-                                                            Seleccionar imagen
-                                                        </button></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="upload-options d-flex justify-content-between">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="cropButton" style="display: none;">
-                                                    <i class="fas fa-crop me-1"></i> Recortar
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger btn-sm" id="btnResetImage" style="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "display: none;" : "")">
-                                                    <i class="fas fa-trash me-1"></i> Eliminar
-                                                </button>
-                                            </div>
+                                            
+                                            <!-- Información sobre tipos de archivo -->
                                             <div class="mt-2 text-muted small">
                                                 <ul class="ps-3 mb-0">
                                                     <li>Formatos: JPG, PNG o GIF</li>
@@ -189,7 +176,6 @@
                                                     <li>Dimensiones recomendadas: 800x800px</li>
                                                 </ul>
                                             </div>
-                                            <span asp-validation-for="ItemImage" class="text-danger"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -199,132 +185,25 @@
 
                     <!-- Tab Compras -->
                     <div class="tab-pane fade" id="tab-compras" role="tabpanel">
-                        <!-- Similar a Create.cshtml pero con datos -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label asp-for="UnidadMedidaInventarioId" class="form-label">Unidad de Medida (Inventario) *</label>
-                                <div class="input-group">
-                                    <select asp-for="UnidadMedidaInventarioId" asp-items="Model.UnidadesMedidaDisponibles" class="form-select select2-uom" required>
-                                        <option value="">Seleccione una unidad</option>
-                                    </select>
-                                    <button type="button" class="btn btn-outline-primary" id="btnNuevaUnidad">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                                <span asp-validation-for="UnidadMedidaInventarioId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="UnidadCompraId" class="form-label">Unidad de Compra Preferida</label>
-                                <select id="UnidadCompraId" name="UnidadCompraId" class="form-select" data-contenedor-compra="@(Model.Contenedores.FirstOrDefault(c => c.EsContenedorCompra)?.Id)">
-                                    <option value="">Debe agregar contenedores primero</option>
-                                </select>
-                                <small class="text-muted">Se habilitará después de configurar los contenedores</small>
-                            </div>
-                        </div>
-
-                        <!-- Conversiones de Unidades -->
-                        <div class="card mb-4">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Conversiones de Unidades</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="tablaContenedores">
-                                        <thead class="bg-light">
-                                            <tr>
-                                                <th style="width: 50px;">No</th>
-                                                <th>Contenedor</th>
-                                                <th>Etiqueta</th>
-                                                <th>Cantidad</th>
-                                                <th>Costo</th>
-                                                <th style="width: 50px;"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="contenedores-body">
-                                            <!-- Las filas se cargarán dinámicamente con JavaScript -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" id="btnAgregarContenedor" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-plus"></i> Agregar Fila
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Resto de secciones igual que en Create.cshtml -->
-                        <!-- ... -->
+                        @await Html.PartialAsync("_TabCompras", Model)
                     </div>
 
                     <!-- Tab Contabilidad -->
                     <div class="tab-pane fade" id="tab-contabilidad" role="tabpanel">
-                        <!-- Contenido de la pestaña de contabilidad -->
-                        <div class="alert alert-info mb-4">
-                            <i class="fas fa-info-circle me-2"></i> Las cuentas contables se heredan de la categoría seleccionada. Puede personalizarlas para este item específico.
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="CuentaVentasId" class="form-label">Cuenta de Ventas</label>
-                                <select asp-for="CuentaVentasId" asp-items="Model.CuentasVentasDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaVentasId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="CuentaComprasInventariosId" class="form-label">Cuenta de Compras/Inventarios</label>
-                                <select asp-for="CuentaComprasInventariosId" asp-items="Model.CuentasComprasInventariosDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaComprasInventariosId" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="CuentaCostoVentasGastosId" class="form-label">Cuenta de Costo de Ventas</label>
-                                <select asp-for="CuentaCostoVentasGastosId" asp-items="Model.CuentasCostoVentasGastosDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaCostoVentasGastosId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="CuentaDescuentosId" class="form-label">Cuenta de Descuentos</label>
-                                <select asp-for="CuentaDescuentosId" asp-items="Model.CuentasDescuentosDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaDescuentosId" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="CuentaDevolucionesId" class="form-label">Cuenta de Devoluciones</label>
-                                <select asp-for="CuentaDevolucionesId" asp-items="Model.CuentasDevolucionesDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaDevolucionesId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="CuentaAjustesId" class="form-label">Cuenta de Ajustes</label>
-                                <select asp-for="CuentaAjustesId" asp-items="Model.CuentasAjustesDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaAjustesId" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="CuentaCostoMateriaPrimaId" class="form-label">Cuenta de Costo de Materia Prima</label>
-                                <select asp-for="CuentaCostoMateriaPrimaId" asp-items="Model.CuentasCostoMateriaPrimaDisponibles" class="form-select select2-cuenta">
-                                    <option value="">Seleccione una cuenta</option>
-                                </select>
-                                <span asp-validation-for="CuentaCostoMateriaPrimaId" class="text-danger"></span>
-                            </div>
+                        <div id="contabilidad-container">
+                            @await Html.PartialAsync("_TabContabilidad", Model)
                         </div>
                     </div>
 
-                    <!-- Resto de pestañas igual que en Create.cshtml -->
-                    <!-- ... -->
+                    <!-- Tab Taras -->
+                    <div class="tab-pane fade" id="tab-taras" role="tabpanel">
+                        @await Html.PartialAsync("_TabTaras", Model)
+                    </div>
+
+                    <!-- Tab Producto de Venta -->
+                    <div class="tab-pane fade" id="tab-venta" role="tabpanel">
+                        @await Html.PartialAsync("_TabProductoVenta", Model)
+                    </div>
                 </div>
             </div>
         </div>
@@ -341,208 +220,559 @@
     </form>
 </div>
 
-<!-- Templates igual que en Create.cshtml -->
-<!-- ... -->
-<!-- Offcanvas y modales igual que en Create.cshtml -->
-<!-- ... -->
-
-<!-- Offcanvas para crear/editar contenedor -->
-<div class="offcanvas offcanvas-end offcanvas-lg bg-white border-primary" tabindex="-1" id="offcanvasContenedor" aria-labelledby="offcanvasContenedorLabel">
+<!-- Offcanvas para crear/editar categoría -->
+<div class="offcanvas offcanvas-end offcanvas-lg bg-white border-primary" tabindex="-1" id="offcanvasCategoria" aria-labelledby="offcanvasCategoriaLabel">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasContenedorLabel">Crear Contenedor</h5>
+        <h5 id="offcanvasCategoriaLabel">Nueva Categoría</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="formContenedorContainer">
-            <!-- El formulario se cargará dinámicamente -->
-        </div>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="btnGuardarContenedor">Guardar</button>
+        <div id="formCategoriaContainer">
+            <!-- Se cargará dinámicamente -->
         </div>
     </div>
 </div>
 
-<!-- Div oculto para contenedores eliminados -->
-<div id="contenedores-eliminados" style="display:none;"></div>
+<!-- Offcanvas para crear/editar marca -->
+<div class="offcanvas offcanvas-end offcanvas-lg bg-white border-primary" tabindex="-1" id="offcanvasMarca" aria-labelledby="offcanvasMarcaLabel">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasMarcaLabel">Nueva Marca</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="formMarcaContainer">
+            <!-- Se cargará dinámicamente -->
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    
+    <!-- jQuery y jQuery UI necesarios para los scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    
+    <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="~/css/select2-fixes.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- SweetAlert para notificaciones -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- JsBarcode para códigos de barras -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="~/js/items/form.js"></script>
-    <script src="~/Scripts/contenedores.js"></script>
-
+    
+    <!-- Scripts específicos de Item -->
+    <script src="~/js/items/item-create-fixed-v2.js"></script>
+    <script src="~/js/items/containers-edit.js"></script>
+    
     <script>
-        console.log("Verificando carga de scripts...");
         $(document).ready(function() {
-            console.log("Document ready");
-            // Listar todos los scripts cargados
-            $('script').each(function() {
-                console.log("Script cargado: " + (this.src || "inline"));
+            console.log('Edit Item page loaded');
+            const itemId = '@Model.Id';
+            
+            // Inicializar Select2 para Categoría
+            const categoriaId = '@Model.CategoriaId';
+            const categoriaText = $('#CategoriaId option:selected').text();
+            $('.select2-categoria').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccione una categoría',
+                allowClear: false,
+                width: '100%',
+                ajax: {
+                    url: '/Categoria/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            term: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                tags: true,
+                createTag: function(params) {
+                    const term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: 'CREATE:' + term,
+                        text: term + ' (Crear nueva)',
+                        newTag: true
+                    };
+                }
             });
-            // Verificar si el botón de agregar fila existe
-            console.log("Botón agregar fila existe: " + ($('.btn-agregar-fila').length > 0));
-            // Evento de prueba
-            $('.btn-agregar-fila, [id$="Agregar Fila"]').on('click', function() {
-                console.log("Botón de agregar fila clickeado (test)");
+            
+            // Si hay una categoría seleccionada, mantenerla
+            if (categoriaId && categoriaText) {
+                const option = new Option(categoriaText, categoriaId, true, true);
+                $('#CategoriaId').append(option).trigger('change');
+            }
+            
+            // Manejar creación de nueva categoría
+            $('#CategoriaId').on('select2:select', function(e) {
+                const data = e.params.data;
+                if (data.newTag) {
+                    // Abrir offcanvas para crear nueva categoría
+                    const categoriaName = data.text.replace(' (Crear nueva)', '');
+                    cargarFormularioCategoria('crear', null, categoriaName);
+                }
             });
-
-            // Initialize Select2 for accounting accounts with AJAX
-            $('.select2-cuenta, #CuentaVentasId, #CuentaComprasInventariosId, #CuentaCostoVentasGastosId, #CuentaDescuentosId, #CuentaDevolucionesId, #CuentaAjustesId, #CuentaCostoMateriaPrimaId').each(function() {
-                const $this = $(this);
+            
+            // Inicializar Select2 para Marca
+            const marcaId = '@Model.MarcaId';
+            const marcaText = $('#MarcaId option:selected').text();
+            $('.select2-marca').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Genérica',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/Marca/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            term: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                tags: true,
+                createTag: function(params) {
+                    const term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: 'CREATE:' + term,
+                        text: term + ' (Crear nueva)',
+                        newTag: true
+                    };
+                }
+            });
+            
+            // Si hay una marca seleccionada, mantenerla
+            if (marcaId && marcaText && marcaText !== 'Genérica') {
+                const option = new Option(marcaText, marcaId, true, true);
+                $('#MarcaId').append(option).trigger('change');
+            }
+            
+            // Manejar creación de nueva marca
+            $('#MarcaId').on('select2:select', function(e) {
+                const data = e.params.data;
+                if (data.newTag) {
+                    // Abrir offcanvas para crear nueva marca
+                    const marcaName = data.text.replace(' (Crear nueva)', '');
+                    cargarFormularioMarca('crear', null, marcaName);
+                }
+            });
+            
+            // Inicializar Select2 para Impuesto
+            const impuestoId = '@Model.ImpuestoId';
+            const impuestoText = $('#ImpuestoId option:selected').text();
+            $('#ImpuestoId').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccione un impuesto',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/Impuestos/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            term: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                }
+            });
+            
+            // Si hay un impuesto seleccionado, mantenerlo
+            if (impuestoId && impuestoText) {
+                const option = new Option(impuestoText, impuestoId, true, true);
+                $('#ImpuestoId').append(option).trigger('change');
+            }
+            
+            // Variable para rastrear si los proveedores han sido cargados
+            let proveedoresCargados = false;
+            
+            // Inicializar Select2 para el dropdown de proveedores
+            $('#ProveedorId').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccione o cree un proveedor',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '/Proveedores/Buscar',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            term: params.term || ''
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                tags: true,
+                createTag: function(params) {
+                    const term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: 'CREATE:' + term,
+                        text: term + ' (Crear nuevo)',
+                        newTag: true
+                    };
+                }
+            });
+            
+            // Manejar creación de nuevo proveedor
+            $('#ProveedorId').on('select2:select', function(e) {
+                const data = e.params.data;
+                if (data.newTag) {
+                    // Abrir offcanvas para crear nuevo proveedor
+                    const proveedorName = data.text.replace(' (Crear nuevo)', '');
+                    cargarFormularioProveedor('crear', null, proveedorName);
+                }
+            });
+            
+            // Función para cargar formulario de proveedor en offcanvas
+            function cargarFormularioProveedor(accion, id = null, nombre = '') {
+                let url = accion === 'crear' ? '/Proveedores/Create' : `/Proveedores/Edit/${id}`;
                 
-                // Avoid initializing twice
-                if (!$this.hasClass('select2-hidden-accessible')) {
-                    $this.select2({
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#formProveedorContainer').html(data);
+                        
+                        // Si es crear y tenemos un nombre, establecerlo
+                        if (accion === 'crear' && nombre) {
+                            $('#formProveedorContainer').find('#NombreRazonSocial').val(nombre);
+                        }
+                        
+                        $('#offcanvasProveedorLabel').text(accion === 'crear' ? 'Nuevo Proveedor' : 'Editar Proveedor');
+                        
+                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasProveedor'));
+                        offcanvas.show();
+                        
+                        // Manejar el guardado del proveedor
+                        $('#formProveedorContainer').find('form').on('submit', function(e) {
+                            e.preventDefault();
+                            guardarProveedor($(this), offcanvas);
+                        });
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                    }
+                });
+            }
+            
+            // Función para guardar proveedor
+            function guardarProveedor($form, offcanvas) {
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: $form.attr('method'),
+                    data: $form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            offcanvas.hide();
+                            Swal.fire('Éxito', 'Proveedor guardado correctamente', 'success');
+                            
+                            // Agregar el nuevo proveedor al select2
+                            const newOption = new Option(response.proveedor.nombreRazonSocial, response.proveedor.id, true, true);
+                            $('#ProveedorId').append(newOption).trigger('change');
+                        } else {
+                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Error al guardar el proveedor', 'error');
+                    }
+                });
+            }
+            
+            // Función para cargar formulario de categoría en offcanvas
+            function cargarFormularioCategoria(accion, id = null, nombre = '') {
+                let url = accion === 'crear' ? '/Categoria/_CreatePartial' : `/Categoria/_EditPartial/${id}`;
+                
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#formCategoriaContainer').html(data);
+                        
+                        // Si es crear y tenemos un nombre, establecerlo
+                        if (accion === 'crear' && nombre) {
+                            $('#formCategoriaContainer').find('#Nombre').val(nombre);
+                        }
+                        
+                        $('#offcanvasCategoriaLabel').text(accion === 'crear' ? 'Nueva Categoría' : 'Editar Categoría');
+                        
+                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasCategoria'));
+                        offcanvas.show();
+                        
+                        // Manejar el guardado de la categoría
+                        $('#formCategoriaContainer').find('form').on('submit', function(e) {
+                            e.preventDefault();
+                            guardarCategoria($(this), offcanvas);
+                        });
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                    }
+                });
+            }
+            
+            // Función para guardar categoría
+            function guardarCategoria($form, offcanvas) {
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: $form.attr('method'),
+                    data: $form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            offcanvas.hide();
+                            Swal.fire('Éxito', 'Categoría guardada correctamente', 'success');
+                            
+                            // Agregar la nueva categoría al select2
+                            const newOption = new Option(response.categoria.nombre, response.categoria.id, true, true);
+                            $('#CategoriaId').append(newOption).trigger('change');
+                        } else {
+                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Error al guardar la categoría', 'error');
+                    }
+                });
+            }
+            
+            // Función para cargar formulario de marca en offcanvas
+            function cargarFormularioMarca(accion, id = null, nombre = '') {
+                let url = accion === 'crear' ? '/Marca/_Create' : `/Marca/_Edit?id=${id}`;
+                
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#formMarcaContainer').html(data);
+                        
+                        // Si es crear y tenemos un nombre, establecerlo
+                        if (accion === 'crear' && nombre) {
+                            $('#formMarcaContainer').find('#Nombre').val(nombre);
+                        }
+                        
+                        $('#offcanvasMarcaLabel').text(accion === 'crear' ? 'Nueva Marca' : 'Editar Marca');
+                        
+                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasMarca'));
+                        offcanvas.show();
+                        
+                        // Manejar el guardado de la marca
+                        $('#formMarcaContainer').find('form').on('submit', function(e) {
+                            e.preventDefault();
+                            guardarMarca($(this), offcanvas);
+                        });
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                    }
+                });
+            }
+            
+            // Función para guardar marca
+            function guardarMarca($form, offcanvas) {
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: $form.attr('method'),
+                    data: $form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            offcanvas.hide();
+                            Swal.fire('Éxito', 'Marca guardada correctamente', 'success');
+                            
+                            // Agregar la nueva marca al select2
+                            const newOption = new Option(response.marca.nombre, response.marca.id, true, true);
+                            $('#MarcaId').append(newOption).trigger('change');
+                        } else {
+                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Error al guardar la marca', 'error');
+                    }
+                });
+            }
+            
+            // Inicializar select2 para proveedores (debe existir en _TabProveedores.cshtml)
+            setTimeout(function() {
+                if (window.initializeProveedores) {
+                    window.initializeProveedores();
+                    
+                    // Cargar proveedores existentes para este item
+                    if (!proveedoresCargados) {
+                        proveedoresCargados = true;
+                        cargarProveedoresDelItem(itemId);
+                    }
+                }
+            }, 500);
+            
+            // Función para cargar proveedores del item
+            function cargarProveedoresDelItem(itemId) {
+                console.log('Cargando proveedores para item:', itemId);
+                
+                // Esperar a que cargarProveedoresExistentes esté disponible
+                const waitForFunction = setInterval(function() {
+                    if (window.cargarProveedoresExistentes) {
+                        clearInterval(waitForFunction);
+                        
+                        // Hacer llamada AJAX para obtener proveedores del item
+                        $.ajax({
+                            url: `/Item/ObtenerProveedores/${itemId}`,
+                            type: 'GET',
+                            success: function(data) {
+                                console.log('Proveedores cargados:', data);
+                                if (data && data.length > 0) {
+                                    // Transformar los datos al formato esperado
+                                    const proveedoresData = data.map(p => ({
+                                        proveedorId: p.proveedorId,
+                                        nombreProveedor: p.nombreProveedor || p.proveedorNombre,
+                                        esPrincipal: p.esPrincipal,
+                                        unidadMedidaCompraId: p.unidadMedidaCompraId,
+                                        precioCompra: p.precioCompra,
+                                        factorConversion: p.factorConversion
+                                    }));
+                                    
+                                    // Cargar proveedores en la tabla
+                                    window.cargarProveedoresExistentes(proveedoresData);
+                                }
+                            },
+                            error: function(err) {
+                                console.error('Error al cargar proveedores:', err);
+                            }
+                        });
+                    }
+                }, 100);
+            }
+            
+            // Inicializar cuentas contables cuando se active el tab de contabilidad
+            let cuentasContablesIniciadas = false;
+            $('a[href="#tab-contabilidad"]').on('shown.bs.tab', function() {
+                if (!cuentasContablesIniciadas) {
+                    cuentasContablesIniciadas = true;
+                    cargarCuentasContables();
+                }
+            });
+            
+            // Función para cargar cuentas contables
+            function cargarCuentasContables() {
+                console.log('Cargando cuentas contables...');
+                
+                $('.select2-cuenta').each(function() {
+                    const $select = $(this);
+                    const selectId = $select.attr('id');
+                    
+                    // Obtener el valor actual antes de inicializar Select2
+                    const valorActual = $select.val();
+                    const textActual = $select.find('option:selected').text();
+                    
+                    // Configurar Select2 con AJAX para buscar cuentas
+                    $select.select2({
                         theme: 'bootstrap-5',
                         width: '100%',
-                        placeholder: 'Buscar cuenta contable...',
+                        placeholder: 'Seleccione una cuenta',
                         allowClear: true,
-                        minimumInputLength: 1,
-                        language: {
-                            inputTooShort: function() {
-                                return "Ingrese al menos 1 caracter para buscar";
-                            },
-                            noResults: function() {
-                                return "No se encontraron resultados";
-                            },
-                            searching: function() {
-                                return "Buscando...";
-                            }
-                        },
                         ajax: {
-                            url: '/Item/BuscarCuentasContables',
+                            url: '/api/CuentasContables/buscar',
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
                                 return {
-                                    term: params.term || ''
+                                    q: params.term || ''
                                 };
                             },
                             processResults: function(data) {
-                                return data;
+                                return {
+                                    results: data.map(function(item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.codigo + ' - ' + item.nombre
+                                        };
+                                    })
+                                };
                             },
                             cache: true
                         },
-                        templateResult: formatCuenta,
-                        templateSelection: formatCuentaSelection
+                        // Mantener la opción seleccionada si existe
+                        initSelection: function(element, callback) {
+                            if (valorActual) {
+                                callback({id: valorActual, text: textActual});
+                            }
+                        }
                     });
-                    console.log(`Account selector initialized with AJAX: ${$this.attr('id') || 'no ID'}`);
-                }
+                    
+                    // Si hay un valor preseleccionado, asegurarse de que esté seleccionado
+                    if (valorActual && textActual) {
+                        const option = new Option(textActual, valorActual, true, true);
+                        $select.append(option).trigger('change');
+                    }
+                });
+            }
+            
+            // Form submission handling
+            $('#itemForm').on('submit', function(e) {
+                // Prepare form for submission if needed
+                prepareFormForSubmission();
             });
-
-            // Format function for accounting account search results
-            function formatCuenta(cuenta) {
-                if (!cuenta.id) {
-                    return cuenta.text;
-                }
+            
+            function prepareFormForSubmission() {
+                // Convert decimal separators from comma to period for numeric fields
+                const numericFields = [
+                    '.contenedor-costo',
+                    '.cantidad-input',
+                    '#Rendimiento'
+                ];
                 
-                var $resultado = $(
-                    '<div class="select2-result">' +
-                        '<span class="badge bg-secondary me-2">' + (cuenta.codigo || '') + '</span>' +
-                        '<span>' + (cuenta.nombre || cuenta.text) + '</span>' +
-                    '</div>'
-                );
-                return $resultado;
-            }
-
-            // Format function for selected accounting account
-            function formatCuentaSelection(cuenta) {
-                if (!cuenta.id) {
-                    return cuenta.text;
-                }
-                return cuenta.text;
-            }
-            
-            // For debugging: Log account fields and their values
-            function debugAccountFields() {
-                console.log("Debugging account fields:");
-                [
-                    "#CuentaVentasId", 
-                    "#CuentaComprasInventariosId", 
-                    "#CuentaCostoVentasGastosId", 
-                    "#CuentaDescuentosId", 
-                    "#CuentaDevolucionesId", 
-                    "#CuentaAjustesId",
-                    "#CuentaCostoMateriaPrimaId"
-                ].forEach(selector => {
-                    const $field = $(selector);
-                    console.log(`Field ${selector}: Value=${$field.val()}, Text=${$field.find('option:selected').text()}`);
+                numericFields.forEach(selector => {
+                    $(selector).each(function() {
+                        const $field = $(this);
+                        const value = $field.val();
+                        if (value) {
+                            const normalizedValue = value.replace(',', '.');
+                            $field.val(normalizedValue);
+                        }
+                    });
                 });
             }
-            
-            // Log initial state
-            setTimeout(debugAccountFields, 500);
-
-            // Initialize the image upload component
-            initImageUpload();
-
-            // Inicializar JsBarcode si hay código de barras
-            if ($('#CodigoBarras').val()) {
-                JsBarcode("#barcode", $('#CodigoBarras').val(), {
-                    format: "CODE128",
-                    displayValue: true,
-                    fontSize: 14,
-                    height: 50,
-                    margin: 10
-                });
-            }
-
-            // Cargar los contenedores existentes
-        @if (Model.Contenedores != null && Model.Contenedores.Any())
-        {
-            <text>
-                    // Datos de contenedores para inicializar
-                    const contenedoresExistentes = @Html.Raw(Json.Serialize(Model.Contenedores));
-                    window.contenedoresDatos = contenedoresExistentes;
-            </text>
-        }
-
-            // Cargar los proveedores existentes
-        @if (Model.Proveedores != null && Model.Proveedores.Any())
-        {
-            <text>
-                    // Datos de proveedores para inicializar
-                    const proveedoresExistentes = @Html.Raw(Json.Serialize(Model.Proveedores));
-                    window.proveedoresDatos = proveedoresExistentes;
-            </text>
-        }
-
-            // Cargar los almacenes existentes
-        @if (Model.Almacenes != null && Model.Almacenes.Any())
-        {
-            <text>
-                    // Datos de almacenes para inicializar
-                    const almacenesExistentes = @Html.Raw(Json.Serialize(Model.Almacenes));
-                    window.almacenesDatos = almacenesExistentes;
-            </text>
-        }
-
-            // Cargar las taras existentes
-        @if (Model.Taras != null && Model.Taras.Any())
-        {
-            <text>
-                    // Datos de taras para inicializar
-                    const tarasExistentes = @Html.Raw(Json.Serialize(Model.Taras));
-                    window.tarasDatos = tarasExistentes;
-            </text>
-        }
-
-            // Cargar datos del producto de venta
-        @if (Model.ProductoVenta != null)
-        {
-            <text>
-                    // Datos de producto de venta para inicializar
-                    const productoVentaExistente = @Html.Raw(Json.Serialize(Model.ProductoVenta));
-                    window.productoVentaDatos = productoVentaExistente;
-            </text>
-        }
         });
     </script>
 }

@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Diagnóstico Simple";
+    var db = Context.RequestServices.GetService<SistemaContable.Data.ApplicationDbContext>();
+    var userService = Context.RequestServices.GetService<SistemaContable.Services.IUserService>();
+    
+    // Obtener datos básicos
+    var empresaIdFromService = userService.GetEmpresaId();
+    var empresaIdFromSession = Context.Session.GetInt32("EmpresaId") ?? 0;
+    
+    // Contar registros
+    var totalEmpresas = db.Empresas.Count();
+    var totalCategorias = db.Categorias.Count();
+    var totalMarcas = db.Marcas.Count();
+    var totalImpuestos = db.Impuestos.Count();
+    var totalItems = db.Items.Count();
+    
+    // Obtener primera empresa
+    var primeraEmpresa = db.Empresas.FirstOrDefault();
+}
+
+<div class="container mt-4">
+    <h1>Diagnóstico Simple del Sistema</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información de Empresa</h5>
+                </div>
+                <div class="card-body">
+                    <p>EmpresaId desde UserService: <strong>@empresaIdFromService</strong></p>
+                    <p>EmpresaId desde Sesión: <strong>@empresaIdFromSession</strong></p>
+                    <p>Total empresas en BD: <strong>@totalEmpresas</strong></p>
+                    @if (primeraEmpresa != null)
+                    {
+                        <p>Primera empresa:</p>
+                        <ul>
+                            <li>ID: <strong>@primeraEmpresa.Id</strong></li>
+                            <li>Nombre: <strong>@primeraEmpresa.Nombre</strong></li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Conteo de Registros</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>Categorías: <strong>@totalCategorias</strong></li>
+                        <li>Marcas: <strong>@totalMarcas</strong></li>
+                        <li>Impuestos: <strong>@totalImpuestos</strong></li>
+                        <li>Items: <strong>@totalItems</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @if (empresaIdFromService != primeraEmpresa?.Id)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>¡Problema detectado!</strong> El UserService está devolviendo EmpresaId: @empresaIdFromService, 
+            pero la empresa en la BD tiene ID: @primeraEmpresa?.Id
+        </div>
+        
+        <div class="alert alert-info">
+            <h5>Solución propuesta:</h5>
+            <p>Establecer la sesión con el ID correcto de la empresa:</p>
+            <a href="#" class="btn btn-primary" onclick="establecerEmpresa()">
+                Establecer Empresa ID: @primeraEmpresa?.Id en la sesión
+            </a>
+        </div>
+    }
+    
+    <div class="mt-4">
+        <a href="/inventario/servicios" class="btn btn-secondary">Volver a Items</a>
+    </div>
+</div>
+
+<script>
+    function establecerEmpresa() {
+        var empresaId = @(primeraEmpresa?.Id ?? 0);
+        if (empresaId > 0) {
+            fetch('/api/empresas/set-session/' + empresaId, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Empresa establecida correctamente');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Error al establecer la empresa');
+                });
+        }
+    }
+</script>

@@ -1,0 +1,25 @@
+@{
+    var empresaId = Context.Session.GetInt32("EmpresaId") ?? 0;
+    var db = Context.RequestServices.GetService<SistemaContable.Data.ApplicationDbContext>();
+    var empresa = empresaId > 0 ? db.Empresas.Find(empresaId) : null;
+}
+
+@if (empresa != null)
+{
+    <div class="d-flex align-items-center text-light me-4">
+        <i class="fas fa-building me-2"></i>
+        <span class="small">@empresa.Nombre</span>
+        <a href="/Empresas" class="btn btn-sm btn-outline-light ms-2">
+            <i class="fas fa-exchange-alt"></i>
+        </a>
+    </div>
+}
+else
+{
+    <div class="text-light me-4">
+        <a href="/Empresas" class="btn btn-sm btn-warning">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Seleccionar Empresa
+        </a>
+    </div>
+}

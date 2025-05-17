@@ -1,0 +1,27 @@
+@{
+    var currentEmpresaId = Context.Session.GetInt32("EmpresaId") ?? 0;
+}
+
+@if (currentEmpresaId == 0)
+{
+    <script>
+        // Si no hay empresaId en sesión, establecer el primero de la BD
+        $(document).ready(function() {
+            $.get('/api/empresas/primera', function(data) {
+                if (data && data.id) {
+                    $.post('/api/empresas/set-session/' + data.id, function() {
+                        console.log('EmpresaId establecido en sesión: ' + data.id);
+                        // Recargar la página después de establecer la sesión
+                        location.reload();
+                    });
+                }
+            });
+        });
+    </script>
+}
+else
+{
+    <script>
+        console.log('EmpresaId actual en sesión: @currentEmpresaId');
+    </script>
+}

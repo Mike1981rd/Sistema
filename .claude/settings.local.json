@@ -6,7 +6,19 @@
       "Bash(rm:*)",
       "Bash(ls:*)",
       "Bash(dotnet run)",
-      "Bash(dotnet ef migrations add:*)"
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(node:*)",
+      "Bash(sed:*)",
+      "Bash(if [ -f \"Edit_backup.cshtml\" ])",
+      "Bash(then cp Edit_backup.cshtml Edit.cshtml)",
+      "Bash(else echo \"No backup found\")",
+      "Bash(fi)",
+      "Bash(git checkout:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(mv:*)",
+      "Bash(dotnet build)",
+      "Bash(dotnet ef database:*)"
     ],
     "deny": []
   }

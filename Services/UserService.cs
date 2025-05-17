@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System;
 
 namespace SistemaContable.Services
 {
@@ -20,9 +21,18 @@ namespace SistemaContable.Services
 
         public int GetEmpresaId()
         {
-            // Esto debería implementarse según tu lógica de negocio específica
-            // Podría ser de una claim, de la sesión, o de la base de datos
-            return 1; // Valor por defecto para desarrollo
+            // Primero intentar obtener de la sesión
+            if (_httpContextAccessor.HttpContext?.Session != null)
+            {
+                var empresaId = _httpContextAccessor.HttpContext.Session.GetInt32("EmpresaId");
+                if (empresaId.HasValue)
+                {
+                    return empresaId.Value;
+                }
+            }
+            
+            // Si no hay sesión, devolver valor por defecto
+            return 4; // Valor por defecto para empresa existente
         }
 
         public string GetUserName()

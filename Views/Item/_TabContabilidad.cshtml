@@ -1,20 +1,20 @@
 @model SistemaContable.Models.ViewModels.ItemViewModel
 
 <div class="alert alert-info mb-4">
-    <i class="fas fa-info-circle me-2"></i> Las cuentas contables se heredan de la categoría seleccionada. Puede personalizarlas para este item específico.
+    <i class="fas fa-info-circle me-2"></i> Las cuentas contables se heredan de la categorÃ­a seleccionada. Puede personalizarlas para este item especÃ­fico.
 </div>
 
 <div class="row mb-3">
     <div class="col-md-6">
         <label asp-for="CuentaVentasId" class="form-label">Cuenta de Ventas</label>
-        <select asp-for="CuentaVentasId" asp-items="Model.CuentasVentasDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaVentasId" asp-items="Model.CuentasVentasDisponibles" class="form-select select2-cuenta" id="CuentaVentasId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaVentasId" class="text-danger"></span>
     </div>
     <div class="col-md-6">
         <label asp-for="CuentaComprasInventariosId" class="form-label">Cuenta de Compras/Inventarios</label>
-        <select asp-for="CuentaComprasInventariosId" asp-items="Model.CuentasComprasInventariosDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaComprasInventariosId" asp-items="Model.CuentasComprasInventariosDisponibles" class="form-select select2-cuenta" id="CuentaComprasInventariosId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaComprasInventariosId" class="text-danger"></span>
@@ -23,14 +23,14 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <label asp-for="CuentaCostoVentasGastosId" class="form-label">Cuenta de Costo de Ventas</label>
-        <select asp-for="CuentaCostoVentasGastosId" asp-items="Model.CuentasCostoVentasGastosDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaCostoVentasGastosId" asp-items="Model.CuentasCostoVentasGastosDisponibles" class="form-select select2-cuenta" id="CuentaCostoVentasGastosId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaCostoVentasGastosId" class="text-danger"></span>
     </div>
     <div class="col-md-6">
         <label asp-for="CuentaDescuentosId" class="form-label">Cuenta de Descuentos</label>
-        <select asp-for="CuentaDescuentosId" asp-items="Model.CuentasDescuentosDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaDescuentosId" asp-items="Model.CuentasDescuentosDisponibles" class="form-select select2-cuenta" id="CuentaDescuentosId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaDescuentosId" class="text-danger"></span>
@@ -39,14 +39,14 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <label asp-for="CuentaDevolucionesId" class="form-label">Cuenta de Devoluciones</label>
-        <select asp-for="CuentaDevolucionesId" asp-items="Model.CuentasDevolucionesDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaDevolucionesId" asp-items="Model.CuentasDevolucionesDisponibles" class="form-select select2-cuenta" id="CuentaDevolucionesId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaDevolucionesId" class="text-danger"></span>
     </div>
     <div class="col-md-6">
         <label asp-for="CuentaAjustesId" class="form-label">Cuenta de Ajustes</label>
-        <select asp-for="CuentaAjustesId" asp-items="Model.CuentasAjustesDisponibles" class="form-select select2-cuenta">
+        <select asp-for="CuentaAjustesId" asp-items="Model.CuentasAjustesDisponibles" class="form-select select2-cuenta" id="CuentaAjustesId">
             <option value="">Seleccione una cuenta</option>
         </select>
         <span asp-validation-for="CuentaAjustesId" class="text-danger"></span>

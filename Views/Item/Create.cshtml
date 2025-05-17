@@ -81,7 +81,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label asp-for="Codigo" class="form-label">Código</label>
-                                        <input asp-for="Codigo" class="form-control" />
+                                        <input asp-for="Codigo" class="form-control" id="Codigo" readonly />
                                         <span asp-validation-for="Codigo" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-6">
@@ -163,27 +163,29 @@
                                         <h5 class="card-title">Imagen</h5>
                                         <div class="modern-image-upload">
                                             <!-- Vista previa de imagen -->
-                                            <div class="image-preview mb-3 text-center">
-                                                @if (string.IsNullOrEmpty(Model.ImagenUrl))
-                                                {
-                                                    <div class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                                        <div class="text-center text-muted">
-                                                            <i class="fas fa-image fa-4x mb-3"></i>
-                                                            <p>No hay imagen</p>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <img src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
-                                                }
+                                            <div id="imagePreview" class="image-preview mb-3 text-center" style="display: @(string.IsNullOrEmpty(Model.ImagenUrl) ? "none" : "block");">
+                                                <img id="preview" 
+                                                     src="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "#" : Url.Content(Model.ImagenUrl))" 
+                                                     data-original-src="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "" : Url.Content(Model.ImagenUrl))" 
+                                                     alt="Vista previa" 
+                                                     class="img-fluid rounded shadow-sm" 
+                                                     style="max-height: 200px;" />
+                                            </div>
+                                            <div id="imageDefault" class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center mb-3" style="height: 200px; display: @(string.IsNullOrEmpty(Model.ImagenUrl) ? "flex" : "none");">
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-image fa-4x mb-3"></i>
+                                                    <p>No hay imagen</p>
+                                                </div>
                                             </div>
                                             
                                             <!-- Selector de archivo -->
                                             <div class="file-selector mb-3">
                                                 <div class="input-group">
                                                     <input type="file" asp-for="ItemImage" class="form-control" accept="image/*" id="imageFile">
-                                                    <button class="btn btn-outline-danger" type="button" id="clearImageBtn" style="display: @(!string.IsNullOrEmpty(Model.ImagenUrl) ? "inline-flex" : "none")">
+                                                    <button class="btn btn-outline-secondary" type="button" id="browseButton" title="Seleccionar imagen">
+                                                        <i class="fas fa-folder-open"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" type="button" id="clearImageBtn" style="display: @(string.IsNullOrEmpty(Model.ImagenUrl) ? "none" : "inline-flex");" title="Eliminar imagen">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 </div>
@@ -506,7 +508,7 @@
                         <label class="form-label">Principal</label>
                         <div class="form-check form-switch pt-2">
                             <input class="form-check-input proveedor-principal" type="checkbox" name="Proveedores[INDEX].EsPrincipal" value="true" />
-                            <label class="form-check-label">Proveedor principal</label>
+                            <label class="form-check-label" for="ProductoVenta_DisponibleParaVenta">Proveedor principal</label>
                         </div>
                     </div>
                 </div>
@@ -719,81 +721,28 @@
     }
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="~/css/select2-fixes.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="~/js/items/form.js"></script>
+    
+    <!-- Nuestro script principal -->
+    <script src="~/js/items/item-create-simple.js"></script>
+    
+    <!-- Script para generar código automático -->
+    <script src="~/js/items/code-generator.js"></script>
+    
+    <!-- Scripts para otras pestañas -->
     <script src="~/Scripts/contenedores.js"></script>
-    <script src="~/js/items/debug.js"></script>
+    <script src="~/js/items/tab-info-init.js"></script>
+    <script src="~/js/items/tab-compras-init.js"></script>
+    <script src="~/js/items/tab-contabilidad-init.js"></script>
+    <script src="~/js/items/tab-venta-init.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for accounting accounts with AJAX
-            $('.select2-cuenta, #CuentaVentasId, #CuentaComprasInventariosId, #CuentaCostoVentasGastosId, #CuentaDescuentosId, #CuentaDevolucionesId, #CuentaAjustesId, #CuentaCostoMateriaPrimaId').each(function() {
-                const $this = $(this);
-                
-                // Avoid initializing twice
-                if (!$this.hasClass('select2-hidden-accessible')) {
-                    $this.select2({
-                        theme: 'bootstrap-5',
-                        width: '100%',
-                        placeholder: 'Buscar cuenta contable...',
-                        allowClear: true,
-                        minimumInputLength: 1,
-                        language: {
-                            inputTooShort: function() {
-                                return "Ingrese al menos 1 caracter para buscar";
-                            },
-                            noResults: function() {
-                                return "No se encontraron resultados";
-                            },
-                            searching: function() {
-                                return "Buscando...";
-                            }
-                        },
-                        ajax: {
-                            url: '/Item/BuscarCuentasContables',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function(params) {
-                                return {
-                                    term: params.term || ''
-                                };
-                            },
-                            processResults: function(data) {
-                                return data;
-                            },
-                            cache: true
-                        },
-                        templateResult: formatCuenta,
-                        templateSelection: formatCuentaSelection
-                    });
-                    console.log(`Account selector initialized with AJAX: ${$this.attr('id') || 'no ID'}`);
-                }
-            });
-
-            // Format function for accounting account search results
-            function formatCuenta(cuenta) {
-                if (!cuenta.id) {
-                    return cuenta.text;
-                }
-                
-                var $resultado = $(
-                    '<div class="select2-result">' +
-                        '<span class="badge bg-secondary me-2">' + (cuenta.codigo || '') + '</span>' +
-                        '<span>' + (cuenta.nombre || cuenta.text) + '</span>' +
-                    '</div>'
-                );
-                return $resultado;
-            }
-
-            // Format function for selected accounting account
-            function formatCuentaSelection(cuenta) {
-                if (!cuenta.id) {
-                    return cuenta.text;
-                }
-                return cuenta.text;
-            }
+            // Marcar como ya inicializado para evitar conflictos con otros scripts
+            window.itemCreateInitialized = true;
             
             // For debugging: Log account fields and their values
             function debugAccountFields() {
@@ -814,8 +763,52 @@
             // Log initial state
             setTimeout(debugAccountFields, 500);
             
-            // Initialize the image upload component
-            initImageUpload();
+            // Configure decimal conversion
+            function prepareFormForSubmission() {
+                // Convert decimal separators from comma to period for numeric fields
+                const numericFields = [
+                    '#ProductoVenta_PrecioVenta',
+                    '#ProductoVenta_Costo',
+                    '#ProductoVenta_Cantidad',
+                    '.contenedor-costo',
+                    '.cantidad-input'
+                ];
+                
+                numericFields.forEach(selector => {
+                    $(selector).each(function() {
+                        const $field = $(this);
+                        const value = $field.val();
+                        if (value) {
+                            // Replace comma with period for proper decimal handling
+                            const normalizedValue = value.replace(',', '.');
+                            $field.val(normalizedValue);
+                        }
+                    });
+                });
+            }
+            
+            // Completely disable ProductoVenta fields before form submission
+            $('#itemForm').on('submit', function(e) {
+                // Temporalmente, desactivar solo los campos de ProductoVenta
+                $('[name^="ProductoVenta."]').each(function() {
+                    $(this).prop('disabled', true);
+                });
+            });
+            
+            // Enable fields after validation to allow user editing
+            $.validator.setDefaults({
+                submitHandler: function(form) {
+                    // Re-enable fields if needed
+                    $('[name^="ProductoVenta."]').each(function() {
+                        $(this).prop('disabled', false);
+                    });
+                    // But then immediately disable them again
+                    $('[name^="ProductoVenta."]').each(function() {
+                        $(this).prop('disabled', true);
+                    });
+                    form.submit();
+                }
+            });
         });
     </script>
 }

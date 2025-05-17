@@ -1,0 +1,67 @@
+@model SistemaContable.Models.ViewModels.ItemViewModel
+@{
+    ViewData["Title"] = "Debug Edit Item";
+}
+
+<div class="container mt-4">
+    <h1>Debug Edit Item</h1>
+    
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>Datos del Item</h5>
+        </div>
+        <div class="card-body">
+            <p>ID: @Model.Id</p>
+            <p>Código: @Model.Codigo</p>
+            <p>Nombre: @Model.Nombre</p>
+            <p>CategoriaId: @Model.CategoriaId</p>
+            <p>MarcaId: @(Model.MarcaId ?? 0)</p>
+            <p>ImpuestoId: @(Model.ImpuestoId ?? 0)</p>
+            <p>Estado: @Model.Estado</p>
+        </div>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>SelectLists Disponibles</h5>
+        </div>
+        <div class="card-body">
+            <h6>Categorías (@(Model.CategoriasDisponibles?.Count() ?? 0)):</h6>
+            @if (Model.CategoriasDisponibles != null)
+            {
+                <ul>
+                @foreach (var cat in Model.CategoriasDisponibles.Take(5))
+                {
+                    <li>@cat.Value: @cat.Text @(cat.Value == Model.CategoriaId.ToString() ? "(SELECTED)" : "")</li>
+                }
+                </ul>
+            }
+            
+            <h6>Marcas (@(Model.MarcasDisponibles?.Count() ?? 0)):</h6>
+            @if (Model.MarcasDisponibles != null)
+            {
+                <ul>
+                @foreach (var marca in Model.MarcasDisponibles.Take(5))
+                {
+                    <li>@marca.Value: @marca.Text @(marca.Value == Model.MarcaId?.ToString() ? "(SELECTED)" : "")</li>
+                }
+                </ul>
+            }
+            
+            <h6>Impuestos (@(Model.ImpuestosDisponibles?.Count() ?? 0)):</h6>
+            @if (Model.ImpuestosDisponibles != null)
+            {
+                <ul>
+                @foreach (var imp in Model.ImpuestosDisponibles.Take(5))
+                {
+                    <li>@imp.Value: @imp.Text @(imp.Value == Model.ImpuestoId?.ToString() ? "(SELECTED)" : "")</li>
+                }
+                </ul>
+            }
+        </div>
+    </div>
+    
+    <div class="text-center">
+        <a href="/inventario/servicios" class="btn btn-secondary">Volver a lista</a>
+    </div>
+</div>

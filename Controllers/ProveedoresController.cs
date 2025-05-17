@@ -117,6 +117,16 @@ namespace SistemaContable.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Obtener el EmpresaId actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId == 0) // O alguna otra validación de que se obtuvo un ID de empresa válido
+                {
+                    ModelState.AddModelError("", "No se pudo determinar la empresa actual. No se puede crear el proveedor.");
+                    CargarViewBags();
+                    return View(proveedor);
+                }
+                proveedor.EmpresaId = empresaId; // Asignar EmpresaId
+
                 // Procesar la imagen si se proporcionó una
                 if (imagen != null && imagen.Length > 0)
                 {
@@ -230,14 +240,29 @@ namespace SistemaContable.Controllers
                 return NotFound();
             }
 
+            // Validar EmpresaId ANTES de cargar proveedorActual para asegurar el contexto correcto.
+            var empresaIdActualServicio = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaIdActualServicio == 0)
+            {
+                ModelState.AddModelError("", "No se pudo determinar la empresa actual. No se puede editar el proveedor.");
+                CargarViewBags(); // Asegúrate de que CargarViewBags esté disponible y funcione aquí
+                return View(proveedor);
+            }
+
             try
             {
-                // Obtener el proveedor actual de la base de datos para mantener valores que no deberían cambiar
-                var proveedorActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.EsProveedor);
+                // Obtener el proveedor actual de la base de datos
+                var proveedorActual = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.EsProveedor && c.EmpresaId == empresaIdActualServicio);
                 if (proveedorActual == null)
                 {
-                    return NotFound();
+                    // Podría ser que el proveedor no exista, o no pertenezca a la empresa actual.
+                    return NotFound("Proveedor no encontrado o no pertenece a la empresa actual.");
                 }
+
+                // Asignar el EmpresaId de forma segura. 
+                // El EmpresaId del proveedor no debería cambiar en una edición normal a través de este flujo.
+                // Usamos el ID de la empresa del servicio para asegurar que el usuario solo edite proveedores de su empresa.
+                proveedor.EmpresaId = empresaIdActualServicio;
 
                 // Procesar la imagen si se proporcionó una nueva
                 if (imagen != null && imagen.Length > 0)

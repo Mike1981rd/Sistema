@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Sesión Actual";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Información de Sesión</h3>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.CurrentEmpresaId != null)
+                    {
+                        <div class="alert alert-info">
+                            <strong>Empresa actual:</strong> <span class="badge bg-primary fs-5">@ViewBag.CurrentEmpresaId</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <strong>No hay empresa establecida en la sesión</strong>
+                        </div>
+                    }
+                    
+                    <hr />
+                    
+                    <h5>Establecer Empresa en Sesión:</h5>
+                    <div class="list-group mt-3">
+                        <a href="@Url.Action("SetEmpresa", "Session", new { id = 1 })" class="list-group-item list-group-item-action">
+                            Establecer Empresa 1
+                        </a>
+                        <a href="@Url.Action("SetEmpresa", "Session", new { id = 2 })" class="list-group-item list-group-item-action">
+                            Establecer Empresa 2
+                        </a>
+                        <a href="@Url.Action("SetEmpresa", "Session", new { id = 3 })" class="list-group-item list-group-item-action">
+                            Establecer Empresa 3
+                        </a>
+                        <a href="@Url.Action("SetEmpresa", "Session", new { id = 4 })" class="list-group-item list-group-item-action active">
+                            Establecer Empresa 4 (Tu empresa)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

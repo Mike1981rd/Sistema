@@ -1,0 +1,92 @@
+// Fragmento de código corregido para ItemController.cs
+// Reemplazar la sección de procesamiento de proveedores (líneas 354-379)
+
+// Procesar colección de proveedores
+if (viewModel.Proveedores != null && viewModel.Proveedores.Any())
+{
+    _logger.LogInformation($"Procesando {viewModel.Proveedores.Count} proveedores");
+    foreach (var proveedorVM in viewModel.Proveedores)
+    {
+        if (proveedorVM.ProveedorId > 0)
+        {
+            // Verificar si tiene UnidadMedidaCompraId válida
+            if (proveedorVM.UnidadMedidaCompraId <= 0)
+            {
+                _logger.LogWarning($"Proveedor {proveedorVM.ProveedorId} no tiene UnidadMedidaCompraId válida. Omitiendo...");
+                continue; // Saltar este proveedor
+            }
+
+            var itemProveedor = new ItemProveedor
+            {
+                EmpresaId = empresaId,
+                ItemId = item.Id,
+                ProveedorId = proveedorVM.ProveedorId,
+                NombreCompra = proveedorVM.NombreCompra,
+                CodigoProveedor = proveedorVM.CodigoProveedor,
+                PrecioCompra = proveedorVM.PrecioCompra,
+                UnidadMedidaCompraId = proveedorVM.UnidadMedidaCompraId,
+                FactorConversion = proveedorVM.FactorConversion,
+                EsPrincipal = proveedorVM.EsPrincipal,
+                UltimaActualizacionPrecio = DateTime.Now
+            };
+
+            _context.ItemProveedores.Add(itemProveedor);
+        }
+    }
+}
+
+// ALTERNATIVA: Si queremos establecer un valor por defecto
+// Primero, obtener la unidad de medida del inventario principal del item
+int unidadMedidaPorDefecto = viewModel.UnidadMedidaInventarioId ?? 0;
+
+// Si no está definida en el item, buscar una unidad "Unidad" por defecto
+if (unidadMedidaPorDefecto <= 0)
+{
+    var unidadDefault = await _context.UnidadesMedida
+        .Where(u => u.Nombre == "Unidad" || u.Nombre == "Unidades" || u.Nombre == "UND")
+        .FirstOrDefaultAsync();
+    
+    if (unidadDefault != null)
+    {
+        unidadMedidaPorDefecto = unidadDefault.Id;
+    }
+}
+
+// Luego, en el procesamiento de proveedores:
+if (viewModel.Proveedores != null && viewModel.Proveedores.Any())
+{
+    _logger.LogInformation($"Procesando {viewModel.Proveedores.Count} proveedores");
+    foreach (var proveedorVM in viewModel.Proveedores)
+    {
+        if (proveedorVM.ProveedorId > 0)
+        {
+            // Si no tiene UnidadMedidaCompraId, usar el valor por defecto
+            int unidadMedidaCompraId = proveedorVM.UnidadMedidaCompraId > 0 
+                ? proveedorVM.UnidadMedidaCompraId 
+                : unidadMedidaPorDefecto;
+
+            // Si aún no tenemos una unidad válida, omitir este proveedor
+            if (unidadMedidaCompraId <= 0)
+            {
+                _logger.LogWarning($"No se pudo determinar UnidadMedidaCompraId para proveedor {proveedorVM.ProveedorId}. Omitiendo...");
+                continue;
+            }
+
+            var itemProveedor = new ItemProveedor
+            {
+                EmpresaId = empresaId,
+                ItemId = item.Id,
+                ProveedorId = proveedorVM.ProveedorId,
+                NombreCompra = proveedorVM.NombreCompra,
+                CodigoProveedor = proveedorVM.CodigoProveedor,
+                PrecioCompra = proveedorVM.PrecioCompra,
+                UnidadMedidaCompraId = unidadMedidaCompraId,
+                FactorConversion = proveedorVM.FactorConversion,
+                EsPrincipal = proveedorVM.EsPrincipal,
+                UltimaActualizacionPrecio = DateTime.Now
+            };
+
+            _context.ItemProveedores.Add(itemProveedor);
+        }
+    }
+}

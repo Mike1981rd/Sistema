@@ -1,20 +1,35 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SistemaContable.Models;
+using SistemaContable.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SistemaContable.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            // Set empresaId in session if not already set
+            if (!HttpContext.Session.TryGetValue("EmpresaId", out _))
+            {
+                var empresa = await _context.Empresas.FirstOrDefaultAsync();
+                if (empresa != null)
+                {
+                    HttpContext.Session.SetInt32("EmpresaId", empresa.Id);
+                    _logger.LogInformation($"Set EmpresaId in session: {empresa.Id}");
+                }
+            }
+            
             // TODO: Replace with actual data from database
             var viewModel = new DashboardViewModel
             {

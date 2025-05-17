@@ -1,3 +1,5 @@
+// console.log("form.js cargado y ejecutándose."); // LOG AL INICIO DEL ARCHIVO -- COMENTADO
+
 $(document).ready(function() {
     // Función temporal para evitar errores
     window.initImageUpload = function() {};
@@ -1024,79 +1026,6 @@ $(document).ready(function() {
         });
     });
 
-    // Delegar el guardado de marca por AJAX
-    $(document).on('click', '#btnGuardarMarca', function(e) {
-        e.preventDefault();
-        var $form = $('#formMarcaContainer form');
-        if ($form.length === 0) return;
-        var formData = $form.serialize();
-        
-        // Mostrar indicador de carga
-        Swal.fire({
-            title: 'Guardando...',
-            text: 'Procesando la información',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-        
-        $.ajax({
-            url: $form.attr('action'),
-            type: $form.attr('method') || 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    // Agregar la opción al select sin seleccionarla automáticamente
-                    var newOption = new Option(response.nombre, response.id, false, false);
-                    // Marcar como recién creada con timestamp
-                    newOption.dataset.createdAt = new Date().getTime().toString();
-                    $('#MarcaId').append(newOption);
-                    
-                    // Cerrar offcanvas
-                    $('#offcanvasMarca').offcanvas('hide');
-                    
-                    // Mostrar mensaje de éxito con información adicional
-                    Swal.fire({ 
-                        icon: 'success', 
-                        title: 'Éxito', 
-                        text: 'Marca guardada correctamente',
-                        footer: 'La marca ahora aparece en la lista de selección.',
-                        timer: 3000, 
-                        showConfirmButton: true 
-                    });
-                    
-                    // Guardar referencia a la marca recién creada para evitar procesamiento automático
-                    ultimaMarcaCreada = {
-                        id: response.id,
-                        nombre: response.nombre,
-                        timestamp: new Date().getTime()
-                    };
-                    
-                    // Después de 5 segundos, olvidar la marca recién creada
-                    setTimeout(() => {
-                        if (ultimaMarcaCreada && ultimaMarcaCreada.id == response.id) {
-                            ultimaMarcaCreada = null;
-                        }
-                    }, 5000);
-                    
-                    // Evitar que se dispare el evento change en MarcaId
-                    $('#MarcaId').off('change.afterCreate').on('change.afterCreate', function(e) {
-                        if ($(this).val() == response.id) {
-                            e.stopPropagation();
-                            $(this).off('change.afterCreate');
-                        }
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo guardar la marca' });
-                }
-            },
-            error: function() {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al guardar la marca' });
-            }
-        });
-    });
-
     // Manejador para herencia de categoría (enfoque con precarga de datos)
     let ultimaCategoriaCreada = null; // Variable para tracking
     let ultimaMarcaCreada = null; // Variable para tracking marcas
@@ -1358,17 +1287,19 @@ $(document).ready(function() {
                         );
                     }
                     
-                    // Activar la pestaña de contabilidad donde están las cuentas
-                    const $pestanaContabilidad = $('a[href="#tab-contabilidad"]');
-                    if ($pestanaContabilidad.length > 0) {
-                        $pestanaContabilidad.tab('show');
-                        
-                        // Actualizar cuentas contables usando los endpoints correctos
-                        if (response.cuentaVentaId) {
-                            promesasPendientes.push(
-                                precargarYSeleccionarOpcion('#CuentaVentasId', response.cuentaVentaId, 'Cuenta de Ventas', '/api/CuentasContables/buscar?q=' + response.cuentaVentaId)
-                            );
-                        }
+                    // No cambiar de pestaña, mantenerse en la actual
+                    // Código comentado para evitar cambio de pestaña
+                    // const $pestanaContabilidad = $('a[href="#tab-contabilidad"]');
+                    // if ($pestanaContabilidad.length > 0) {
+                    //     $pestanaContabilidad.tab('show');
+                    // }
+                    
+                    // Actualizar cuentas contables usando los endpoints correctos
+                    if (response.cuentaVentaId) {
+                        promesasPendientes.push(
+                            precargarYSeleccionarOpcion('#CuentaVentasId', response.cuentaVentaId, 'Cuenta de Ventas', '/api/CuentasContables/buscar?q=' + response.cuentaVentaId)
+                        );
+                    }
                         
                         if (response.cuentaCompraId) {
                             promesasPendientes.push(
@@ -1407,9 +1338,6 @@ $(document).ready(function() {
                                 precargarYSeleccionarOpcion('#CuentaCostoMateriaPrimaId', response.cuentaCostoMateriaPrimaId, 'Cuenta de Costo de Materia Prima', '/api/CuentasContables/buscar?q=' + response.cuentaCostoMateriaPrimaId)
                             );
                         }
-                    } else {
-                        console.warn('No se encontró la pestaña de contabilidad');
-                    }
                     
                     // Esperar a que todas las promesas terminen
                     Promise.all(promesasPendientes).then(() => {
@@ -1418,11 +1346,12 @@ $(document).ready(function() {
                         // Cerrar el indicador de carga
                         Swal.close();
                         
-                        // Volver a la pestaña general
-                        const $pestanaGeneral = $('a[href="#tab-general"]');
-                        if ($pestanaGeneral.length > 0) {
-                            $pestanaGeneral.tab('show');
-                        }
+                        // No cambiar de pestaña
+                        // Código comentado para evitar cambio de pestaña
+                        // const $pestanaGeneral = $('a[href="#tab-general"]');
+                        // if ($pestanaGeneral.length > 0) {
+                        //     $pestanaGeneral.tab('show');
+                        // }
                         
                         // Verificar si hay campos fallidos - aquellos que muestran aún (ID: XX) en su texto
                         $('[id$="Id"]').each(function() {
@@ -1461,6 +1390,7 @@ $(document).ready(function() {
                             });
                         }
                     });
+                    
                 } else {
                     Swal.close();
                     console.error('Error en respuesta:', response);
@@ -1674,4 +1604,107 @@ $(document).ready(function() {
     
     // Inicializar carga de imágenes
     initImageUpload();
-}); 
+    
+    // Delegar el guardado de marca por AJAX (Restaurado)
+    $(document).on('click', '#btnGuardarMarca', function(e) {
+        console.log("#btnGuardarMarca clickeado (desde form.js)."); // Log para confirmar
+        e.preventDefault();
+        var $form = $('#formMarcaCreate');
+        if ($form.length === 0) {
+            // Fallback si #formMarcaCreate no existe, buscar form dentro de #formMarcaContainer
+            var $container = $('#offcanvasMarca #formMarcaContainer');
+            if ($container.length > 0) {
+                $form = $container.find('form');
+                if ($form.length === 0) {
+                    console.error("No se encontró ningún formulario dentro de #offcanvasMarca #formMarcaContainer.");
+                    return;
+                }
+            } else {
+                 console.error("Formulario #formMarcaCreate y contenedor #formMarcaContainer no encontrados.");
+                return;
+            }
+        }
+
+        var formData = $form.serialize();
+        
+        // Validar campos del formulario del lado del cliente (ejemplo básico)
+        let isValid = true;
+        const nombreMarca = $form.find('[name="Nombre"]').val();
+        if (!nombreMarca || nombreMarca.trim() === '') {
+            isValid = false;
+            console.error("El nombre de la marca es requerido (validación cliente en form.js).");
+            Swal.fire({ icon: 'error', title: 'Error de Validación', text: 'El nombre de la marca es requerido.' });
+        }
+
+        if (!isValid) {
+            return;
+        }
+        
+        Swal.fire({
+            title: 'Guardando Marca...',
+            text: 'Procesando la información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method') || 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    var newOptionText = response.nombre;
+                    if (response.marca && response.marca.nombre) { // Si el backend devuelve un objeto nested
+                        newOptionText = response.marca.nombre;
+                    }
+                    var newOption = new Option(newOptionText, response.id, false, false);
+                    newOption.dataset.createdAt = new Date().getTime().toString();
+                    
+                    const $marcaSelect = $('#MarcaId'); 
+                    $marcaSelect.append(newOption).trigger('change');
+                    
+                    const offcanvasMarcaElement = document.getElementById('offcanvasMarca');
+                    if (offcanvasMarcaElement) {
+                        const offcanvasBS = bootstrap.Offcanvas.getInstance(offcanvasMarcaElement);
+                        if (offcanvasBS) {
+                            offcanvasBS.hide();
+                        }
+                    }
+                    
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Éxito', 
+                        text: 'Marca guardada correctamente.',
+                        footer: 'La marca ahora aparece en la lista de selección.',
+                        timer: 2000, 
+                        showConfirmButton: false 
+                    });
+                    
+                    if (typeof ultimaMarcaCreada !== 'undefined') { 
+                        ultimaMarcaCreada = {
+                            id: response.id,
+                            nombre: newOptionText,
+                            timestamp: new Date().getTime()
+                        };
+                        setTimeout(() => {
+                            if (ultimaMarcaCreada && ultimaMarcaCreada.id == response.id) {
+                                ultimaMarcaCreada = null;
+                            }
+                        }, 5000);
+                    }
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error al Guardar', text: response.message || 'No se pudo guardar la marca.' });
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                Swal.fire({ icon: 'error', title: 'Error de Red', text: 'Ocurrió un error al guardar la marca: ' + errorThrown });
+            }
+        });
+    });
+
+    // Manejador para herencia de categoría (enfoque con precarga de datos)
+    // ... (resto del código de form.js) ...
+
+}); // Cierre del $(document).ready 

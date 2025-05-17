@@ -628,7 +628,17 @@ namespace SistemaContable.Controllers
                         message = "Categoría creada con éxito", 
                         categoria = new { 
                             id = categoria.Id, 
-                            nombre = categoria.Nombre 
+                            nombre = categoria.Nombre,
+                            cuentaVentasId = categoria.CuentaVentasId,
+                            cuentaComprasInventariosId = categoria.CuentaComprasInventariosId,
+                            cuentaCostoVentasGastosId = categoria.CuentaCostoVentasGastosId,
+                            cuentaDescuentosId = categoria.CuentaDescuentosId,
+                            cuentaDevolucionesId = categoria.CuentaDevolucionesId,
+                            cuentaAjustesId = categoria.CuentaAjustesId,
+                            cuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId,
+                            impuestoId = categoria.ImpuestoId,
+                            propinaImpuestoId = categoria.PropinaImpuestoId,
+                            rutaImpresoraId = categoria.RutaImpresoraId
                         } 
                     });
                 }
@@ -741,7 +751,17 @@ namespace SistemaContable.Controllers
                         message = "Categoría actualizada con éxito", 
                         categoria = new { 
                             id = categoria.Id, 
-                            nombre = categoria.Nombre 
+                            nombre = categoria.Nombre,
+                            cuentaVentasId = categoria.CuentaVentasId,
+                            cuentaComprasInventariosId = categoria.CuentaComprasInventariosId,
+                            cuentaCostoVentasGastosId = categoria.CuentaCostoVentasGastosId,
+                            cuentaDescuentosId = categoria.CuentaDescuentosId,
+                            cuentaDevolucionesId = categoria.CuentaDevolucionesId,
+                            cuentaAjustesId = categoria.CuentaAjustesId,
+                            cuentaCostoMateriaPrimaId = categoria.CuentaCostoMateriaPrimaId,
+                            impuestoId = categoria.ImpuestoId,
+                            propinaImpuestoId = categoria.PropinaImpuestoId,
+                            rutaImpresoraId = categoria.RutaImpresoraId
                         } 
                     });
                 }
@@ -859,7 +879,11 @@ namespace SistemaContable.Controllers
         [HttpGet]
         public async Task<JsonResult> Obtener(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var categoria = await _context.Categorias
+                .Where(c => c.Id == id && c.EmpresaId == empresaId)
+                .FirstOrDefaultAsync();
+                
             if (categoria == null)
                 return Json(new { success = false, message = "No encontrada" });
 

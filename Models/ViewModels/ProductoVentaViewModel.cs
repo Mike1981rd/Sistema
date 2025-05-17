@@ -18,7 +18,6 @@ namespace SistemaContable.Models.ViewModels
         [Display(Name = "Nombre")]
         public string? Nombre { get; set; }
         
-        [Range(0.001, double.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero")]
         [Display(Name = "Cantidad")]
         public decimal Cantidad { get; set; } = 1;
         

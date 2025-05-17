@@ -28,6 +28,14 @@ namespace SistemaContable.Controllers
             return View(await _context.Empresas.ToListAsync());
         }
 
+        // POST: Empresas/Seleccionar/5
+        [HttpPost]
+        public IActionResult Seleccionar(int id)
+        {
+            HttpContext.Session.SetInt32("EmpresaId", id);
+            return Json(new { success = true, message = $"Empresa {id} seleccionada" });
+        }
+
         // GET: Empresas/Configurar
         public async Task<IActionResult> Configurar()
         {
@@ -108,6 +116,9 @@ namespace SistemaContable.Controllers
                 {
                     _context.Update(empresa);
                     await _context.SaveChangesAsync();
+                    
+                    // Establecer esta empresa como la actual en la sesión
+                    HttpContext.Session.SetInt32("EmpresaId", empresa.Id);
                     
                     TempData["SuccessMessage"] = "Datos de la empresa guardados correctamente.";
                     return RedirectToAction(nameof(Configurar));

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Empresas";
+    var empresaActualId = Context.Session.GetInt32("EmpresaId") ?? 0;
 }
 
 <div class="aurora-dashboard-section">
@@ -28,8 +29,14 @@
                 <tbody>
                     @foreach (var item in Model)
                     {
-                        <tr>
-                            <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                        <tr class="@(item.Id == empresaActualId ? "table-primary" : "")">
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Nombre)
+                                @if (item.Id == empresaActualId)
+                                {
+                                    <span class="badge bg-info ms-2">Actual</span>
+                                }
+                            </td>
                             <td>@Html.DisplayFor(modelItem => item.MonedaPrincipal)</td>
                             <td>@Html.DisplayFor(modelItem => item.PrecisionDecimal)</td>
                             <td>@Html.DisplayFor(modelItem => item.SeparadorDecimal)</td>
@@ -45,6 +52,12 @@
                             </td>
                             <td>
                                 <div class="btn-group">
+                                    @if (item.Id != empresaActualId)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="seleccionarEmpresa(@item.Id, '@item.Nombre')">
+                                            <i class="fas fa-check"></i> Seleccionar
+                                        </button>
+                                    }
                                     <a asp-action="Configurar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -56,4 +69,31 @@
             </table>
         </div>
     </div>
-</div> 
+    
+    @if (empresaActualId == 0)
+    {
+        <div class="alert alert-warning mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No hay ninguna empresa seleccionada. Por favor seleccione una empresa para trabajar.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function seleccionarEmpresa(id, nombre) {
+            if (confirm('¿Desea establecer "' + nombre + '" como la empresa actual?')) {
+                $.post('/Empresas/Seleccionar/' + id)
+                    .done(function(response) {
+                        if (response.success) {
+                            alert('Empresa seleccionada correctamente');
+                            location.reload();
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error al seleccionar la empresa');
+                    });
+            }
+        }
+    </script>
+} 

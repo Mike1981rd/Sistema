@@ -1,18 +1,18 @@
 @model SistemaContable.Models.ViewModels.ItemViewModel
 
-<div class="tab-pane fade" id="tab-compras" role="tabpanel">
-    <div class="row mb-4">
+<div class="row mb-4">
         <div class="col-md-6">
             <label class="form-label" for="UnidadMedidaInventarioId">Unidad de Medida (Inventario) *</label>
             <div class="input-group">
-                <select class="form-select select2-um" required data-val="true" data-val-required="La unidad de medida de inventario es requerida" id="UnidadMedidaInventarioId" name="UnidadMedidaInventarioId">
+                <select asp-for="UnidadMedidaInventarioId" asp-items="Model.UnidadesMedidaDisponibles" 
+                        class="form-select select2-um" required>
                     <option value="">Seleccione una unidad</option>
                 </select>
                 <button type="button" class="btn btn-outline-primary" id="btnNuevaUnidad">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
-            <span class="text-danger field-validation-valid" data-valmsg-for="UnidadMedidaInventarioId" data-valmsg-replace="true"></span>
+            <span asp-validation-for="UnidadMedidaInventarioId" class="text-danger"></span>
         </div>
         <div class="col-md-6">
             <label for="UnidadCompraId" class="form-label">Unidad de Compra Preferida</label>
@@ -54,15 +54,8 @@
         </div>
     </div>
     
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Proveedores</h5>
-        </div>
-        <div class="card-body">
-            <p>Esta sección está en desarrollo.</p>
-        </div>
-    </div>
-</div>
+    <!-- Incluir partial de proveedores -->
+    @await Html.PartialAsync("_TabProveedores", Model)
 
 <!-- Contenedor oculto para IDs eliminados -->
 <div id="conversiones-eliminadas" style="display:none;"></div>

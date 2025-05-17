@@ -1,0 +1,90 @@
+@using SistemaContable.Services
+@{
+    ViewData["Title"] = "Verificar Base de Datos";
+    var db = Context.RequestServices.GetService<SistemaContable.Data.ApplicationDbContext>();
+    var userService = Context.RequestServices.GetService<IUserService>();
+    
+    // Obtener el empresaId del UserService
+    var empresaIdActual = userService.GetEmpresaId();
+    
+    // Verificar empresa y datos
+    var empresas = db.Empresas.ToList();
+    var items = db.Items.Take(10).Select(i => new { i.Id, i.Nombre, i.EmpresaId }).ToList();
+    var categorias = db.Categorias.Take(10).Select(c => new { c.Id, c.Nombre, c.EmpresaId }).ToList();
+    var marcas = db.Marcas.Take(10).Select(m => new { m.Id, m.Nombre, m.EmpresaId }).ToList();
+    var impuestos = db.Impuestos.Take(10).Select(i => new { i.Id, i.Nombre, i.EmpresaId }).ToList();
+}
+
+<div class="container mt-4">
+    <h1>Verificación de Base de Datos</h1>
+    
+    <div class="alert alert-warning">
+        <p>UserService está devolviendo EmpresaId: <strong>@empresaIdActual</strong></p>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Empresas en el Sistema</h5>
+        </div>
+        <div class="card-body">
+            @foreach (var emp in empresas)
+            {
+                <p>ID: @emp.Id - @emp.Nombre</p>
+            }
+        </div>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5>Primeros 10 Items</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>EmpresaId</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Nombre</td>
+                        <td>@item.EmpresaId</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h5>Primeras 10 Categorías</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>EmpresaId</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var cat in categorias)
+                {
+                    <tr>
+                        <td>@cat.Id</td>
+                        <td>@cat.Nombre</td>
+                        <td>@cat.EmpresaId</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
