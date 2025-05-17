@@ -377,6 +377,14 @@ function initImageUpload() {
     let localImageDataBase64 = sessionStorage.getItem(IMAGE_SESSION_STORAGE_KEY);
 
     function displayImage(src, isModelImageSource = false) {
+        // Si la imagen ya tiene esta fuente y está visible, no hacer nada para evitar bucles.
+        if ($preview.attr('src') === src && $imagePreviewDiv.is(':visible')) {
+            // console.log("displayImage: src es el mismo y ya está visible, evitando re-actualización.");
+            // Asegurarse de que el botón clear esté visible si hay imagen
+            if (src && src !== '#') $clearImageBtn.show();
+            return;
+        }
+
         $preview.attr('src', src);
         $imagePreviewDiv.show();
         $imageDefaultDiv.hide();
@@ -398,7 +406,13 @@ function initImageUpload() {
     }
 
     function displayDefault(clearOriginalModelUrl = false) {
-        console.trace("displayDefault called");
+        // console.trace("displayDefault called");
+        // Si ya está en default, no hacer nada
+        if ($imageDefaultDiv.is(':visible') && $preview.attr('src') === '#') {
+            // console.log("displayDefault: ya está en estado default, evitando re-actualización.");
+            return;
+        }
+
         $preview.attr('src', '#');
         $imagePreviewDiv.hide();
         $imageDefaultDiv.show();
@@ -427,12 +441,18 @@ function initImageUpload() {
         
         // Quitar handlers previos para evitar duplicados si se llama múltiples veces
         $preview.off('.imagehandler').on('load.imagehandler', function() {
-            if ($(this).width() > 0 && $(this).height() > 0) { 
-                console.log("Imagen del modelo cargada y visible (desde evento load):");
-                displayImage(finalModelImageUrl, true); // true porque la fuente es modelImageUrl
+            // $(this) es el elemento img#preview
+            if (this.naturalWidth > 0 && this.naturalHeight > 0) { 
+                console.log("Imagen del modelo cargada y visible (desde evento load inicial):");
+                // Llamar a displayImage SOLO si el src actual no es ya el finalModelImageUrl
+                // o si no está correctamente visible. La propia displayImage ya tiene una guarda.
+                displayImage(finalModelImageUrl, true);
+            } else {
+                console.warn("Evento load inicial disparado, pero imagen parece no válida. Modelo URL:", finalModelImageUrl);
+                // No llamar a displayDefault aquí para evitar problemas si el placeholder dispara load.
             }
         }).on('error.imagehandler', function() {
-            console.error("Error cargando imagen del modelo (desde evento error):", finalModelImageUrl);
+            console.error("Error cargando imagen del modelo (desde evento error inicial):", finalModelImageUrl);
             displayDefault();
         });
 
@@ -538,13 +558,10 @@ function initImageUpload() {
                                 // Verificar si la imagen realmente se cargó y tiene dimensiones
                                 if (this.naturalWidth > 0 && this.naturalHeight > 0) {
                                     console.log("Imagen del modelo restaurada y visible (desde evento load en observer).");
+                                    // displayImage se llamará, y tiene su propia guarda para evitar bucles si el src ya es el correcto.
                                     displayImage(finalModelUrl, true);
                                 } else {
-                                     // A veces 'load' se dispara incluso si la imagen está rota pero es un recurso válido (ej. 200 OK con contenido corrupto)
-                                     // O si el src es data:image y está vacío.
                                      console.warn("Evento load disparado en observer, pero imagen parece no válida (dimensiones 0). Modelo URL:", finalModelUrl);
-                                     // No llamar a displayDefault() aquí directamente para evitar bucles si el placeholder también dispara 'load'.
-                                     // El evento 'error' debería manejar la falla de carga real.
                                 }
                             }).on('error.imagehandler', function() {
                                 console.error("Error cargando imagen del modelo al restaurar (desde evento error en observer):", finalModelUrl);

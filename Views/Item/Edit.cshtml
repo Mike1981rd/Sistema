@@ -23,7 +23,7 @@
     </div>
 
     <form asp-action="Edit" method="post" enctype="multipart/form-data" id="itemForm">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
 
         <!-- Nav tabs con estilo Underline -->
@@ -76,6 +76,12 @@
                                             <button type="button" class="btn btn-outline-secondary" id="generarCodigoBarras" title="Generar código">
                                                 <i class="fas fa-barcode"></i>
                                             </button>
+                                            <button type="button" class="btn btn-outline-info" id="imprimirCodigoBarras" title="Imprimir código" disabled>
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                        <div id="codigoBarrasPreview" class="mt-2 text-center" style="display: none;">
+                                            <svg id="barcode"></svg>
                                         </div>
                                         <span asp-validation-for="CodigoBarras" class="text-danger"></span>
                                     </div>
@@ -142,26 +148,30 @@
                                         <h5 class="card-title">Imagen</h5>
                                         <div class="modern-image-upload">
                                             <!-- Vista previa de imagen -->
-                                            <div class="image-preview mb-3 text-center">
+                                            <div id="imagePreview" class="image-preview mb-3 text-center" style="display: @(string.IsNullOrEmpty(Model.ImagenUrl) ? "none" : "block");">
                                                 @if (string.IsNullOrEmpty(Model.ImagenUrl))
                                                 {
-                                                    <div class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                                        <div class="text-center text-muted">
-                                                            <i class="fas fa-image fa-4x mb-3"></i>
-                                                            <p>No hay imagen</p>
-                                                        </div>
-                                                    </div>
+                                                    <img id="preview" src="#" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px; display: none;" />
                                                 }
                                                 else
                                                 {
-                                                    <img src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
+                                                    <img id="preview" src="@Model.ImagenUrl" data-original-src="@Model.ImagenUrl" alt="Vista previa" class="img-fluid rounded shadow-sm" style="max-height: 200px;" />
                                                 }
+                                            </div>
+                                            <div id="imageDefault" class="no-image-container p-4 border rounded bg-light d-flex align-items-center justify-content-center mb-3" style="height: 200px; display: @(string.IsNullOrEmpty(Model.ImagenUrl) ? "flex" : "none");">
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-image fa-4x mb-3"></i>
+                                                    <p>No hay imagen</p>
+                                                </div>
                                             </div>
                                             
                                             <!-- Selector de archivo -->
                                             <div class="file-selector mb-3">
                                                 <div class="input-group">
                                                     <input type="file" asp-for="ItemImage" class="form-control" accept="image/*" id="imageFile">
+                                                    <button class="btn btn-outline-secondary" type="button" id="browseButton" title="Seleccionar imagen">
+                                                        <i class="fas fa-folder-open"></i>
+                                                    </button>
                                                     <button class="btn btn-outline-danger" type="button" id="clearImageBtn" style="display: @(!string.IsNullOrEmpty(Model.ImagenUrl) ? "inline-flex" : "none")">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -185,7 +195,7 @@
 
                     <!-- Tab Compras -->
                     <div class="tab-pane fade" id="tab-compras" role="tabpanel">
-                        @await Html.PartialAsync("_TabCompras", Model)
+                        @await Html.PartialAsync("_ComprasPartial", Model)
                     </div>
 
                     <!-- Tab Contabilidad -->
@@ -250,419 +260,43 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    
-    <!-- jQuery y jQuery UI necesarios para los scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    
-    <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <link href="~/css/select2-fixes.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
-    <!-- SweetAlert para notificaciones -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- JsBarcode para códigos de barras -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
-    <!-- Scripts específicos de Item -->
-    <script src="~/js/items/item-create-fixed-v2.js"></script>
-    <script src="~/js/items/containers-edit.js"></script>
+    <!-- Nuestro script principal (alineado con Create.cshtml) -->
+    <script src="~/js/items/item-create-simple.js"></script>
     
+    <!-- Script para generar código automático (alineado con Create.cshtml) -->
+    <script src="~/js/items/code-generator.js"></script>
+    
+    <!-- Scripts para otras pestañas (alineado con Create.cshtml) -->
+    <script src="~/Scripts/contenedores.js"></script>
+    <script src="~/js/items/tab-info-init.js"></script>
+    <script src="~/js/items/tab-compras-init.js"></script>
+    <script src="~/js/items/tab-contabilidad-init.js"></script>
+    <script src="~/js/items/tab-venta-init.js"></script>
+
     <script>
         $(document).ready(function() {
-            console.log('Edit Item page loaded');
-            const itemId = '@Model.Id';
-            
-            // Inicializar Select2 para Categoría
-            const categoriaId = '@Model.CategoriaId';
-            const categoriaText = $('#CategoriaId option:selected').text();
-            $('.select2-categoria').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Seleccione una categoría',
-                allowClear: false,
-                width: '100%',
-                ajax: {
-                    url: '/Categoria/Buscar',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            term: params.term || ''
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results || []
-                        };
-                    },
-                    cache: true
-                },
-                tags: true,
-                createTag: function(params) {
-                    const term = $.trim(params.term);
-                    if (term === '') {
-                        return null;
-                    }
-                    return {
-                        id: 'CREATE:' + term,
-                        text: term + ' (Crear nueva)',
-                        newTag: true
-                    };
-                }
-            });
-            
-            // Si hay una categoría seleccionada, mantenerla
-            if (categoriaId && categoriaText) {
-                const option = new Option(categoriaText, categoriaId, true, true);
-                $('#CategoriaId').append(option).trigger('change');
-            }
-            
-            // Manejar creación de nueva categoría
-            $('#CategoriaId').on('select2:select', function(e) {
-                const data = e.params.data;
-                if (data.newTag) {
-                    // Abrir offcanvas para crear nueva categoría
-                    const categoriaName = data.text.replace(' (Crear nueva)', '');
-                    cargarFormularioCategoria('crear', null, categoriaName);
-                }
-            });
-            
-            // Inicializar Select2 para Marca
-            const marcaId = '@Model.MarcaId';
-            const marcaText = $('#MarcaId option:selected').text();
-            $('.select2-marca').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Genérica',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: '/Marca/Buscar',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            term: params.term || ''
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results || []
-                        };
-                    },
-                    cache: true
-                },
-                tags: true,
-                createTag: function(params) {
-                    const term = $.trim(params.term);
-                    if (term === '') {
-                        return null;
-                    }
-                    return {
-                        id: 'CREATE:' + term,
-                        text: term + ' (Crear nueva)',
-                        newTag: true
-                    };
-                }
-            });
-            
-            // Si hay una marca seleccionada, mantenerla
-            if (marcaId && marcaText && marcaText !== 'Genérica') {
-                const option = new Option(marcaText, marcaId, true, true);
-                $('#MarcaId').append(option).trigger('change');
-            }
-            
-            // Manejar creación de nueva marca
-            $('#MarcaId').on('select2:select', function(e) {
-                const data = e.params.data;
-                if (data.newTag) {
-                    // Abrir offcanvas para crear nueva marca
-                    const marcaName = data.text.replace(' (Crear nueva)', '');
-                    cargarFormularioMarca('crear', null, marcaName);
-                }
-            });
-            
-            // Inicializar Select2 para Impuesto
-            const impuestoId = '@Model.ImpuestoId';
-            const impuestoText = $('#ImpuestoId option:selected').text();
-            $('#ImpuestoId').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Seleccione un impuesto',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: '/Impuestos/Buscar',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            term: params.term || ''
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results || []
-                        };
-                    },
-                    cache: true
-                }
-            });
-            
-            // Si hay un impuesto seleccionado, mantenerlo
-            if (impuestoId && impuestoText) {
-                const option = new Option(impuestoText, impuestoId, true, true);
-                $('#ImpuestoId').append(option).trigger('change');
-            }
-            
-            // Variable para rastrear si los proveedores han sido cargados
-            let proveedoresCargados = false;
-            
-            // Inicializar Select2 para el dropdown de proveedores
-            $('#ProveedorId').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Seleccione o cree un proveedor',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: '/Proveedores/Buscar',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            term: params.term || ''
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.results || []
-                        };
-                    },
-                    cache: true
-                },
-                tags: true,
-                createTag: function(params) {
-                    const term = $.trim(params.term);
-                    if (term === '') {
-                        return null;
-                    }
-                    return {
-                        id: 'CREATE:' + term,
-                        text: term + ' (Crear nuevo)',
-                        newTag: true
-                    };
-                }
-            });
-            
-            // Manejar creación de nuevo proveedor
-            $('#ProveedorId').on('select2:select', function(e) {
-                const data = e.params.data;
-                if (data.newTag) {
-                    // Abrir offcanvas para crear nuevo proveedor
-                    const proveedorName = data.text.replace(' (Crear nuevo)', '');
-                    cargarFormularioProveedor('crear', null, proveedorName);
-                }
-            });
-            
-            // Función para cargar formulario de proveedor en offcanvas
-            function cargarFormularioProveedor(accion, id = null, nombre = '') {
-                let url = accion === 'crear' ? '/Proveedores/Create' : `/Proveedores/Edit/${id}`;
-                
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(data) {
-                        $('#formProveedorContainer').html(data);
-                        
-                        // Si es crear y tenemos un nombre, establecerlo
-                        if (accion === 'crear' && nombre) {
-                            $('#formProveedorContainer').find('#NombreRazonSocial').val(nombre);
-                        }
-                        
-                        $('#offcanvasProveedorLabel').text(accion === 'crear' ? 'Nuevo Proveedor' : 'Editar Proveedor');
-                        
-                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasProveedor'));
-                        offcanvas.show();
-                        
-                        // Manejar el guardado del proveedor
-                        $('#formProveedorContainer').find('form').on('submit', function(e) {
-                            e.preventDefault();
-                            guardarProveedor($(this), offcanvas);
-                        });
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
-                    }
-                });
-            }
-            
-            // Función para guardar proveedor
-            function guardarProveedor($form, offcanvas) {
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: $form.attr('method'),
-                    data: $form.serialize(),
-                    success: function(response) {
-                        if (response.success) {
-                            offcanvas.hide();
-                            Swal.fire('Éxito', 'Proveedor guardado correctamente', 'success');
-                            
-                            // Agregar el nuevo proveedor al select2
-                            const newOption = new Option(response.proveedor.nombreRazonSocial, response.proveedor.id, true, true);
-                            $('#ProveedorId').append(newOption).trigger('change');
-                        } else {
-                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
-                        }
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'Error al guardar el proveedor', 'error');
-                    }
-                });
-            }
-            
-            // Función para cargar formulario de categoría en offcanvas
-            function cargarFormularioCategoria(accion, id = null, nombre = '') {
-                let url = accion === 'crear' ? '/Categoria/_CreatePartial' : `/Categoria/_EditPartial/${id}`;
-                
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(data) {
-                        $('#formCategoriaContainer').html(data);
-                        
-                        // Si es crear y tenemos un nombre, establecerlo
-                        if (accion === 'crear' && nombre) {
-                            $('#formCategoriaContainer').find('#Nombre').val(nombre);
-                        }
-                        
-                        $('#offcanvasCategoriaLabel').text(accion === 'crear' ? 'Nueva Categoría' : 'Editar Categoría');
-                        
-                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasCategoria'));
-                        offcanvas.show();
-                        
-                        // Manejar el guardado de la categoría
-                        $('#formCategoriaContainer').find('form').on('submit', function(e) {
-                            e.preventDefault();
-                            guardarCategoria($(this), offcanvas);
-                        });
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
-                    }
-                });
-            }
-            
-            // Función para guardar categoría
-            function guardarCategoria($form, offcanvas) {
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: $form.attr('method'),
-                    data: $form.serialize(),
-                    success: function(response) {
-                        if (response.success) {
-                            offcanvas.hide();
-                            Swal.fire('Éxito', 'Categoría guardada correctamente', 'success');
-                            
-                            // Agregar la nueva categoría al select2
-                            const newOption = new Option(response.categoria.nombre, response.categoria.id, true, true);
-                            $('#CategoriaId').append(newOption).trigger('change');
-                        } else {
-                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
-                        }
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'Error al guardar la categoría', 'error');
-                    }
-                });
-            }
-            
-            // Función para cargar formulario de marca en offcanvas
-            function cargarFormularioMarca(accion, id = null, nombre = '') {
-                let url = accion === 'crear' ? '/Marca/_Create' : `/Marca/_Edit?id=${id}`;
-                
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(data) {
-                        $('#formMarcaContainer').html(data);
-                        
-                        // Si es crear y tenemos un nombre, establecerlo
-                        if (accion === 'crear' && nombre) {
-                            $('#formMarcaContainer').find('#Nombre').val(nombre);
-                        }
-                        
-                        $('#offcanvasMarcaLabel').text(accion === 'crear' ? 'Nueva Marca' : 'Editar Marca');
-                        
-                        const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasMarca'));
-                        offcanvas.show();
-                        
-                        // Manejar el guardado de la marca
-                        $('#formMarcaContainer').find('form').on('submit', function(e) {
-                            e.preventDefault();
-                            guardarMarca($(this), offcanvas);
-                        });
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
-                    }
-                });
-            }
-            
-            // Función para guardar marca
-            function guardarMarca($form, offcanvas) {
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: $form.attr('method'),
-                    data: $form.serialize(),
-                    success: function(response) {
-                        if (response.success) {
-                            offcanvas.hide();
-                            Swal.fire('Éxito', 'Marca guardada correctamente', 'success');
-                            
-                            // Agregar la nueva marca al select2
-                            const newOption = new Option(response.marca.nombre, response.marca.id, true, true);
-                            $('#MarcaId').append(newOption).trigger('change');
-                        } else {
-                            Swal.fire('Error', response.message || 'Error al guardar', 'error');
-                        }
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'Error al guardar la marca', 'error');
-                    }
-                });
-            }
-            
-            // Inicializar select2 para proveedores (debe existir en _TabProveedores.cshtml)
-            setTimeout(function() {
-                if (window.initializeProveedores) {
-                    window.initializeProveedores();
-                    
-                    // Cargar proveedores existentes para este item
-                    if (!proveedoresCargados) {
-                        proveedoresCargados = true;
-                        cargarProveedoresDelItem(itemId);
-                    }
-                }
-            }, 500);
-            
-            // Función para cargar proveedores del item
+            window.itemCreateInitialized = true; // Indica que la inicialización principal se manejará externamente
+            const itemId = '@Model.Id'; // Crucial para el modo edición
+            let proveedoresCargados = false; // Control para la carga de proveedores existentes
+
+            // Función para cargar proveedores existentes del ítem (específico del modo Edit)
             function cargarProveedoresDelItem(itemId) {
-                console.log('Cargando proveedores para item:', itemId);
-                
-                // Esperar a que cargarProveedoresExistentes esté disponible
+                console.log('Edit.cshtml: Cargando proveedores para item:', itemId);
                 const waitForFunction = setInterval(function() {
-                    if (window.cargarProveedoresExistentes) {
+                    if (typeof window.cargarProveedoresExistentes === 'function') {
                         clearInterval(waitForFunction);
-                        
-                        // Hacer llamada AJAX para obtener proveedores del item
                         $.ajax({
                             url: `/Item/ObtenerProveedores/${itemId}`,
                             type: 'GET',
                             success: function(data) {
-                                console.log('Proveedores cargados:', data);
                                 if (data && data.length > 0) {
-                                    // Transformar los datos al formato esperado
                                     const proveedoresData = data.map(p => ({
                                         proveedorId: p.proveedorId,
                                         nombreProveedor: p.nombreProveedor || p.proveedorNombre,
@@ -671,41 +305,35 @@
                                         precioCompra: p.precioCompra,
                                         factorConversion: p.factorConversion
                                     }));
-                                    
-                                    // Cargar proveedores en la tabla
                                     window.cargarProveedoresExistentes(proveedoresData);
                                 }
                             },
                             error: function(err) {
-                                console.error('Error al cargar proveedores:', err);
+                                console.error('Error al cargar proveedores del item:', err);
                             }
                         });
+                    } else {
+                        // Puede que la función aún no esté lista si el script de la pestaña de compras carga con retraso
+                        console.log("Edit.cshtml: Esperando a window.cargarProveedoresExistentes...");
                     }
-                }, 100);
+                }, 200); // Revisa cada 200ms
+                 // Timeout para evitar bucles infinitos si la función nunca aparece
+                setTimeout(() => clearInterval(waitForFunction), 10000);
             }
-            
-            // Inicializar cuentas contables cuando se active el tab de contabilidad
+
+            // Inicialización de Select2 para cuentas contables (específico del modo Edit)
             let cuentasContablesIniciadas = false;
-            $('a[href="#tab-contabilidad"]').on('shown.bs.tab', function() {
-                if (!cuentasContablesIniciadas) {
-                    cuentasContablesIniciadas = true;
-                    cargarCuentasContables();
-                }
-            });
-            
-            // Función para cargar cuentas contables
             function cargarCuentasContables() {
-                console.log('Cargando cuentas contables...');
-                
+                if (cuentasContablesIniciadas) return;
+                cuentasContablesIniciadas = true;
+                console.log('Edit.cshtml: Cargando selectores de cuentas contables...');
                 $('.select2-cuenta').each(function() {
                     const $select = $(this);
-                    const selectId = $select.attr('id');
-                    
-                    // Obtener el valor actual antes de inicializar Select2
                     const valorActual = $select.val();
-                    const textActual = $select.find('option:selected').text();
-                    
-                    // Configurar Select2 con AJAX para buscar cuentas
+                    // Para obtener el texto, es mejor tomarlo del atributo data si es posible, o de la opción seleccionada
+                    let textActual = $select.find('option:selected').text();
+                    if ($select.find('option:selected').val() === "") textActual = null; // No usar el texto del placeholder
+
                     $select.select2({
                         theme: 'bootstrap-5',
                         width: '100%',
@@ -715,64 +343,121 @@
                             url: '/api/CuentasContables/buscar',
                             dataType: 'json',
                             delay: 250,
-                            data: function(params) {
+                            data: function (params) { return { q: params.term || '' }; },
+                            processResults: function (data) {
                                 return {
-                                    q: params.term || ''
-                                };
-                            },
-                            processResults: function(data) {
-                                return {
-                                    results: data.map(function(item) {
-                                        return {
-                                            id: item.id,
-                                            text: item.codigo + ' - ' + item.nombre
-                                        };
+                                    results: data.map(function (item) {
+                                        return { id: item.id, text: item.codigo + ' - ' + item.nombre };
                                     })
                                 };
                             },
                             cache: true
                         },
-                        // Mantener la opción seleccionada si existe
-                        initSelection: function(element, callback) {
-                            if (valorActual) {
-                                callback({id: valorActual, text: textActual});
-                            }
-                        }
+                        // Para preseleccionar el valor en modo edición
+                        dataAdapter: $.fn.select2.amd.require('select2/data/extended-ajax'),
+                        initialDataUrl: valorActual ? `/api/CuentasContables/obtener/${valorActual}` : null,
+                        formatInitialSelection: function(data) { return data.codigo + ' - ' + data.nombre; }
                     });
-                    
-                    // Si hay un valor preseleccionado, asegurarse de que esté seleccionado
-                    if (valorActual && textActual) {
-                        const option = new Option(textActual, valorActual, true, true);
-                        $select.append(option).trigger('change');
+                     // Si hay un valor y texto inicial (del renderizado del servidor), y Select2 no lo tomó con initialDataUrl
+                    if (valorActual && textActual && $select.val() !== valorActual) {
+                         // Comprobar si la opción ya existe para no duplicarla
+                        if ($select.find("option[value='" + valorActual + "']").length === 0) {
+                            const option = new Option(textActual, valorActual, true, true);
+                            $select.append(option);
+                        }
+                        $select.val(valorActual).trigger('change.select2');
+                    } else if (valorActual && !$select.val()){
+                        // Si solo hay valor y select2 no pudo cargar, reintentar una carga simple
+                         $.ajax(`/api/CuentasContables/obtener/${valorActual}`, {
+                            dataType: "json"
+                        }).done(function(data) {
+                             if(data && data.id && data.nombre) {
+                                if ($select.find("option[value='" + data.id + "']").length === 0) {
+                                    const option = new Option(data.codigo + ' - ' + data.nombre, data.id, true, true);
+                                    $select.append(option);
+                                }
+                                $select.val(data.id).trigger('change.select2');
+                             }
+                        });
                     }
                 });
             }
-            
-            // Form submission handling
-            $('#itemForm').on('submit', function(e) {
-                // Prepare form for submission if needed
-                prepareFormForSubmission();
+
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if ($(e.target).attr('href') === '#tab-contabilidad') {
+                    cargarCuentasContables();
+                }
+                // Podrías agregar lógica similar para la pestaña de compras si es necesario
+                if ($(e.target).attr('href') === '#tab-compras') {
+                    if (itemId && typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
+                         window.initializeProveedores(); // Asegura que el UI de la tabla esté listo
+                         cargarProveedoresDelItem(itemId);
+                         proveedoresCargados = true;
+                    }
+                }
             });
-            
+
+
+            // Lógica de preparación del formulario y envío (combinada y adaptada)
             function prepareFormForSubmission() {
-                // Convert decimal separators from comma to period for numeric fields
                 const numericFields = [
-                    '.contenedor-costo',
-                    '.cantidad-input',
-                    '#Rendimiento'
+                    '.contenedor-costo', '#Rendimiento', // Campos relevantes para Item/Edit
+                    '#ProductoVenta_PrecioVenta', '#ProductoVenta_Costo', '#ProductoVenta_Cantidad', // Campos de ProductoVenta
+                    '.cantidad-input' // Presente en compras
                 ];
-                
                 numericFields.forEach(selector => {
                     $(selector).each(function() {
                         const $field = $(this);
                         const value = $field.val();
-                        if (value) {
-                            const normalizedValue = value.replace(',', '.');
-                            $field.val(normalizedValue);
+                        if (value && typeof value === 'string') { // Asegurar que es string antes de reemplazar
+                            $field.val(value.replace(',', '.'));
                         }
                     });
                 });
             }
+            
+            $('#itemForm').on('submit', function(e) {
+                prepareFormForSubmission();
+                // Desactivar campos de ProductoVenta antes del submit (lógica de Create.cshtml)
+                $('[name^="ProductoVenta."]').each(function() {
+                    $(this).prop('disabled', true);
+                });
+            });
+            
+            $.validator.setDefaults({
+                submitHandler: function(form) {
+                    // Re-habilitar campos de ProductoVenta para que se incluyan en el submit
+                    $('[name^="ProductoVenta."]').each(function() {
+                        $(this).prop('disabled', false);
+                    });
+                    // Luego, el form.submit() se encarga del envío.
+                    // Si se necesita deshabilitarlos *después* del submit por alguna razón (poco común), se haría en un callback del submit.
+                    form.submit();
+                }
+            });
+
+            // Inicialización de datos específicos del modo Edit después de que la página esté lista
+            // y potencialmente después de que item-create-simple.js haya hecho su inicialización.
+            setTimeout(function() {
+                // Cargar cuentas contables si la pestaña de contabilidad es la activa al cargar
+                if ($('#tab-contabilidad').hasClass('active') || $('#tab-contabilidad').is(':visible')) {
+                    cargarCuentasContables();
+                }
+                 // Cargar proveedores si la pestaña de compras es la activa al cargar y tenemos un itemId
+                if (itemId && ($('#tab-compras').hasClass('active') || $('#tab-compras').is(':visible'))) {
+                     if (typeof window.initializeProveedores === 'function' && !proveedoresCargados) {
+                         window.initializeProveedores();
+                         cargarProveedoresDelItem(itemId);
+                         proveedoresCargados = true;
+                     } else if (!window.initializeProveedores) {
+                         console.warn("Edit.cshtml: initializeProveedores no está disponible al cargar la pestaña de compras activa.");
+                     }
+                } else if (itemId && !$('#tab-compras').hasClass('active') && !$('#tab-compras').is(':visible')) {
+                    // Si no está activa, la lógica 'shown.bs.tab' se encargará cuando se active
+                }
+
+
+            }, 700); // Delay para permitir que otros scripts (como item-create-simple.js) se ejecuten.
         });
     </script>
 }

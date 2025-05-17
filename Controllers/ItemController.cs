@@ -208,6 +208,39 @@ namespace SistemaContable.Controllers
             return View(item);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetItemJson(int id)
+        {
+            var empresaId = _userService.GetEmpresaId();
+
+            var item = await _context.Items
+                                     .Include(i => i.Categoria)
+                                     .Include(i => i.Marca)
+                                     .AsNoTracking()
+                                     .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
+
+            if (item == null)
+            {
+                return NotFound(new { message = $"Item con ID {id} no encontrado para la empresa actual." });
+            }
+
+            var itemData = new
+            {
+                item.Id,
+                item.Nombre,
+                item.CodigoBarras,
+                item.Descripcion,
+                item.CategoriaId,
+                CategoriaNombre = item.Categoria?.Nombre,
+                item.MarcaId,
+                MarcaNombre = item.Marca?.Nombre,
+                item.ImpuestoId,
+                item.Rendimiento,
+                item.Estado
+            };
+            return Json(itemData);
+        }
+
         // GET: Item/Create
         public IActionResult Create()
         {

@@ -24,17 +24,20 @@ namespace SistemaContable.Controllers.API
         {
             var contenedores = await _context.ItemContenedores
                 .Where(ic => ic.ItemId == id)
+                .Include(ic => ic.UnidadMedida)
+                .OrderBy(ic => ic.Orden)
                 .Select(ic => new 
                 {
                     id = ic.Id,
                     unidadMedidaId = ic.UnidadMedidaId,
+                    nombre = ic.Nombre,
                     unidadMedidaNombre = ic.UnidadMedida != null ? ic.UnidadMedida.Nombre : "",
+                    factor = ic.Factor,
                     etiqueta = ic.Etiqueta,
-                    cantidad = ic.Factor,  // Using Factor instead of Cantidad
                     costo = ic.Costo,
-                    orden = ic.Orden
+                    orden = ic.Orden,
+                    esPrincipal = ic.EsPrincipal
                 })
-                .OrderBy(ic => ic.orden)
                 .ToListAsync();
 
             return Ok(contenedores);

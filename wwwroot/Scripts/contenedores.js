@@ -1,7 +1,10 @@
 // contenedores.js - Versión mejorada con funcionalidad completa para Select2
+console.log('contenedores.js: Script cargado y ejecutándose (IIFE externa)');
 (function() {
+    console.log('contenedores.js: Dentro de IIFE');
     // Esperar hasta que jQuery esté disponible completamente
     function checkjQuery() {
+        console.log('contenedores.js: Entrando en checkjQuery');
         console.log('Verificando disponibilidad de jQuery...');
         if (typeof jQuery === 'undefined') {
             console.log('jQuery no está disponible todavía, esperando...');
@@ -15,19 +18,26 @@
     
     // Función principal que inicializa todo el módulo
     function initContenedores($) {
+        console.log('contenedores.js: Entrando en initContenedores (PRIMERA LÍNEA DENTRO)');
+        console.log('contenedores.js: Entrando en initContenedores');
+
         // Inicializar Select2 para Proveedor
         inicializarSelectProveedor();
+        console.log('contenedores.js: Después de inicializarSelectProveedor');
 
         // Ocultar el campo Unidad de Medida (Inventario)
         $('[for="UnidadMedidaInventarioId"]').closest('.row, .form-group').hide();
+        console.log('contenedores.js: Después de ocultar UnidadMedidaInventarioId');
 
         console.log("Inicializando módulo de conversiones de unidades...");
 
         // Variables para tracking de contenedores recién creados
         let ultimoContenedorCreado = null;
 
+        console.log('contenedores.js: Antes de enlazar evento para #btnAgregarContenedor');
         // Botón para agregar un nuevo contenedor
         $(document).on('click', '#btnAgregarContenedor', function () {
+            console.log('#btnAgregarContenedor clickeado! Intentando agregar fila...');
             agregarFilaContenedor();
             
             // Actualizar contenedores en proveedores si la función existe
@@ -35,6 +45,7 @@
                 window.actualizarContenedoresProveedores();
             }
         });
+        console.log('contenedores.js: Después de enlazar evento para #btnAgregarContenedor');
 
         // Eliminar un contenedor
         $(document).on('click', '.btn-eliminar-contenedor', function () {
@@ -415,8 +426,9 @@
         }
 
         // Exponer la función para cargar contenedores existentes globalmente
+        console.log('contenedores.js: Antes de definir window.cargarContenedoresExistentes');
         window.cargarContenedoresExistentes = function(contenedores) {
-            console.log('Cargando contenedores existentes:', contenedores);
+            console.log('contenedores.js: window.cargarContenedoresExistentes fue llamada con:', contenedores);
             
             // Limpiar contenedores existentes
             $('#contenedores-body').empty();
@@ -443,9 +455,11 @@
             actualizarBotonesEliminar();
             renumerarFilas();
         };
+        console.log('contenedores.js: Después de definir window.cargarContenedoresExistentes');
 
         // Inicialización a nivel de documento
         $(document).ready(function() {
+            console.log('contenedores.js: $(document).ready dentro de initContenedores');
             cargarDatosIniciales();
             
             // Inicializar el guardado de contenedor
