@@ -13,6 +13,7 @@ export class Select2OffCanvas {
      * @param {string} config.updateUrl - URL para actualización
      * @param {string} config.entityName - Nombre de la entidad (ej: "categoría")
      * @param {Function} config.onItemSelected - Callback cuando se selecciona un item
+     * @param {Function} config.onOffCanvasLoaded - Callback cuando se carga contenido en el offcanvas
      */
     constructor(config) {
         this.config = {
@@ -24,6 +25,7 @@ export class Select2OffCanvas {
         this.select = document.getElementById(config.selectId);
         this.offCanvas = document.getElementById(config.offCanvasId);
         this.offCanvasBS = null;
+        this.offCanvasBody = this.offCanvas ? this.offCanvas.querySelector('.offcanvas-body') : null;
         
         if (!this.select || !this.offCanvas) {
             console.error(`Select2OffCanvas: No se encontró el select #${config.selectId} o el offcanvas #${config.offCanvasId}`);
@@ -198,7 +200,7 @@ export class Select2OffCanvas {
     _prepareOffCanvasForCreation(term) {
         // Aplicar estilos al offcanvas
         this.offCanvas.classList.remove('offcanvas-sm', 'offcanvas-md', 'offcanvas-lg');
-        this.offCanvas.style.width = '800px';  // Ancho fijo más amplio
+        this.offCanvas.style.width = '650px';  // Ancho fijo para formularios
         
         const header = this.offCanvas.querySelector('.offcanvas-header');
         if (header) {
@@ -209,6 +211,7 @@ export class Select2OffCanvas {
             const title = header.querySelector('.offcanvas-title, h5');
             if (title) {
                 title.classList.add('text-white');
+                title.textContent = `Crear ${this.config.entityName}`;
             }
             
             // Asegurar que el botón de cerrar sea visible
@@ -218,34 +221,47 @@ export class Select2OffCanvas {
             }
         }
 
-        // Limpiar el formulario
-        const form = this.offCanvas.querySelector('form');
-        if (form) {
-            form.reset();
+        // Si hay un contenedor de formulario, cargar contenido dinámicamente
+        const formContainer = this.offCanvasBody ? this.offCanvasBody.querySelector('#formProveedorContainer') : null;
+        
+        if (formContainer && this.config.createUrl) {
+            console.log('=== Cargando formulario dinámicamente ===', this.config.createUrl);
             
-            // Establecer el título del offcanvas
-            const title = this.offCanvas.querySelector('.offcanvas-title');
-            if (title) {
-                title.textContent = `Nueva ${this.config.entityName}`;
-            }
+            // Mostrar indicador de carga
+            formContainer.innerHTML = '<div class="text-center my-5"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Cargando formulario...</p></div>';
             
-            // Prellenar el campo de nombre con el término buscado
-            const nameInput = form.querySelector('#Nombre') || form.querySelector('[name="Nombre"]');
-            if (nameInput && term) {
-                nameInput.value = term;
-            }
-            
-            // Establecer la acción como creación
-            form.setAttribute('data-mode', 'create');
-            
-            // Restablecer la acción del formulario si es necesario
-            if (this.config.createUrl) {
-                form.action = this.config.createUrl;
-            }
-            
-            // Mostrar el offcanvas
-            this.offCanvasBS.show();
+            // Cargar formulario vía AJAX
+            $.ajax({
+                url: this.config.createUrl,
+                method: 'GET',
+                success: (html) => {
+                    console.log('=== Formulario cargado exitosamente ===');
+                    formContainer.innerHTML = html;
+                    
+                    // Ejecutar callback si existe
+                    if (typeof this.config.onOffCanvasLoaded === 'function') {
+                        console.log('Ejecutando callback onOffCanvasLoaded');
+                        this.config.onOffCanvasLoaded();
+                    }
+                    
+                    // Prellenar el campo de nombre con el término buscado
+                    setTimeout(() => {
+                        const nameInput = formContainer.querySelector('#ProveedorNombreRazonSocial') || 
+                                        formContainer.querySelector('[name="NombreRazonSocial"]');
+                        if (nameInput && term) {
+                            nameInput.value = term;
+                        }
+                    }, 100);
+                },
+                error: (xhr, status, error) => {
+                    console.error('Error al cargar formulario:', error);
+                    formContainer.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario</div>';
+                }
+            });
         }
+        
+        // Mostrar el offcanvas
+        this.offCanvasBS.show();
     }
     
     /**

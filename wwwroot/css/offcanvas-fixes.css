@@ -1,0 +1,36 @@
+/* Fixes para Offcanvas de Proveedores */
+
+/* Forzar ancho de 850px con máxima especificidad */
+#offcanvasProveedor.offcanvas {
+    width: 850px !important;
+    max-width: 90vw !important;
+}
+
+/* Asegurar que el offcanvas tenga el z-index correcto */
+#offcanvasProveedor {
+    z-index: 1055 !important;
+}
+
+/* Estilo para el header */
+#offcanvasProveedor .offcanvas-header {
+    background-color: #3944BC;
+    color: white;
+}
+
+/* Asegurar contraste en el botón de cerrar */
+#offcanvasProveedor .btn-close {
+    filter: invert(1);
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 900px) {
+    #offcanvasProveedor.offcanvas {
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* Fix para el backdrop */
+.offcanvas-backdrop {
+    z-index: 1054 !important;
+}

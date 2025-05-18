@@ -1,0 +1,31 @@
+/* Estilo personalizado para el offcanvas de proveedores */
+
+/* IMPORTANT: Ancho personalizado del offcanvas */
+#offcanvasProveedor {
+    width: 650px !important;
+    max-width: 90vw !important;
+}
+
+/* Ajustes responsive */
+@media (max-width: 992px) {
+    #offcanvasProveedor {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Asegurar que los select2 dentro del offcanvas funcionen correctamente */
+#offcanvasProveedor .select2-container {
+    width: 100% !important;
+}
+
+/* Z-index para asegurar que los dropdowns de select2 se muestren sobre el offcanvas */
+.select2-container--open {
+    z-index: 2000 !important;
+}
+
+/* Estilo del header */
+#offcanvasProveedor .offcanvas-header {
+    background-color: #3944BC;
+    color: white;
+}

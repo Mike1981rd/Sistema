@@ -688,6 +688,93 @@ namespace SistemaContable.Controllers
             return PartialView("~/Views/Item/_OffCanvasProveedorForm.cshtml", model);
         }
 
+        [HttpPost]
+        [IgnoreAntiforgeryToken] // Temporary for debugging
+        public async Task<IActionResult> CreatePartial([FromBody] Cliente cliente)
+        {
+            try
+            {
+                // Log para debugging
+                // Console.WriteLine($"[CreatePartial] Cliente object received: {JsonSerializer.Serialize(cliente)}");
+
+                if (!ModelState.IsValid)
+                {
+                    // Log ModelState errors
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    // Console.WriteLine($"[CreatePartial] ModelState errors: {JsonSerializer.Serialize(errors)}");
+                    return Json(new { success = false, errors = errors, message = "Datos inválidos." });
+                }
+                
+                // Asegurarse de que las propiedades booleanas se manejen correctamente si vienen como strings
+                // (aunque con [FromBody] y JSON, el binder debería manejarlos si el JSON es bool)
+                // cliente.EsCliente = Convert.ToBoolean(datos.GetValueOrDefault("EsCliente", false));
+                // cliente.EsProveedor = Convert.ToBoolean(datos.GetValueOrDefault("EsProveedor", true)); // Siempre true para este form
+
+                cliente.EsProveedor = true; // Asegurar que se marque como proveedor
+                // Si el formulario también puede crear clientes regulares, se necesitaría lógica para EsCliente
+
+                // Obtener el EmpresaId actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId == 0)
+                {
+                    // Console.WriteLine("[CreatePartial] Error: EmpresaId no pudo ser determinado.");
+                    return Json(new { success = false, message = "Error al determinar la empresa actual." });
+                }
+                cliente.EmpresaId = empresaId;
+                
+                // Establecer la fecha de creación
+                cliente.FechaCreacion = DateTime.UtcNow;
+                
+                _context.Add(cliente);
+                await _context.SaveChangesAsync();
+                
+                // Console.WriteLine($"[CreatePartial] Cliente guardado exitosamente. ID: {cliente.Id}");
+                return Json(new 
+                { 
+                    success = true, 
+                    id = cliente.Id, 
+                    nombre = cliente.NombreRazonSocial 
+                });
+            }
+            catch (Exception ex)
+            {
+                // Console.WriteLine($"[CreatePartial] Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
+                // Loggear la excepción completa para más detalles
+                // _logger.LogError(ex, "[CreatePartial] Exception occurred"); 
+                return Json(new 
+                { 
+                    success = false, 
+                    message = "Error interno del servidor al guardar el proveedor: " + ex.Message 
+                });
+            }
+        }
+
+        // Método adicional para debug - aceptar cualquier cosa
+        [HttpPost]
+        [Route("Clientes/CreatePartialTest")]
+        public IActionResult CreatePartialTest()
+        {
+            return Json(new { success = true, message = "El endpoint funciona" });
+        }
+        
+        // Método de prueba sin deserialización
+        [HttpPost]
+        [Route("Clientes/TestPost")]
+        public async Task<IActionResult> TestPost()
+        {
+            using (var reader = new System.IO.StreamReader(Request.Body))
+            {
+                var body = await reader.ReadToEndAsync();
+                Console.WriteLine($"[TestPost] Body recibido: {body}");
+                return Json(new { success = true, message = "Body recibido", body = body });
+            }
+        }
+
         [HttpGet]
         public IActionResult EditPartial(int id)
         {

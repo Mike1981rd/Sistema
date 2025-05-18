@@ -113,10 +113,89 @@ namespace SistemaContable.Controllers
         // POST: Proveedores/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Cliente proveedor, Microsoft.AspNetCore.Http.IFormFile imagen, string Pais)
+        public async Task<IActionResult> Create(Cliente proveedor, Microsoft.AspNetCore.Http.IFormFile imagen = null)
         {
-            if (ModelState.IsValid)
+            try
             {
+                // Log para debug
+                var isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                Console.WriteLine($"[Create] ===== INICIO CREATE =====");
+                Console.WriteLine($"[Create] Request es AJAX: {isAjax}");
+                Console.WriteLine($"[Create] ModelState.IsValid inicial: {ModelState.IsValid}");
+                
+                // Log de todos los campos del modelo
+                Console.WriteLine($"[Create] NombreRazonSocial: {proveedor?.NombreRazonSocial}");
+                Console.WriteLine($"[Create] TipoIdentificacionId: {proveedor?.TipoIdentificacionId}");
+                Console.WriteLine($"[Create] NumeroIdentificacion: {proveedor?.NumeroIdentificacion}");
+                Console.WriteLine($"[Create] Imagen es null: {imagen == null}");
+                if (imagen != null)
+                {
+                    Console.WriteLine($"[Create] Imagen nombre: {imagen.FileName}");
+                    Console.WriteLine($"[Create] Imagen tamaño: {imagen.Length}");
+                }
+                
+                // Siempre remover validación de imagen ya que es opcional
+                ModelState.Remove("imagen");
+                ModelState.Remove("ImagenUrl");
+                
+                // Si es una petición AJAX, omitir algunas validaciones complejas
+                if (isAjax)
+                {
+                    // Remover validaciones que pueden causar problemas con AJAX
+                    ModelState.Remove("Empresa");
+                    ModelState.Remove("TipoIdentificacion");
+                    ModelState.Remove("Municipio");
+                    ModelState.Remove("PlazoPago");
+                    ModelState.Remove("TipoNcf");
+                    ModelState.Remove("ListaPrecio");
+                    ModelState.Remove("Vendedor");
+                    ModelState.Remove("CuentaPorCobrar");
+                    ModelState.Remove("CuentaPorPagar");
+                    ModelState.Remove("Provincia");
+                    ModelState.Remove("Pais");
+                }
+                
+                // Si es una petición AJAX y hay errores, devolver JSON
+                if (isAjax && !ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    
+                    // Log detallado de errores
+                    Console.WriteLine($"[Create] ===== ERRORES DE VALIDACIÓN =====");
+                    foreach (var error in errors)
+                    {
+                        Console.WriteLine($"[Create] Campo: {error.Key}");
+                        foreach (var msg in error.Value)
+                        {
+                            Console.WriteLine($"[Create]   Error: {msg}");
+                        }
+                    }
+                    Console.WriteLine($"[Create] =================================");
+                    
+                    return Json(new { success = false, errors = errors });
+                }
+                
+                if (!ModelState.IsValid)
+                {
+                    // Log todos los errores de validación
+                    foreach (var state in ModelState)
+                    {
+                        foreach (var error in state.Value.Errors)
+                        {
+                            Console.WriteLine($"[Create] Error en campo {state.Key}: {error.ErrorMessage}");
+                        }
+                    }
+                    
+                    // Mantener los ViewBags para el formulario
+                    CargarViewBags();
+                    return View(proveedor);
+                }
+                
                 // Obtener el EmpresaId actual
                 var empresaId = await _empresaService.ObtenerEmpresaActualId();
                 if (empresaId == 0) // O alguna otra validación de que se obtuvo un ID de empresa válido
@@ -133,47 +212,227 @@ namespace SistemaContable.Controllers
                     proveedor.ImagenUrl = await GuardarImagen(imagen);
                 }
 
-                // Procesar el país seleccionado
-                if (!string.IsNullOrEmpty(Pais))
-                {
-                    // Buscar el ID del país en la base de datos o crearlo si no existe
-                    var paisEntity = await _context.Paises.FirstOrDefaultAsync(p => p.Nombre == Pais);
-                    if (paisEntity == null)
-                    {
-                        // Obtener el código del país desde DataLists
-                        var paisData = DataLists.LatinAmericanCountries.FirstOrDefault(c => c.Name == Pais);
-                        if (paisData != null)
-                        {
-                            paisEntity = new Pais
-                            {
-                                Nombre = Pais,
-                                Codigo = paisData.Code
-                            };
-                            _context.Paises.Add(paisEntity);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-                    
-                    // Asignar el ID del país al proveedor
-                    if (paisEntity != null)
-                    {
-                        proveedor.PaisId = paisEntity.Id;
-                    }
-                }
-
                 // Establecer como proveedor
                 proveedor.EsProveedor = true;
 
                 // Establecer la fecha de creación
                 proveedor.FechaCreacion = DateTime.UtcNow;
 
+                // Log antes de guardar
+                Console.WriteLine($"[Create] Intentando guardar proveedor: {proveedor.NombreRazonSocial}");
+                Console.WriteLine($"[Create] EmpresaId: {proveedor.EmpresaId}");
+                Console.WriteLine($"[Create] EsProveedor: {proveedor.EsProveedor}");
+                
                 _context.Add(proveedor);
                 await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"[Create] Proveedor guardado exitosamente con ID: {proveedor.Id}");
+                
+                // Si es una petición AJAX, devolver JSON
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { 
+                        success = true, 
+                        id = proveedor.Id, 
+                        nombre = proveedor.NombreRazonSocial 
+                    });
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
+            catch (Exception ex)
+            {
+                // Si es una petición AJAX, devolver error en JSON
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Error al procesar la solicitud: " + ex.Message 
+                    });
+                }
+                
+                ModelState.AddModelError("", "Error al procesar la solicitud: " + ex.Message);
+                CargarViewBags();
+                return View(proveedor);
+            }
+        }
 
-            CargarViewBags();
-            return View(proveedor);
+        // POST: Proveedores/CreateWithoutImage
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateWithoutImage(Cliente proveedor)
+        {
+            try
+            {
+                Console.WriteLine($"[CreateWithoutImage] ===== INICIO CREATE SIN IMAGEN =====");
+                Console.WriteLine($"[CreateWithoutImage] NombreRazonSocial: {proveedor?.NombreRazonSocial}");
+                
+                // Remover todas las validaciones no esenciales
+                ModelState.Remove("imagen");
+                ModelState.Remove("ImagenUrl");
+                ModelState.Remove("Empresa");
+                ModelState.Remove("TipoIdentificacion");
+                ModelState.Remove("Municipio");
+                ModelState.Remove("PlazoPago");
+                ModelState.Remove("TipoNcf");
+                ModelState.Remove("ListaPrecio");
+                ModelState.Remove("Vendedor");
+                ModelState.Remove("CuentaPorCobrar");
+                ModelState.Remove("CuentaPorPagar");
+                ModelState.Remove("Provincia");
+                ModelState.Remove("Pais");
+                
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    
+                    return Json(new { success = false, errors = errors });
+                }
+                
+                // Obtener el EmpresaId actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId == 0)
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "No se pudo determinar la empresa actual" 
+                    });
+                }
+                
+                proveedor.EmpresaId = empresaId;
+                proveedor.EsProveedor = true;
+                proveedor.FechaCreacion = DateTime.UtcNow;
+                
+                _context.Add(proveedor);
+                await _context.SaveChangesAsync();
+                
+                return Json(new { 
+                    success = true, 
+                    id = proveedor.Id, 
+                    nombre = proveedor.NombreRazonSocial,
+                    message = "Proveedor creado exitosamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CreateWithoutImage] Error: {ex.Message}");
+                return Json(new { 
+                    success = false, 
+                    message = "Error al crear el proveedor: " + ex.Message 
+                });
+            }
+        }
+        
+        // POST: Proveedores/CreateJson
+        [HttpPost]
+        public async Task<IActionResult> CreateJson([FromBody] Cliente proveedor)
+        {
+            try
+            {
+                // Log detallado para debug
+                Console.WriteLine($"[CreateJson] ===== INICIO CREACIÓN PROVEEDOR =====");
+                Console.WriteLine($"[CreateJson] Nombre: {proveedor?.NombreRazonSocial}");
+                Console.WriteLine($"[CreateJson] TipoIdentificacionId: {proveedor?.TipoIdentificacionId}");
+                Console.WriteLine($"[CreateJson] NumeroIdentificacion: {proveedor?.NumeroIdentificacion}");
+                Console.WriteLine($"[CreateJson] Email: {proveedor?.Email}");
+                Console.WriteLine($"[CreateJson] Telefono: {proveedor?.Telefono}");
+                Console.WriteLine($"[CreateJson] Direccion: {proveedor?.Direccion}");
+                
+                // Remover validaciones de navegación que pueden causar problemas
+                ModelState.Remove("Empresa");
+                ModelState.Remove("TipoIdentificacion");
+                ModelState.Remove("Municipio");
+                ModelState.Remove("PlazoPago");
+                ModelState.Remove("TipoNcf");
+                ModelState.Remove("ListaPrecio");
+                ModelState.Remove("Vendedor");
+                ModelState.Remove("CuentaPorCobrar");
+                ModelState.Remove("CuentaPorPagar");
+                ModelState.Remove("Provincia");
+                ModelState.Remove("Pais");
+                
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    
+                    var errorDetails = string.Join("; ", errors.Select(e => $"{e.Key}: {string.Join(", ", e.Value)}"));
+                    Console.WriteLine($"[CreateJson] Errores de validación: {errorDetails}");
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Error de validación", 
+                        errors = errors 
+                    });
+                }
+                
+                // Obtener el EmpresaId actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                Console.WriteLine($"[CreateJson] EmpresaId obtenido: {empresaId}");
+                
+                if (empresaId == 0)
+                {
+                    Console.WriteLine($"[CreateJson] ERROR: No se pudo determinar la empresa actual");
+                    return Json(new { 
+                        success = false, 
+                        message = "No se pudo determinar la empresa actual. Por favor, verifique que ha seleccionado una empresa." 
+                    });
+                }
+                
+                proveedor.EmpresaId = empresaId;
+                proveedor.EsProveedor = true;
+                proveedor.FechaCreacion = DateTime.UtcNow;
+                
+                // Log completo antes de guardar
+                Console.WriteLine($"[CreateJson] ===== DATOS ANTES DE GUARDAR =====");
+                Console.WriteLine($"[CreateJson] ID: {proveedor.Id}");
+                Console.WriteLine($"[CreateJson] NombreRazonSocial: {proveedor.NombreRazonSocial}");
+                Console.WriteLine($"[CreateJson] EmpresaId: {proveedor.EmpresaId}");
+                Console.WriteLine($"[CreateJson] EsProveedor: {proveedor.EsProveedor}");
+                Console.WriteLine($"[CreateJson] FechaCreacion: {proveedor.FechaCreacion}");
+                
+                _context.Add(proveedor);
+                Console.WriteLine($"[CreateJson] Proveedor agregado al contexto, ejecutando SaveChangesAsync...");
+                
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"[CreateJson] ===== ÉXITO =====");
+                Console.WriteLine($"[CreateJson] Proveedor guardado con ID: {proveedor.Id}");
+                
+                return Json(new { 
+                    success = true, 
+                    id = proveedor.Id, 
+                    nombre = proveedor.NombreRazonSocial,
+                    message = $"Proveedor '{proveedor.NombreRazonSocial}' creado exitosamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CreateJson] ===== ERROR =====");
+                Console.WriteLine($"[CreateJson] Mensaje: {ex.Message}");
+                Console.WriteLine($"[CreateJson] StackTrace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[CreateJson] InnerException: {ex.InnerException.Message}");
+                    Console.WriteLine($"[CreateJson] InnerException StackTrace: {ex.InnerException.StackTrace}");
+                }
+                
+                return Json(new { 
+                    success = false, 
+                    message = $"Error al crear el proveedor: {ex.Message}",
+                    details = ex.InnerException?.Message
+                });
+            }
         }
 
         // GET: Proveedores/Edit/5
@@ -328,6 +587,16 @@ namespace SistemaContable.Controllers
                 _context.Update(proveedor);
                 await _context.SaveChangesAsync();
                 
+                // Si es una petición AJAX, devolver JSON
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { 
+                        success = true, 
+                        id = proveedor.Id, 
+                        nombre = proveedor.NombreRazonSocial 
+                    });
+                }
+                
                 // Redirigir a la lista de proveedores después de guardar
                 return RedirectToAction(nameof(Index));
             }
@@ -350,6 +619,142 @@ namespace SistemaContable.Controllers
                 
                 return View(proveedor);
             }
+        }
+        
+        // POST: Proveedores/EditJson
+        [HttpPost]
+        public async Task<IActionResult> EditJson(int id, [FromBody] Cliente proveedor)
+        {
+            try
+            {
+                // Log para debug
+                Console.WriteLine($"[EditJson] ===== INICIO ACTUALIZACION PROVEEDOR =====");
+                Console.WriteLine($"[EditJson] ID: {id}");
+                Console.WriteLine($"[EditJson] Nombre: {proveedor?.NombreRazonSocial}");
+                Console.WriteLine($"[EditJson] TipoIdentificacionId: {proveedor?.TipoIdentificacionId}");
+                Console.WriteLine($"[EditJson] NumeroIdentificacion: {proveedor?.NumeroIdentificacion}");
+                
+                // Verificar que el ID coincida
+                if (id != proveedor.Id)
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "ID no coincide" 
+                    });
+                }
+                
+                // Remover validaciones de navegación que pueden causar problemas
+                ModelState.Remove("Empresa");
+                ModelState.Remove("TipoIdentificacion");
+                ModelState.Remove("Municipio");
+                ModelState.Remove("PlazoPago");
+                ModelState.Remove("TipoNcf");
+                ModelState.Remove("ListaPrecio");
+                ModelState.Remove("Vendedor");
+                ModelState.Remove("CuentaPorCobrar");
+                ModelState.Remove("CuentaPorPagar");
+                ModelState.Remove("Provincia");
+                ModelState.Remove("Pais");
+                
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    
+                    var errorDetails = string.Join("; ", errors.Select(e => $"{e.Key}: {string.Join(", ", e.Value)}"));
+                    Console.WriteLine($"[EditJson] Errores de validación: {errorDetails}");
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Error de validación", 
+                        errors = errors 
+                    });
+                }
+                
+                // Obtener el EmpresaId actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId == 0)
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "No se pudo determinar la empresa actual" 
+                    });
+                }
+                
+                // Obtener el proveedor actual de la base de datos
+                var proveedorActual = await _context.Clientes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EsProveedor && c.EmpresaId == empresaId);
+                    
+                if (proveedorActual == null)
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Proveedor no encontrado o no pertenece a la empresa actual" 
+                    });
+                }
+                
+                // Establecer valores importantes del proveedor actual
+                proveedor.EmpresaId = empresaId;
+                proveedor.EsProveedor = true;
+                proveedor.EsCliente = proveedorActual.EsCliente;
+                proveedor.FechaCreacion = proveedorActual.FechaCreacion;
+                proveedor.FechaModificacion = DateTime.UtcNow;
+                
+                // Mantener la imagen actual (no se actualiza en este método)
+                proveedor.ImagenUrl = proveedorActual.ImagenUrl;
+                
+                // Log completo antes de actualizar
+                Console.WriteLine($"[EditJson] ===== DATOS ANTES DE ACTUALIZAR =====");
+                Console.WriteLine($"[EditJson] ID: {proveedor.Id}");
+                Console.WriteLine($"[EditJson] NombreRazonSocial: {proveedor.NombreRazonSocial}");
+                Console.WriteLine($"[EditJson] EmpresaId: {proveedor.EmpresaId}");
+                Console.WriteLine($"[EditJson] EsProveedor: {proveedor.EsProveedor}");
+                Console.WriteLine($"[EditJson] FechaModificacion: {proveedor.FechaModificacion}");
+                
+                // Actualizar el proveedor
+                _context.Update(proveedor);
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"[EditJson] ===== ÉXITO =====");
+                Console.WriteLine($"[EditJson] Proveedor actualizado exitosamente");
+                
+                return Json(new { 
+                    success = true, 
+                    id = proveedor.Id, 
+                    nombre = proveedor.NombreRazonSocial,
+                    message = $"Proveedor '{proveedor.NombreRazonSocial}' actualizado exitosamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EditJson] ===== ERROR =====");
+                Console.WriteLine($"[EditJson] Mensaje: {ex.Message}");
+                Console.WriteLine($"[EditJson] StackTrace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[EditJson] InnerException: {ex.InnerException.Message}");
+                    Console.WriteLine($"[EditJson] InnerException StackTrace: {ex.InnerException.StackTrace}");
+                }
+                
+                return Json(new { 
+                    success = false, 
+                    message = $"Error al actualizar el proveedor: {ex.Message}",
+                    details = ex.InnerException?.Message
+                });
+            }
+        }
+
+        // GET: Proveedores/Test
+        public IActionResult Test()
+        {
+            CargarViewBags();
+            return View();
         }
 
         // GET: Proveedores/Delete/5
@@ -405,27 +810,106 @@ namespace SistemaContable.Controllers
             return RedirectToAction(nameof(Index));
         }
         
+        // GET: Proveedores/CreatePartial
+        public async Task<IActionResult> CreatePartial()
+        {
+            var model = new Cliente();
+            model.EsProveedor = true; // Ensure it's marked as a provider
+            
+            // Cargar los ViewBags necesarios
+            CargarViewBags();
+            
+            // Asegurar que los ViewBags tengan los nombres correctos para el offcanvas
+            ViewBag.PlazosPago = ViewBag.PlazoPagoId;
+            ViewBag.TiposNcf = ViewBag.TipoNcfId;
+            ViewBag.TiposIdentificacion = ViewBag.TipoIdentificacionId;
+            
+            // Configuración adicional para el modelo
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            var empresa = await _context.Empresas.FindAsync(empresaId);
+            
+            // Configuración de formato decimal
+            ViewBag.SeparadorDecimal = empresa?.SeparadorDecimal ?? ",";
+            ViewBag.PrecisionDecimal = empresa?.PrecisionDecimal ?? 2;
+            
+            // Verificar si la petición viene del módulo de Item o del módulo de Proveedores
+            var referer = Request.Headers["Referer"].ToString();
+            
+            if (referer.Contains("/Item/", StringComparison.OrdinalIgnoreCase))
+            {
+                // Si viene del módulo de Item, devolver el formulario para Item
+                return PartialView("~/Views/Item/_OffCanvasProveedorForm.cshtml", model);
+            }
+            else
+            {
+                // Si viene del módulo de Proveedores, devolver el formulario para Proveedores
+                return PartialView("_CreateForm", model);
+            }
+        }
+
+        // GET: Proveedores/EditPartial/{id}
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            var proveedor = await _context.Clientes
+                .Include(p => p.Pais)
+                .FirstOrDefaultAsync(p => p.Id == id && p.EsProveedor);
+                
+            if (proveedor == null)
+            {
+                return NotFound();
+            }
+
+            // Obtener el nombre del país
+            string paisNombre = null;
+            if (proveedor.PaisId.HasValue)
+            {
+                var pais = await _context.Paises.FindAsync(proveedor.PaisId.Value);
+                paisNombre = pais?.Nombre;
+            }
+            ViewBag.PaisNombre = paisNombre;
+            
+            CargarViewBags();
+            
+            return PartialView("_EditForm", proveedor);
+        }
+
         // GET: Proveedores/BuscarCuentasContables
         [HttpGet]
         public async Task<IActionResult> BuscarCuentasContables(string term)
         {
-            if (string.IsNullOrEmpty(term))
+            try
             {
-                return Json(new { results = new List<object>() });
-            }
+                Console.WriteLine($"[BuscarCuentasContables] Término de búsqueda: '{term}'");
+                
+                var query = _context.CuentasContables.AsQueryable();
 
-            var cuentas = await _context.CuentasContables
-                .Where(c => c.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase) || 
-                           c.Codigo.Contains(term, StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .Select(c => new 
+                // Si hay término de búsqueda, filtrar por él (case insensitive)
+                if (!string.IsNullOrEmpty(term))
                 {
-                    id = c.Id,
-                    text = $"{c.Codigo} - {c.Nombre}"
-                })
-                .ToListAsync();
+                    var termLower = term.ToLower();
+                    query = query.Where(c => c.Nombre.ToLower().Contains(termLower) || 
+                                           c.Codigo.ToLower().Contains(termLower));
+                }
 
-            return Json(new { results = cuentas });
+                // Obtener todas las cuentas o las que coincidan con el término
+                var cuentas = await query
+                    .OrderBy(c => c.Codigo)
+                    .Take(50)  // Aumentar el límite a 50 resultados
+                    .Select(c => new 
+                    {
+                        id = c.Id,
+                        text = $"{c.Codigo} - {c.Nombre}"
+                    })
+                    .ToListAsync();
+
+                Console.WriteLine($"[BuscarCuentasContables] Encontradas {cuentas.Count} cuentas");
+                return Json(new { results = cuentas });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[BuscarCuentasContables] Error: {ex.Message}");
+                return Json(new { results = new List<object>(), error = ex.Message });
+            }
         }
 
         // GET: Proveedores/BuscarVendedores
@@ -669,6 +1153,10 @@ namespace SistemaContable.Controllers
             
             // Usar el mismo enfoque que el módulo de empresas (DataLists.LatinAmericanCountries)
             ViewBag.Countries = DataLists.LatinAmericanCountries;
+            ViewBag.Paises = DataLists.LatinAmericanCountries.Select(c => c.Name).ToList();
+            
+            // Cargar países desde la base de datos para el dropdown
+            ViewBag.PaisId = new SelectList(_context.Paises, "Id", "Nombre");
             
             ViewBag.PlazoPagoId = new SelectList(_context.PlazosPago, "Id", "Nombre");
             ViewBag.TipoNcfId = new SelectList(_context.ComprobantesFiscales, "Id", "Nombre");
@@ -689,6 +1177,9 @@ namespace SistemaContable.Controllers
                     codigo = c.Codigo,
                     nombre = c.Nombre
                 }));
+            
+            // Para tipos de identificación en el offcanvas
+            ViewBag.TiposIdentificacion = ViewBag.TipoIdentificacionId;
         }
 
         private async Task<string?> GuardarImagen(Microsoft.AspNetCore.Http.IFormFile imagen)

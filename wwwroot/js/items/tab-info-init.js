@@ -352,10 +352,17 @@ function printBarcode(codigo) {
 // Image upload handler
 let initImageUploadCallCount = 0; // Contador para depuración
 const IMAGE_SESSION_STORAGE_KEY = 'itemImagePreviewBase64';
+let imageUploadInitialized = false; // Flag to prevent multiple initializations
 
 function initImageUpload() {
+    if (imageUploadInitialized && !window.location.pathname.toLowerCase().includes('/item/edit/')) {
+        // Allow re-init only on edit page if needed for some dynamic scenarios, but generally prevent it.
+        // console.log("Image upload already initialized. Skipping full re-init.");
+        // return; // Potentially skip if no re-init is ever needed after first load.
+    }
+
     initImageUploadCallCount++;
-    console.log(`Inicializando cargador de imágenes v5... (Llamada #${initImageUploadCallCount})`);
+    // console.log(`Inicializando cargador de imágenes v5... (Llamada #${initImageUploadCallCount})`);
 
     const $preview = $('#preview');
     const $imagePreviewDiv = $('#imagePreview');
@@ -557,7 +564,7 @@ function initImageUpload() {
                             $preview.off('.imagehandler').on('load.imagehandler', function() {
                                 // Verificar si la imagen realmente se cargó y tiene dimensiones
                                 if (this.naturalWidth > 0 && this.naturalHeight > 0) {
-                                    console.log("Imagen del modelo restaurada y visible (desde evento load en observer).");
+                                    // console.log("Imagen del modelo restaurada y visible (desde evento load en observer).");
                                     // displayImage se llamará, y tiene su propia guarda para evitar bucles si el src ya es el correcto.
                                     displayImage(finalModelUrl, true);
                                 } else {
@@ -596,6 +603,8 @@ function initImageUpload() {
         tabObserver.observe(tabInfoElement, { attributes: true });
     }
     console.log("Manejador de carga de imágenes v5 inicializado.");
+
+    imageUploadInitialized = true; // Set the flag after successful initialization
 }
 
 // Format functions for Select2
