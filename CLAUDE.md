@@ -1152,7 +1152,89 @@ Si los iconos siguen teniendo espaciado incorrecto después de aplicar el CSS, v
 
 **Módulos afectados por este problema:**
 - ✅ **Comprobantes**: Tiene el botón oculto desde el inicio
-- ✅ **Impuestos**: Agregado el botón oculto para consistencia
+- ❌ **Impuestos**: El botón oculto NO funcionó - requirió solución agresiva
+
+### 2.1. FIX DEFINITIVO: Solución Agresiva para Espaciado (Enero 2025)
+
+**Problema**: Después de aplicar botones ocultos y CSS estándar, algunos módulos **aún tienen espaciado** entre iconos.
+
+**⚠️ SÍNTOMA**: Los iconos siguen separados visualmente incluso con:
+- ✅ Botón oculto agregado
+- ✅ CSS `.btn-group` aplicado
+- ✅ `gap: 0` configurado
+
+**🔧 SOLUCIÓN DEFINITIVA (comprobada en Impuestos):**
+
+**HTML con clase `.no-gap`:**
+```html
+<td class="text-center">
+    <div class="btn-group no-gap">
+        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm text-primary p-0 m-0 border-0" title="Editar">
+            <i class="fas fa-edit"></i>
+        </a>
+        @if (item.Estado)
+        {
+            <button type="button" class="btn btn-sm text-danger p-0 m-0 border-0" 
+                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
+                <i class="fas fa-ban"></i>
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-sm text-success p-0 m-0 border-0" 
+                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" title="Activar">
+                <i class="fas fa-check-circle"></i>
+            </button>
+        }
+    </div>
+</td>
+```
+
+**CSS Agresivo (SOLUCIÓN DE FUERZA BRUTA):**
+```css
+/* SOLUCIÓN RÁPIDA Y AGRESIVA PARA ICONOS */
+.btn-group.no-gap {
+    display: inline-block !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    letter-spacing: -1px !important;
+}
+
+.btn-group.no-gap .btn {
+    display: inline-block !important;
+    padding: 4px 6px !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    vertical-align: top !important;
+}
+
+.btn-group.no-gap .btn + .btn {
+    margin-left: -5px !important;
+}
+
+/* FUERZA BRUTA: Eliminar TODOS los espacios */
+.btn-group.no-gap * {
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    border: 0 !important;
+}
+```
+
+**🎯 Técnicas Agresivas Clave:**
+1. **`font-size: 0`**: Elimina espacio entre elementos inline
+2. **`letter-spacing: -1px`**: Reduce espacio adicional
+3. **`margin-left: -5px`**: Fuerza superposición ligera entre botones
+4. **CSS `*` selector**: Afecta TODOS los elementos internos
+5. **`p-0 m-0 border-0`**: CSS inline como respaldo
+
+**📋 Módulos con Solución Agresiva:**
+- ✅ **Impuestos**: Fix definitivo aplicado (Enero 2025)
+- ✅ **Categorías**: Ya tenía solución similar desde el inicio
+
+**⚠️ CUÁNDO USAR**: Aplicar esta solución agresiva cuando las técnicas estándar (botones ocultos, CSS normal) no funcionan.
 
 ### 3. Problema de Idioma de DataTables (Error CORS)
 

@@ -342,12 +342,12 @@ namespace SistemaContable.Data
                 
                 // Datos semilla para plazos predeterminados
                 entity.HasData(
-                    new PlazoPago { Id = 1, Nombre = "De contado", Dias = 0, FechaCreacion = DateTime.UtcNow },
-                    new PlazoPago { Id = 2, Nombre = "8 días", Dias = 8, FechaCreacion = DateTime.UtcNow },
-                    new PlazoPago { Id = 3, Nombre = "15 días", Dias = 15, FechaCreacion = DateTime.UtcNow },
-                    new PlazoPago { Id = 4, Nombre = "30 días", Dias = 30, FechaCreacion = DateTime.UtcNow },
-                    new PlazoPago { Id = 5, Nombre = "60 días", Dias = 60, FechaCreacion = DateTime.UtcNow },
-                    new PlazoPago { Id = 6, Nombre = "Vencimiento manual", Dias = null, EsVencimientoManual = true, FechaCreacion = DateTime.UtcNow }
+                    new PlazoPago { Id = 1, Nombre = "De contado", Dias = 0, Estado = true, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 2, Nombre = "8 días", Dias = 8, Estado = true, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 3, Nombre = "15 días", Dias = 15, Estado = true, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 4, Nombre = "30 días", Dias = 30, Estado = true, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 5, Nombre = "60 días", Dias = 60, Estado = true, FechaCreacion = DateTime.UtcNow },
+                    new PlazoPago { Id = 6, Nombre = "Vencimiento manual", Dias = null, EsVencimientoManual = true, Estado = true, FechaCreacion = DateTime.UtcNow }
                 );
             });
             

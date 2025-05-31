@@ -17,11 +17,17 @@ namespace SistemaContable.Controllers
             _context = context;
         }
 
-        // GET: /configuracion/retenciones
+        // GET: /configuracion/retenciones y Retenciones/Index
         [Route("/configuracion/retenciones")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tab)
         {
-            var retenciones = await _context.Retenciones.ToListAsync();
+            bool activos = string.IsNullOrEmpty(tab) || tab == "Activos";
+            ViewBag.Tab = activos ? "Activos" : "Inactivos";
+            
+            var retenciones = await _context.Retenciones
+                .Where(r => r.Activo == activos)
+                .OrderBy(r => r.Nombre)
+                .ToListAsync();
             return View(retenciones);
         }
 
@@ -38,12 +44,13 @@ namespace SistemaContable.Controllers
         {
             if (ModelState.IsValid)
             {
+                retencion.Activo = true; // Por defecto activo
                 retencion.FechaCreacion = DateTime.UtcNow;
                 retencion.FechaModificacion = DateTime.UtcNow;
                 _context.Add(retencion);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Retención creada correctamente.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { tab = "Activos" });
             }
             return View(retencion);
         }
@@ -94,7 +101,7 @@ namespace SistemaContable.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { tab = retencion.Activo ? "Activos" : "Inactivos" });
             }
             return View(retencion);
         }
@@ -131,6 +138,38 @@ namespace SistemaContable.Controllers
             }
             
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Retenciones/ToggleEstado/5
+        [HttpPost]
+        public async Task<IActionResult> ToggleEstado(int id)
+        {
+            try
+            {
+                var retencion = await _context.Retenciones.FirstOrDefaultAsync(r => r.Id == id);
+
+                if (retencion == null)
+                {
+                    TempData["ErrorMessage"] = "No se encontró la retención especificada";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var estadoAnterior = retencion.Activo;
+                retencion.Activo = !retencion.Activo;
+                retencion.FechaModificacion = DateTime.UtcNow;
+
+                _context.Update(retencion);
+                await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"La retención '{retencion.Nombre}' ha sido {(retencion.Activo ? "activada" : "desactivada")} correctamente";
+                
+                return RedirectToAction(nameof(Index), new { tab = retencion.Activo ? "Activos" : "Inactivos" });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al cambiar el estado: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         private bool RetencionExists(int id)

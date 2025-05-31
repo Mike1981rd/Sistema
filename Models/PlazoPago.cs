@@ -26,6 +26,15 @@ namespace SistemaContable.Models
         // Flag para impedir eliminación si está en uso
         public bool EstaEnUso { get; set; } = false;
         
+        // Estado del plazo de pago (activo/inactivo)
+        [Display(Name = "Estado")]
+        public bool Estado { get; set; } = true;
+        
+        // Descripción del plazo de pago
+        [Display(Name = "Descripción")]
+        [StringLength(255)]
+        public string? Descripcion { get; set; }
+        
         // Campos de auditoría
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
         public DateTime? FechaModificacion { get; set; }

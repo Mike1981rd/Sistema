@@ -21,9 +21,13 @@ namespace SistemaContable.Controllers
         }
         
         // GET: PlazoPago
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tab)
         {
+            bool activos = string.IsNullOrEmpty(tab) || tab == "Activos";
+            ViewBag.Tab = activos ? "Activos" : "Inactivos";
+            
             var plazosPago = await _context.PlazosPago
+                .Where(p => p.Estado == activos)
                 .OrderBy(p => p.Dias ?? 999) // Ordenar por días, con vencimiento manual al final
                 .ToListAsync();
             return View(plazosPago);
@@ -49,10 +53,11 @@ namespace SistemaContable.Controllers
             
             if (ModelState.IsValid)
             {
+                plazoPago.Estado = true; // Por defecto activo
                 _context.Add(plazoPago);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Plazo de pago creado correctamente";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { tab = "Activos" });
             }
             
             return View(plazoPago);
@@ -133,7 +138,7 @@ namespace SistemaContable.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { tab = plazoPago.Estado ? "Activos" : "Inactivos" });
             }
             
             return View(plazoPago);
@@ -200,6 +205,38 @@ namespace SistemaContable.Controllers
             return RedirectToAction(nameof(Index));
         }
         
+        // POST: PlazoPago/ToggleEstado/5
+        [HttpPost]
+        public async Task<IActionResult> ToggleEstado(int id)
+        {
+            try
+            {
+                var plazoPago = await _context.PlazosPago.FirstOrDefaultAsync(p => p.Id == id);
+
+                if (plazoPago == null)
+                {
+                    TempData["ErrorMessage"] = "No se encontró el plazo de pago especificado";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var estadoAnterior = plazoPago.Estado;
+                plazoPago.Estado = !plazoPago.Estado;
+                plazoPago.FechaModificacion = DateTime.UtcNow;
+
+                _context.Update(plazoPago);
+                await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"El plazo de pago '{plazoPago.Nombre}' ha sido {(plazoPago.Estado ? "activado" : "desactivado")} correctamente";
+                
+                return RedirectToAction(nameof(Index), new { tab = plazoPago.Estado ? "Activos" : "Inactivos" });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al cambiar el estado: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         private bool PlazoPagoExists(int id)
         {
             return _context.PlazosPago.Any(e => e.Id == id);
