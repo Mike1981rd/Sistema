@@ -1,0 +1,81 @@
+@model Dictionary<string, string>
+@{
+    ViewData["Title"] = "Depuración de errores 404";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h2>Diagnóstico de errores 404</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h4>Información de diagnóstico</h4>
+                        <p>Esta página muestra información de depuración para diagnosticar errores 404 en la aplicación.</p>
+                    </div>
+
+                    <h3>Información de la aplicación</h3>
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th width="30%">Propiedad</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><strong>@item.Key</strong></td>
+                                    <td>@item.Value</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <h3>Pruebas de ruta</h3>
+                    <div class="list-group mb-4">
+                        <a href="@Url.Action("Index", "Home")" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Página principal
+                            <span class="badge bg-primary rounded-pill">Home/Index</span>
+                        </a>
+                        <a href="@Url.Action("Current", "Session")" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Ver información de sesión
+                            <span class="badge bg-primary rounded-pill">Session/Current</span>
+                        </a>
+                        <a href="@Url.Action("SetEmpresa", "Session", new { id = 1 })" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Establecer Empresa ID = 1
+                            <span class="badge bg-primary rounded-pill">Session/SetEmpresa/1</span>
+                        </a>
+                    </div>
+
+                    <h3>Generar empresa de prueba</h3>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <p>Si no hay empresas en la base de datos, puedes generar una empresa de prueba:</p>
+                            <form method="post" action="@Url.Action("CreateTestEmpresa", "Home")">
+                                <button type="submit" class="btn btn-success">Crear empresa de prueba</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <h3>Resolución de problemas</h3>
+                    <div class="alert alert-warning">
+                        <h4>Posibles soluciones para errores 404</h4>
+                        <ol>
+                            <li>Verifica que exista al menos una empresa en la base de datos</li>
+                            <li>Comprueba que la sesión esté funcionando correctamente</li>
+                            <li>Asegúrate de que las rutas estén correctamente configuradas</li>
+                            <li>Revisa los logs de la aplicación para identificar errores</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Volver a la página principal</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

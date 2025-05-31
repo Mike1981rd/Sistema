@@ -1,0 +1,195 @@
+using SistemaContable.Data;
+using Microsoft.EntityFrameworkCore;
+using SistemaContable.Services;
+using Microsoft.Extensions.Logging;
+using SistemaContable.Repositories;
+using SistemaContable.Repositories.Interfaces;
+using SistemaContable.Services.Interfaces;
+using OfficeOpenXml;
+using SistemaContable.Extensions;
+using Npgsql;
+
+namespace SistemaContable
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            // Coloca aquí cualquier código ejecutable que estuviera en este archivo
+            // Por ejemplo: llamadas a métodos, inicializaciones, etc.
+
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+            builder.Services.AddControllersWithViews();
+
+            // Configurar sesión
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
+            // Configure database context
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+                       .EnableSensitiveDataLogging()
+                       .LogTo(Console.WriteLine, LogLevel.Information));
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IEmpresaService, EmpresaService>();
+            builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
+
+            // Registro de repositorios para Cuenta Contable y Contacto
+            builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+            builder.Services.AddScoped<IContactoRepository, ContactoRepository>();
+
+            // Registro de repositorios y servicios para el módulo de Entradas de Diario
+            builder.Services.AddScoped<IEntradaDiarioRepository, EntradaDiarioRepository>();
+            builder.Services.AddScoped<ITipoEntradaDiarioRepository, TipoEntradaDiarioRepository>();
+            builder.Services.AddScoped<INumeracionEntradaDiarioRepository, NumeracionEntradaDiarioRepository>();
+            builder.Services.AddScoped<IEntradaDiarioService, EntradaDiarioService>();
+
+            // Configurar EPPlus para la licencia no comercial
+            ExcelPackage.License.SetNonCommercialPersonal("SistemaContable");
+
+            // Configura logging para EntityFramework en entorno de desarrollo
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddLogging(builder =>
+                {
+                    builder.AddConsole();
+                    builder.AddDebug();
+                    builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Information);
+                });
+            }
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+            else
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            // Usar sesión - IMPORTANTE: debe estar antes de las rutas
+            app.UseSession();
+
+            app.MapControllerRoute(
+                name: "catalogoCuentas",
+                pattern: "contabilidad/catalogo",
+                defaults: new { controller = "Catalogo", action = "Index" });
+
+            app.MapControllerRoute(
+                name: "empresas",
+                pattern: "empresas/{action=Index}/{id?}",
+                defaults: new { controller = "Empresas" });
+
+            app.MapControllerRoute(
+                name: "bancos",
+                pattern: "bancos/cuentas",
+                defaults: new { controller = "Banco", action = "Index" });
+
+            app.MapControllerRoute(
+                name: "bancosTransacciones",
+                pattern: "bancos/transacciones",
+                defaults: new { controller = "Banco", action = "TransaccionesBancarias" });
+
+            app.MapControllerRoute(
+                name: "bancosConciliacion",
+                pattern: "bancos/conciliacion", 
+                defaults: new { controller = "Banco", action = "Conciliacion" });
+
+            app.MapControllerRoute(
+                name: "plazosPago",
+                pattern: "PlazoPago/{action=Index}/{id?}",
+                defaults: new { controller = "PlazoPago" });
+
+            app.MapControllerRoute(
+                name: "retenciones",
+                pattern: "Retenciones/{action=Index}/{id?}",
+                defaults: new { controller = "Retenciones" });
+
+            app.MapControllerRoute(
+                name: "ventasClientes",
+                pattern: "ventas/clientes/{action=Index}/{id?}",
+                defaults: new { controller = "Clientes" });
+
+            app.MapControllerRoute(
+                name: "comprasProveedores",
+                pattern: "compras/proveedores/{action=Index}/{id?}",
+                defaults: new { controller = "Proveedores" });
+
+            // Rutas para el módulo de Entradas de Diario
+            app.MapControllerRoute(
+                name: "entradaDiario",
+                pattern: "contabilidad/entradas-diario/{action=Index}/{id?}",
+                defaults: new { controller = "EntradaDiario" });
+
+            app.MapControllerRoute(
+                name: "tipoEntradaDiario",
+                pattern: "contabilidad/tipos-entrada-diario/{action=Index}/{id?}",
+                defaults: new { controller = "TipoEntradaDiario" });
+
+            app.MapControllerRoute(
+                name: "numeracionEntradaDiario",
+                pattern: "contabilidad/numeraciones-entrada-diario/{action=Index}/{id?}",
+                defaults: new { controller = "NumeracionEntradaDiario" });
+
+            app.MapControllerRoute(
+                name: "categoria",
+                pattern: "Categoria/{action=Index}/{id?}",
+                defaults: new { controller = "Categoria" });
+
+            // Ruta específica para configurar la empresa en sesión
+            app.MapControllerRoute(
+                name: "setEmpresa",
+                pattern: "session/setempresa/{id?}",
+                defaults: new { controller = "Session", action = "SetEmpresa" });
+
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            // Aplicar migraciones automáticamente en desarrollo
+            if (app.Environment.IsDevelopment())
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var services = scope.ServiceProvider;
+                    try
+                    {
+                        var context = services.GetRequiredService<ApplicationDbContext>();
+                        context.Database.Migrate();
+                        Console.WriteLine("La base de datos ha sido migrada con éxito.");
+                    }
+                    catch (Exception ex)
+                    {
+                        var logger = services.GetRequiredService<ILogger<Program>>();
+                        logger.LogError(ex, "Ocurrió un error al intentar migrar la base de datos.");
+                        Console.WriteLine($"Error al migrar la base de datos: {ex.Message}");
+                    }
+                }
+            }
+
+            app.Run();
+        }
+    }
+}

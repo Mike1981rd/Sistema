@@ -18,8 +18,10 @@
       "Bash(cat:*)",
       "Bash(mv:*)",
       "Bash(dotnet build)",
-      "Bash(dotnet ef database:*)"
+      "Bash(dotnet ef database:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": false
 }

@@ -299,6 +299,42 @@ namespace SistemaContable.Controllers
             }
         }
 
+        // GET: EntradaDiario/ObtenerCuentaContable
+        [HttpGet]
+        public async Task<IActionResult> ObtenerCuentaContable(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return Json(new { success = false, message = "ID inválido" });
+                }
+
+                var cuenta = await _dbContext.CuentasContables
+                    .Where(c => c.Id == id)
+                    .Select(c => new
+                    {
+                        id = c.Id,
+                        text = $"{c.Codigo} - {c.Nombre}",
+                        codigo = c.Codigo,
+                        nombre = c.Nombre
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (cuenta == null)
+                {
+                    return Json(new { success = false, message = "Cuenta no encontrada" });
+                }
+
+                return Json(new { success = true, cuenta = cuenta });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener cuenta contable: {ex.Message}");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         // Acción para buscar contactos (para Select2)
         [HttpGet]
         public async Task<IActionResult> BuscarContactos(string term)

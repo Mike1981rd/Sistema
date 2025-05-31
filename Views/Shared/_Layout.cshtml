@@ -46,6 +46,7 @@
         }
     </style>
     @RenderSection("Styles", required: false)
+    @RenderSection("VendorStyles", required: false)
 </head>
 <body>
     <div class="aurora-wrapper">
@@ -405,6 +406,8 @@
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("VendorScripts", required: false)
+    @await RenderSectionAsync("PageScripts", required: false)
     <script>
         // Script de carga tardía para garantizar que el colapsador del sidebar funcione
         window.addEventListener('load', function() {

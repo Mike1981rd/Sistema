@@ -29,7 +29,7 @@ namespace SistemaContable.Controllers
         }
 
         // GET: Impuestos
-        public async Task<IActionResult> Index(bool activos = true)
+        public async Task<IActionResult> Index(string tab)
         {
             // Obtener la empresa actual
             var empresaId = await _empresaService.ObtenerEmpresaActualId();
@@ -38,8 +38,11 @@ namespace SistemaContable.Controllers
                 return RedirectToAction("Index", "Empresas");
             }
             
+            // Determinar si mostrar activos o inactivos
+            bool activos = string.IsNullOrEmpty(tab) || tab == "Activos";
+            
             // Pasar el estado de filtro a la vista
-            ViewBag.MostrarEstados = activos;
+            ViewBag.Tab = activos ? "Activos" : "Inactivos";
 
             return View(await _context.Impuestos
                 .Include(i => i.CuentaContableVentas)
@@ -457,6 +460,38 @@ namespace SistemaContable.Controllers
                 Console.WriteLine($"Error en Buscar: {ex.Message}");
                 return Json(new { results = new List<object>() });
             }
+        }
+
+        // POST: Impuestos/ToggleEstado
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleEstado(int id)
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            if (empresaId <= 0)
+            {
+                return RedirectToAction("Index", "Empresas");
+            }
+
+            var impuesto = await _context.Impuestos
+                .FirstOrDefaultAsync(i => i.Id == id && i.EmpresaId == empresaId);
+                
+            if (impuesto != null)
+            {
+                impuesto.Estado = !impuesto.Estado;
+                impuesto.FechaModificacion = DateTime.UtcNow;
+                
+                _context.Update(impuesto);
+                await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"El impuesto '{impuesto.Nombre}' ha sido {(impuesto.Estado ? "activado" : "desactivado")} correctamente";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "No se pudo encontrar el impuesto";
+            }
+            
+            return RedirectToAction(nameof(Index), new { tab = impuesto?.Estado == true ? "Activos" : "Inactivos" });
         }
     }
 } 
