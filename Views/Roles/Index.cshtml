@@ -1,0 +1,879 @@
+@model IEnumerable<SistemaContable.Models.Rol>
+
+@{
+    ViewData["Title"] = "Roles";
+    var rolesDestacados = ViewBag.RolesDestacados as List<SistemaContable.Models.Rol> ?? new List<SistemaContable.Models.Rol>();
+}
+
+@section Styles {
+    <style>
+        /* Page Background */
+        body {
+            background-color: #f8f7fa;
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+        
+        /* Role Cards */
+        .role-card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .role-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .role-users-count {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .role-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+        
+        .role-edit-link {
+            color: #007bff;
+            font-size: 0.875rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .role-edit-link:hover {
+            text-decoration: underline;
+        }
+        
+        .role-avatars {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .avatar-group {
+            display: flex;
+            margin-right: 0.5rem;
+        }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            margin-left: -8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        .avatar:first-child {
+            margin-left: 0;
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-more {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        /* Avatar colors for initials */
+        .avatar-1 { background: #FF6B6B; }
+        .avatar-2 { background: #4ECDC4; }
+        .avatar-3 { background: #45B7D1; }
+        .avatar-4 { background: #96CEB4; }
+        .avatar-5 { background: #FECA57; }
+        
+        /* Add Role Card */
+        .add-role-card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 160px;
+        }
+        
+        .add-role-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .add-role-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+        
+        .add-role-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .add-role-button:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .add-role-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+        
+        /* Copy icon */
+        .copy-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #adb5bd;
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+        
+        .copy-icon:hover {
+            color: #6c757d;
+        }
+        
+        /* Data Table Section */
+        .table-section {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .table-header {
+            margin-bottom: 2rem;
+        }
+        
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .table-subtitle {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+        
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .table-controls-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .show-select {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .show-select select {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.375rem 2rem 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .export-button {
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 0.25rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .export-button:hover {
+            background: #f8f9fa;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            width: 250px;
+        }
+        
+        /* Custom Table */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .custom-table thead th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6c757d;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+        }
+        
+        .custom-table tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #f8f9fa;
+            vertical-align: middle;
+        }
+        
+        .custom-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9375rem;
+        }
+        
+        .user-username {
+            color: #6c757d;
+            font-size: 0.8125rem;
+        }
+        
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+        
+        .role-badge i {
+            font-size: 0.75rem;
+        }
+        
+        /* Role badge colors */
+        .role-maintainer {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .role-subscriber {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .role-editor {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        .role-author {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .role-admin {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status-inactive {
+            background: #f5f5f5;
+            color: #757575;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-button {
+            border: none;
+            background: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+        
+        .action-button:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        
+        /* Responsive adjustments for mobile */
+        @@media (max-width: 767px) {
+            .role-card {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .page-description {
+                font-size: 0.8125rem;
+            }
+            
+            .btn-create {
+                padding: 0.375rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Make table scrollable on mobile */
+            .table-responsive {
+                margin: 0 -1rem;
+                padding: 0 1rem;
+            }
+            
+            /* Hide less important columns on mobile */
+            .table-modern th:nth-child(2),
+            .table-modern td:nth-child(2),
+            .table-modern th:nth-child(3),
+            .table-modern td:nth-child(3),
+            .table-modern th:nth-child(5),
+            .table-modern td:nth-child(5) {
+                display: none;
+            }
+            
+            /* Adjust table font size */
+            .table-modern {
+                font-size: 0.875rem;
+            }
+            
+            /* Stack action buttons vertically on very small screens */
+            @@media (max-width: 380px) {
+                .btn-group-sm {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                }
+                
+                .btn-group-sm .btn {
+                    width: 100%;
+                }
+            }
+        }
+        
+        /* Tablet adjustments */
+        @@media (min-width: 768px) and (max-width: 991px) {
+            /* Show important columns, hide description */
+            .table-modern th:nth-child(2),
+            .table-modern td:nth-child(2) {
+                display: none;
+            }
+        }
+        
+        .role-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #d1d5de;
+        }
+        
+        .role-icon {
+            width: 48px;
+            height: 48px;
+            background: #f1f3f4;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .role-icon.admin {
+            background: rgba(115, 103, 240, 0.12);
+            color: #7367f0;
+        }
+        
+        .role-icon.editor {
+            background: rgba(40, 199, 111, 0.12);
+            color: #28c76f;
+        }
+        
+        .role-icon.support {
+            background: rgba(255, 159, 67, 0.12);
+            color: #ff9f43;
+        }
+        
+        .role-icon.custom {
+            background: rgba(0, 207, 232, 0.12);
+            color: #00cfe8;
+        }
+        
+        .role-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+        
+        .role-subtitle {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .role-users {
+            color: #636578;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .role-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Tabla mejorada */
+        .table-modern {
+            border: none;
+        }
+        
+        .table-modern thead th {
+            border-bottom: 2px solid #e3e6f0;
+            font-weight: 600;
+            color: #5e5873;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+        }
+        
+        .table-modern tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f2f7;
+        }
+        
+        .table-modern tbody tr:hover {
+            background-color: #f8f8f8;
+        }
+        
+        .permission-count {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        /* Header section */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-description {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+        
+        /* Botón crear */
+        .btn-create {
+            background: #7367f0;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-create:hover {
+            background: #5e50ee;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(115, 103, 240, 0.3);
+        }
+        
+        /* Prioridad badge */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: #f1f3f4;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #5e5873;
+        }
+        
+        .priority-badge.high {
+            background: #ffe0e0;
+            color: #d32f2f;
+        }
+        
+        .priority-badge.medium {
+            background: #fff3cd;
+            color: #f57c00;
+        }
+        
+        .priority-badge.low {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">Roles List</h1>
+        <p class="page-subtitle">A role provided access to predefined menus and features so that depending on assigned role an administrator can have access to what user needs.</p>
+    </div>
+
+    <!-- Role Cards -->
+    <div class="row g-4 mb-4">
+        @{
+            var roleNames = new[] { "Administrator", "Editor", "Users", "Support", "Restricted User" };
+            var userCounts = new[] { 4, 7, 5, 3, 2 };
+            var avatarColors = new[] { "avatar-1", "avatar-2", "avatar-3", "avatar-4", "avatar-5" };
+        }
+        
+        @for (int i = 0; i < 5 && i < Model.Count(); i++)
+        {
+            var rol = Model.ElementAt(i);
+            <div class="col-xl col-lg-4 col-md-6">
+                <div class="role-card">
+                    <i class="far fa-copy copy-icon"></i>
+                    <div class="role-users-count">Total @userCounts[i] users</div>
+                    <div class="role-name">@rol.Nombre</div>
+                    <a asp-action="Edit" asp-route-id="@rol.Id" class="role-edit-link">Edit Role</a>
+                    
+                    <div class="role-avatars">
+                        <div class="avatar-group">
+                            @for (int j = 0; j < Math.Min(3, userCounts[i]); j++)
+                            {
+                                <div class="avatar @avatarColors[(i + j) % 5]">
+                                    @{
+                                        var initials = rol.Nombre.Substring(0, Math.Min(2, rol.Nombre.Length)).ToUpper();
+                                    }
+                                    @initials[0]
+                                </div>
+                            }
+                        </div>
+                        @if (userCounts[i] > 3)
+                        {
+                            <span class="avatar-more">+@(userCounts[i] - 3)</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <!-- Add Role Card -->
+        <div class="col-xl col-lg-4 col-md-6">
+            <a asp-action="Create" style="text-decoration: none;">
+                <div class="add-role-card">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMwIDYwQzQ2LjU2ODUgNjAgNjAgNDYuNTY4NSA2MCAzMEM2MCAxMy40MzE1IDQ2LjU2ODUgMCAzMCAwQzEzLjQzMTUgMCAwIDEzLjQzMTUgMCAzMEMwIDQ2LjU2ODUgMTMuNDMxNSA2MCAzMCA2MFoiIGZpbGw9IiNGMEYyRjgiLz4KPHBhdGggZD0iTTMwIDQwVjIwIiBzdHJva2U9IiM2QzZGODUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMCAzMEg0MCIgc3Ryb2tlPSIjNkM2Rjg1IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=" alt="Add Role" class="add-role-icon">
+                    <button type="button" class="add-role-button">Add Role</button>
+                    <p class="add-role-text">Add new role,<br>if it doesn't exist</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="table-section">
+        <div class="table-header">
+            <h2 class="table-title">Total users with their roles</h2>
+            <p class="table-subtitle">Find all of your company's administrator accounts and their associate roles.</p>
+        </div>
+        
+        <div class="table-controls">
+            <div class="table-controls-left">
+                <div class="show-select">
+                    <span>Show</span>
+                    <select class="form-select form-select-sm">
+                        <option>10</option>
+                        <option>25</option>
+                        <option>50</option>
+                        <option>100</option>
+                    </select>
+                </div>
+                <button class="export-button">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+            </div>
+            <div class="search-box">
+                <input type="text" class="form-control" placeholder="Search User">
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" class="form-check-input">
+                        </th>
+                        <th>USER</th>
+                        <th>EMAIL</th>
+                        <th>ROLE</th>
+                        <th>PLAN</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var sampleUsers = new[]
+                        {
+                            new { Name = "Zsazsa McCleverty", Username = "zmccleverty", Email = "zmccleverty@soundcloud.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Enterprise", Status = "Active", Avatar = "ZM", Color = "avatar-1" },
+                            new { Name = "Yoko Pottie", Username = "ypottie", Email = "ypottie@privacy.gov.au", Role = "Subscriber", Icon = "fas fa-user", Plan = "Basic", Status = "Inactive", Avatar = "YP", Color = "avatar-2" },
+                            new { Name = "Wesley Burland", Username = "wburland", Email = "wburland@uiuc.edu", Role = "Editor", Icon = "fas fa-edit", Plan = "Team", Status = "Inactive", Avatar = "WB", Color = "avatar-3" },
+                            new { Name = "Vladamir Koschek", Username = "vkoschek", Email = "vkoschek17@abc.net.au", Role = "Author", Icon = "fas fa-feather", Plan = "Team", Status = "Active", Avatar = "VK", Color = "avatar-4" },
+                            new { Name = "Tyne Widmore", Username = "twidmore", Email = "twidmore12@bravesites.com", Role = "Subscriber", Icon = "fas fa-user", Plan = "Team", Status = "Pending", Avatar = "TW", Color = "avatar-5" },
+                            new { Name = "Travus Bruntjen", Username = "tbruntjen", Email = "tbruntjen@sitemeter.com", Role = "Admin", Icon = "fas fa-crown", Plan = "Enterprise", Status = "Active", Avatar = "TB", Color = "avatar-1" },
+                            new { Name = "Stu Delamaine", Username = "sdelamaine", Email = "sdelamaine@who.int", Role = "Author", Icon = "fas fa-feather", Plan = "Basic", Status = "Pending", Avatar = "SD", Color = "avatar-2" },
+                            new { Name = "Saunder Offner", Username = "soffner", Email = "soffner19@mac.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Enterprise", Status = "Pending", Avatar = "SO", Color = "avatar-3" },
+                            new { Name = "Stephen MacGilfoyle", Username = "smacgilfoyle", Email = "smacgilfoyle@bigcartel.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Company", Status = "Pending", Avatar = "SM", Color = "avatar-4" },
+                            new { Name = "Skip Hebblethwaite", Username = "shebblethwaite", Email = "shebblethwaite10@arizona.edu", Role = "Admin", Icon = "fas fa-crown", Plan = "Company", Status = "Inactive", Avatar = "SH", Color = "avatar-5" }
+                        };
+                        
+                        var roleClasses = new Dictionary<string, string>
+                        {
+                            { "Maintainer", "role-maintainer" },
+                            { "Subscriber", "role-subscriber" },
+                            { "Editor", "role-editor" },
+                            { "Author", "role-author" },
+                            { "Admin", "role-admin" }
+                        };
+                        
+                        var statusClasses = new Dictionary<string, string>
+                        {
+                            { "Active", "status-active" },
+                            { "Pending", "status-pending" },
+                            { "Inactive", "status-inactive" }
+                        };
+                    }
+                    
+                    @foreach (var user in sampleUsers)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input">
+                            </td>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar @user.Color">
+                                        @user.Avatar
+                                    </div>
+                                    <div class="user-info">
+                                        <div class="user-name">@user.Name</div>
+                                        <div class="user-username">@@@user.Username</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@user.Email</td>
+                            <td>
+                                <span class="role-badge @roleClasses[user.Role]">
+                                    <i class="@user.Icon"></i>
+                                    @user.Role
+                                </span>
+                            </td>
+                            <td>@user.Plan</td>
+                            <td>
+                                <span class="status-badge @statusClasses[user.Status]">
+                                    @user.Status
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-button" title="Delete">
+                                        <i class="far fa-trash-alt"></i>
+                                    </button>
+                                    <button class="action-button" title="View">
+                                        <i class="far fa-eye"></i>
+                                    </button>
+                                    <button class="action-button" title="More">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <p class="text-muted mb-0">Showing 1 to 10 of 50 entries</p>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">4</a></li>
+                    <li class="page-item"><a class="page-link" href="#">5</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar el rol <strong id="rolNombre"></strong>?</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmarEliminacion(id, nombre) {
+            document.getElementById('rolNombre').textContent = nombre;
+            document.getElementById('deleteForm').action = '/configuracion/roles/eliminar/' + id;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

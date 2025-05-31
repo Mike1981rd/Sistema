@@ -98,6 +98,9 @@ namespace SistemaContable.Data
         public DbSet<ProductoModificadorGrupo> ProductosModificadoresGrupos { get; set; }
         public DbSet<RecetaIngrediente> RecetasIngredientes { get; set; }
         public DbSet<PaqueteComponente> PaquetesComponentes { get; set; }
+        
+        // Roles y permisos
+        public DbSet<Rol> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -986,9 +989,37 @@ namespace SistemaContable.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
             
-            
-            
-            
+            // Configuración para Rol
+            builder.Entity<Rol>(entity =>
+            {
+                entity.ToTable("Roles");
+                entity.HasKey(e => e.Id);
+                
+                // Propiedades
+                entity.Property(e => e.Nombre)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                      
+                entity.Property(e => e.Descripcion)
+                      .HasMaxLength(500);
+                      
+                entity.Property(e => e.Prioridad)
+                      .HasDefaultValue(0);
+                      
+                // Configuración para lista de permisos como JSONB
+                entity.Property(e => e.Permisos)
+                      .HasColumnType("jsonb");
+                      
+                // Índice único para Nombre por EmpresaId
+                entity.HasIndex(e => new { e.Nombre, e.EmpresaId })
+                      .IsUnique();
+                      
+                // Relación con Empresa
+                entity.HasOne(e => e.Empresa)
+                      .WithMany()
+                      .HasForeignKey(e => e.EmpresaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         private void ConvertDatesToUtc()

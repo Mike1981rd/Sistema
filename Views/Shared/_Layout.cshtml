@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SistemaContable</title>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/aurora-theme.css" asp-append-version="true" />
@@ -65,6 +69,9 @@
                     <span>Configuración</span>
                 </a>
                 <div class="aurora-submenu">
+                    <a href="/configuracion/roles" class="aurora-submenu-item" data-title="Roles">
+                        <i class="fas fa-user-shield me-2"></i>Roles
+                    </a>
                     <a href="/Empresas/Configurar" class="aurora-submenu-item" data-title="Empresa">
                         <i class="fas fa-building me-2"></i>Empresa
                     </a>

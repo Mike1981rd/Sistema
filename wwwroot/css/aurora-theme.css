@@ -115,8 +115,30 @@
 .aurora-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  transition: all 0.3s;
+  transition: margin-left 0.3s ease;
 }
+
+/* Deshabilitar transiciones durante inicialización del menú */
+.menu-initializing .aurora-content {
+  transition: none !important;
+}
+
+.menu-initializing * {
+  transition-duration: 0s !important;
+}
+
+/* Prevenir efectos visuales de carga bruscos en el contenido principal */
+.aurora-main {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+.container-fluid {
+  opacity: 1;
+  transition: opacity 0.15s ease-in;
+}
+
 
 /* Header */
 .aurora-header {

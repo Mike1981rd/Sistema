@@ -8,10 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const body = document.body;
     body.classList.add('menu-initializing');
     
-    // Congelar brevemente para evitar saltos
-    const originalOverflow = body.style.overflow;
-    body.style.overflow = 'hidden';
-    
     // Marcar el elemento activo basado en la URL actual
     const currentPath = window.location.pathname.toLowerCase();
     let activeItem = null;
@@ -147,13 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Restaurar comportamiento normal después de inicialización
     setTimeout(function() {
-        // Restaurar scroll
-        body.style.overflow = originalOverflow;
-        
         // Permitir transiciones
         body.classList.remove('menu-initializing');
-        
-        // Estabilizar la página
-        document.documentElement.scrollTop = document.documentElement.scrollTop;
-    }, 100);
+    }, 50);
 }); 
