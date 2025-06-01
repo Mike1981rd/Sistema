@@ -6,6 +6,7 @@ using SistemaContable.Repositories;
 using SistemaContable.Repositories.Interfaces;
 using SistemaContable.Services.Interfaces;
 using OfficeOpenXml;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,8 +23,12 @@ builder.Services.AddSession(options =>
 });
 
 // Configure database context
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+dataSourceBuilder.EnableDynamicJson();
+var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseNpgsql(dataSource)
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine, LogLevel.Information));
 
@@ -146,6 +151,27 @@ app.MapControllerRoute(
     name: "categoria",
     pattern: "Categoria/{action=Index}/{id?}",
     defaults: new { controller = "Categoria" });
+
+// Rutas para módulos principales
+app.MapControllerRoute(
+    name: "impuestos",
+    pattern: "Impuestos/{action=Index}/{id?}",
+    defaults: new { controller = "Impuestos" });
+
+app.MapControllerRoute(
+    name: "usuarios",
+    pattern: "Usuarios/{action=Index}/{id?}",
+    defaults: new { controller = "Usuarios" });
+
+app.MapControllerRoute(
+    name: "roles",
+    pattern: "Roles/{action=Index}/{id?}",
+    defaults: new { controller = "Roles" });
+
+app.MapControllerRoute(
+    name: "comprobantes",
+    pattern: "configuracion/comprobantes-fiscales/{action=Index}/{id?}",
+    defaults: new { controller = "Comprobantes" });
 
 app.MapControllerRoute(
     name: "default",

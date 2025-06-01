@@ -1,8 +1,9 @@
 @model IEnumerable<SistemaContable.Models.Rol>
+@using SistemaContable.Models
 
 @{
     ViewData["Title"] = "Roles";
-    var rolesDestacados = ViewBag.RolesDestacados as List<SistemaContable.Models.Rol> ?? new List<SistemaContable.Models.Rol>();
+    var rolesDestacados = ViewBag.RolesDestacados as List<Rol> ?? new List<Rol>();
 }
 
 @section Styles {
@@ -91,17 +92,17 @@
         }
         
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             border: 2px solid #fff;
-            margin-left: -8px;
+            margin-left: -14px;
             position: relative;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 1.25rem;
             font-weight: 500;
             color: #fff;
         }
@@ -646,7 +647,22 @@
     </style>
 }
 
-<div class="container-fluid">
+<div class="container-fluid p-0">
+    <!-- Encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Roles</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active">Roles</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="page-header">
         <h1 class="page-title">Roles List</h1>
@@ -656,36 +672,46 @@
     <!-- Role Cards -->
     <div class="row g-4 mb-4">
         @{
-            var roleNames = new[] { "Administrator", "Editor", "Users", "Support", "Restricted User" };
-            var userCounts = new[] { 4, 7, 5, 3, 2 };
             var avatarColors = new[] { "avatar-1", "avatar-2", "avatar-3", "avatar-4", "avatar-5" };
         }
         
-        @for (int i = 0; i < 5 && i < Model.Count(); i++)
+        @foreach (var rol in rolesDestacados)
         {
-            var rol = Model.ElementAt(i);
+            var usuariosDelRol = rol.Usuarios?.Where(u => u.Activo).ToList() ?? new List<Usuario>();
+            var totalUsuarios = usuariosDelRol.Count;
+            
             <div class="col-xl col-lg-4 col-md-6">
                 <div class="role-card">
                     <i class="far fa-copy copy-icon"></i>
-                    <div class="role-users-count">Total @userCounts[i] users</div>
+                    <div class="role-users-count">Total @totalUsuarios users</div>
                     <div class="role-name">@rol.Nombre</div>
                     <a asp-action="Edit" asp-route-id="@rol.Id" class="role-edit-link">Edit Role</a>
                     
                     <div class="role-avatars">
                         <div class="avatar-group">
-                            @for (int j = 0; j < Math.Min(3, userCounts[i]); j++)
+                            @{
+                                var usuariosAMostrar = usuariosDelRol.Take(4).ToList();
+                            }
+                            @foreach (var usuario in usuariosAMostrar)
                             {
-                                <div class="avatar @avatarColors[(i + j) % 5]">
-                                    @{
-                                        var initials = rol.Nombre.Substring(0, Math.Min(2, rol.Nombre.Length)).ToUpper();
-                                    }
-                                    @initials[0]
-                                </div>
+                                @if (!string.IsNullOrEmpty(usuario.FotoUrl))
+                                {
+                                    <div class="avatar" style="background: none;">
+                                        <img src="~/uploads/usuarios/@usuario.FotoUrl" alt="@usuario.NombreCompleto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    </div>
+                                }
+                                else
+                                {
+                                    var colorIndex = usuariosDelRol.IndexOf(usuario) % avatarColors.Length;
+                                    <div class="avatar @avatarColors[colorIndex]">
+                                        @usuario.NombreCompleto.Substring(0, 1).ToUpper()
+                                    </div>
+                                }
                             }
                         </div>
-                        @if (userCounts[i] > 3)
+                        @if (totalUsuarios > 4)
                         {
-                            <span class="avatar-more">+@(userCounts[i] - 3)</span>
+                            <span class="avatar-more">+@(totalUsuarios - 4)</span>
                         }
                     </div>
                 </div>
@@ -748,76 +774,82 @@
                 </thead>
                 <tbody>
                     @{
-                        var sampleUsers = new[]
+                        var todosLosUsuarios = ViewBag.TodosLosUsuarios as List<Usuario> ?? new List<Usuario>();
+                        var usuarioColors = new[] { "avatar-1", "avatar-2", "avatar-3", "avatar-4", "avatar-5" };
+                        
+                        // Map role names to icons and classes
+                        var roleIcons = new Dictionary<string, string>
                         {
-                            new { Name = "Zsazsa McCleverty", Username = "zmccleverty", Email = "zmccleverty@soundcloud.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Enterprise", Status = "Active", Avatar = "ZM", Color = "avatar-1" },
-                            new { Name = "Yoko Pottie", Username = "ypottie", Email = "ypottie@privacy.gov.au", Role = "Subscriber", Icon = "fas fa-user", Plan = "Basic", Status = "Inactive", Avatar = "YP", Color = "avatar-2" },
-                            new { Name = "Wesley Burland", Username = "wburland", Email = "wburland@uiuc.edu", Role = "Editor", Icon = "fas fa-edit", Plan = "Team", Status = "Inactive", Avatar = "WB", Color = "avatar-3" },
-                            new { Name = "Vladamir Koschek", Username = "vkoschek", Email = "vkoschek17@abc.net.au", Role = "Author", Icon = "fas fa-feather", Plan = "Team", Status = "Active", Avatar = "VK", Color = "avatar-4" },
-                            new { Name = "Tyne Widmore", Username = "twidmore", Email = "twidmore12@bravesites.com", Role = "Subscriber", Icon = "fas fa-user", Plan = "Team", Status = "Pending", Avatar = "TW", Color = "avatar-5" },
-                            new { Name = "Travus Bruntjen", Username = "tbruntjen", Email = "tbruntjen@sitemeter.com", Role = "Admin", Icon = "fas fa-crown", Plan = "Enterprise", Status = "Active", Avatar = "TB", Color = "avatar-1" },
-                            new { Name = "Stu Delamaine", Username = "sdelamaine", Email = "sdelamaine@who.int", Role = "Author", Icon = "fas fa-feather", Plan = "Basic", Status = "Pending", Avatar = "SD", Color = "avatar-2" },
-                            new { Name = "Saunder Offner", Username = "soffner", Email = "soffner19@mac.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Enterprise", Status = "Pending", Avatar = "SO", Color = "avatar-3" },
-                            new { Name = "Stephen MacGilfoyle", Username = "smacgilfoyle", Email = "smacgilfoyle@bigcartel.com", Role = "Maintainer", Icon = "fas fa-user-shield", Plan = "Company", Status = "Pending", Avatar = "SM", Color = "avatar-4" },
-                            new { Name = "Skip Hebblethwaite", Username = "shebblethwaite", Email = "shebblethwaite10@arizona.edu", Role = "Admin", Icon = "fas fa-crown", Plan = "Company", Status = "Inactive", Avatar = "SH", Color = "avatar-5" }
+                            { "Administrador", "fas fa-crown" },
+                            { "Editor", "fas fa-edit" },
+                            { "Usuario", "fas fa-user" },
+                            { "Supervisor", "fas fa-user-shield" },
+                            { "Contador", "fas fa-calculator" }
                         };
                         
                         var roleClasses = new Dictionary<string, string>
                         {
-                            { "Maintainer", "role-maintainer" },
-                            { "Subscriber", "role-subscriber" },
+                            { "Administrador", "role-admin" },
                             { "Editor", "role-editor" },
-                            { "Author", "role-author" },
-                            { "Admin", "role-admin" }
-                        };
-                        
-                        var statusClasses = new Dictionary<string, string>
-                        {
-                            { "Active", "status-active" },
-                            { "Pending", "status-pending" },
-                            { "Inactive", "status-inactive" }
+                            { "Usuario", "role-subscriber" },
+                            { "Supervisor", "role-maintainer" },
+                            { "Contador", "role-author" }
                         };
                     }
                     
-                    @foreach (var user in sampleUsers)
+                    @foreach (var usuario in todosLosUsuarios)
                     {
+                        var rolNombre = usuario.Rol?.Nombre ?? "Sin Rol";
+                        var roleIcon = roleIcons.ContainsKey(rolNombre) ? roleIcons[rolNombre] : "fas fa-user";
+                        var roleClass = roleClasses.ContainsKey(rolNombre) ? roleClasses[rolNombre] : "role-subscriber";
+                        var colorIndex = todosLosUsuarios.IndexOf(usuario) % usuarioColors.Length;
+                        
                         <tr>
                             <td>
                                 <input type="checkbox" class="form-check-input">
                             </td>
                             <td>
                                 <div class="user-cell">
-                                    <div class="user-avatar @user.Color">
-                                        @user.Avatar
-                                    </div>
+                                    @if (!string.IsNullOrEmpty(usuario.FotoUrl))
+                                    {
+                                        <div class="user-avatar" style="background: none;">
+                                            <img src="~/uploads/usuarios/@usuario.FotoUrl" alt="@usuario.NombreCompleto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="user-avatar @usuarioColors[colorIndex]">
+                                            @usuario.NombreCompleto.Substring(0, 1).ToUpper()
+                                        </div>
+                                    }
                                     <div class="user-info">
-                                        <div class="user-name">@user.Name</div>
-                                        <div class="user-username">@@@user.Username</div>
+                                        <div class="user-name">@usuario.NombreCompleto</div>
+                                        <div class="user-username">@@@usuario.NombreUsuario</div>
                                     </div>
                                 </div>
                             </td>
-                            <td>@user.Email</td>
+                            <td>@usuario.Email</td>
                             <td>
-                                <span class="role-badge @roleClasses[user.Role]">
-                                    <i class="@user.Icon"></i>
-                                    @user.Role
+                                <span class="role-badge @roleClass">
+                                    <i class="@roleIcon"></i>
+                                    @rolNombre
                                 </span>
                             </td>
-                            <td>@user.Plan</td>
+                            <td>Enterprise</td>
                             <td>
-                                <span class="status-badge @statusClasses[user.Status]">
-                                    @user.Status
+                                <span class="status-badge status-active">
+                                    Activo
                                 </span>
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="action-button" title="Delete">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
-                                    <button class="action-button" title="View">
+                                    <a href="/Usuarios/Edit/@usuario.Id" class="action-button" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="/Usuarios/Details/@usuario.Id" class="action-button" title="Ver">
                                         <i class="far fa-eye"></i>
-                                    </button>
-                                    <button class="action-button" title="More">
+                                    </a>
+                                    <button class="action-button" title="Más">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                 </div>
@@ -829,7 +861,7 @@
         </div>
         
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <p class="text-muted mb-0">Showing 1 to 10 of 50 entries</p>
+            <p class="text-muted mb-0">Showing 1 to @todosLosUsuarios.Count of @todosLosUsuarios.Count entries</p>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>

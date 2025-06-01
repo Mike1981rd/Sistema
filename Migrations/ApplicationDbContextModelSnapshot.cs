@@ -2190,7 +2190,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = false,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1935),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4887),
                             Nombre = "De contado"
                         },
                         new
@@ -2201,7 +2201,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = false,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1937),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4892),
                             Nombre = "8 días"
                         },
                         new
@@ -2212,7 +2212,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = false,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1939),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4896),
                             Nombre = "15 días"
                         },
                         new
@@ -2223,7 +2223,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = false,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1952),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4920),
                             Nombre = "30 días"
                         },
                         new
@@ -2234,7 +2234,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = false,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1954),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4922),
                             Nombre = "60 días"
                         },
                         new
@@ -2244,7 +2244,7 @@ namespace SistemaContable.Migrations
                             EsVencimientoManual = true,
                             EstaEnUso = false,
                             Estado = true,
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(1956),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(4925),
                             Nombre = "Vencimiento manual"
                         });
                 });
@@ -2573,8 +2573,8 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Impuesto Sobre la Renta al 10%",
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(3386),
-                            FechaModificacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(3387),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(8114),
+                            FechaModificacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(8116),
                             Nombre = "ISR 10%",
                             Porcentaje = 10.00m,
                             Tipo = "ISR"
@@ -2584,8 +2584,8 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Retención del IVA al 15%",
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(3389),
-                            FechaModificacion = new DateTime(2025, 5, 31, 20, 48, 28, 831, DateTimeKind.Utc).AddTicks(3390),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(8120),
+                            FechaModificacion = new DateTime(2025, 6, 1, 15, 47, 45, 150, DateTimeKind.Utc).AddTicks(8121),
                             Nombre = "IVA Retenido 15%",
                             Porcentaje = 15.00m,
                             Tipo = "IVA"
@@ -2993,6 +2993,90 @@ namespace SistemaContable.Migrations
                     b.ToTable("UnidadesMedida");
                 });
 
+            modelBuilder.Entity("SistemaContable.Models.Usuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Ciudad")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CodigoPostal")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("EmpresaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EstadoProvincia")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("NombreCompleto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NombreUsuario")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PinPOS")
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
+                    b.Property<int>("RolId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpresaId");
+
+                    b.HasIndex("RolId");
+
+                    b.HasIndex("NombreUsuario", "EmpresaId")
+                        .IsUnique();
+
+                    b.ToTable("Usuarios", (string)null);
+                });
+
             modelBuilder.Entity("SistemaContable.Models.VarianteProducto", b =>
                 {
                     b.Property<int>("Id")
@@ -3096,7 +3180,7 @@ namespace SistemaContable.Migrations
                             Id = 1,
                             Activo = true,
                             Email = "juan@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 836, DateTimeKind.Utc).AddTicks(1039),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 153, DateTimeKind.Utc).AddTicks(8229),
                             Nombre = "Juan Pérez",
                             PorcentajeComision = 5m,
                             Telefono = "809-555-1234"
@@ -3106,7 +3190,7 @@ namespace SistemaContable.Migrations
                             Id = 2,
                             Activo = true,
                             Email = "maria@example.com",
-                            FechaCreacion = new DateTime(2025, 5, 31, 20, 48, 28, 836, DateTimeKind.Utc).AddTicks(1050),
+                            FechaCreacion = new DateTime(2025, 6, 1, 15, 47, 45, 153, DateTimeKind.Utc).AddTicks(8239),
                             Nombre = "María González",
                             PorcentajeComision = 7m,
                             Telefono = "809-555-5678"
@@ -4069,6 +4153,25 @@ namespace SistemaContable.Migrations
                     b.Navigation("CuentaContableDestino");
 
                     b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("SistemaContable.Models.Usuario", b =>
+                {
+                    b.HasOne("SistemaContable.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaContable.Models.Rol", "Rol")
+                        .WithMany()
+                        .HasForeignKey("RolId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Empresa");
+
+                    b.Navigation("Rol");
                 });
 
             modelBuilder.Entity("SistemaContable.Models.VarianteProducto", b =>

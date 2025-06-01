@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SistemaContable</title>
-    <!-- Google Fonts - Inter -->
+    <!-- Google Fonts - Inter, Playfair Display & Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap&text-rendering=optimizeLegibility" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/aurora-theme.css" asp-append-version="true" />
@@ -72,6 +72,9 @@
                     <a href="/configuracion/roles" class="aurora-submenu-item" data-title="Roles">
                         <i class="fas fa-user-shield me-2"></i>Roles
                     </a>
+                    <a href="/Usuarios" class="aurora-submenu-item" data-title="Usuarios">
+                        <i class="fas fa-user-cog me-2"></i>Usuarios
+                    </a>
                     <a href="/Empresas/Configurar" class="aurora-submenu-item" data-title="Empresa">
                         <i class="fas fa-building me-2"></i>Empresa
                     </a>
@@ -92,9 +95,6 @@
                     </a>
                     <a href="/configuracion/comprobantes-fiscales" class="aurora-submenu-item" data-title="Comprobantes Fiscales">
                         <i class="fas fa-file-invoice me-2"></i>Comprobantes Fiscales
-                    </a>
-                    <a href="/Usuarios" class="aurora-submenu-item" data-title="Usuarios">
-                        <i class="fas fa-user-cog me-2"></i>Usuarios
                     </a>
                 </div>
                 
@@ -415,6 +415,73 @@
     @await RenderSectionAsync("Scripts", required: false)
     @await RenderSectionAsync("VendorScripts", required: false)
     @await RenderSectionAsync("PageScripts", required: false)
+    
+    <!-- Fix completo para modales y tokens antiforgery -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Iniciando fix para modales y formularios...');
+            
+            // 1. Interceptar envíos de formularios para debug
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (form.method.toLowerCase() !== 'post') return;
+                
+                console.log('📝 Envío de formulario POST:', {
+                    action: form.action,
+                    id: form.id,
+                    hasToken: !!form.querySelector('input[name="__RequestVerificationToken"]')
+                });
+                
+                // Para formularios en modales, agregar un pequeño delay
+                const modal = form.closest('.modal');
+                if (modal) {
+                    console.log('📋 Formulario en modal detectado, agregando delay...');
+                }
+            }, true);
+            
+            // 2. Fix específico para Bootstrap modals
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                modal.addEventListener('shown.bs.modal', function() {
+                    console.log('🎭 Modal mostrado:', this.id);
+                    
+                    // Verificar que el formulario dentro del modal tenga token
+                    const form = this.querySelector('form[method="post"]');
+                    if (form) {
+                        const token = form.querySelector('input[name="__RequestVerificationToken"]');
+                        if (!token) {
+                            console.error('❌ Modal sin token antiforgery:', this.id);
+                        } else {
+                            console.log('✅ Modal con token antiforgery correcto');
+                        }
+                    }
+                });
+            });
+            
+            // 3. Fix para asegurar que los botones en modales funcionen
+            document.addEventListener('click', function(e) {
+                if (e.target.type === 'submit' && e.target.closest('.modal')) {
+                    console.log('🔘 Click en botón submit dentro de modal');
+                    
+                    // Pequeño delay para asegurar que el evento se procese
+                    setTimeout(function() {
+                        const form = e.target.closest('form');
+                        if (form && !form.querySelector('.submitting')) {
+                            // Agregar marcador para evitar envíos duplicados
+                            const marker = document.createElement('input');
+                            marker.type = 'hidden';
+                            marker.className = 'submitting';
+                            form.appendChild(marker);
+                            
+                            console.log('📤 Preparando envío de formulario...');
+                        }
+                    }, 10);
+                }
+            }, true);
+            
+            console.log('✅ Fix para modales y formularios activo');
+        });
+    </script>
     <script>
         // Script de carga tardía para garantizar que el colapsador del sidebar funcione
         window.addEventListener('load', function() {

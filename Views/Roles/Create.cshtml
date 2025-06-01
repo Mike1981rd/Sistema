@@ -17,7 +17,7 @@
             background: #fff;
             border-radius: 0.75rem;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
-            padding: 2rem 3rem;
+            padding: 2rem 3rem 3rem 3rem;
             margin: 2rem auto;
             max-width: 1200px;
             width: 100%;
@@ -91,10 +91,19 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
+            padding: 1rem 1.5rem 1rem 1rem;
             border-bottom: 1px solid #f3f4f6;
-            cursor: pointer;
             transition: all 0.2s;
+        }
+        
+        .permission-item .d-flex {
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .category-toggle {
+            margin-left: 1rem;
+            cursor: pointer;
         }
         
         .permission-item:hover {
@@ -117,6 +126,7 @@
             font-weight: 500;
             font-size: 0.9375rem;
             margin-left: 1rem;
+            margin-right: 1rem;
         }
         
         
@@ -144,8 +154,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.75rem 0;
+            padding: 1rem 0;
             border-bottom: 1px solid #f9fafb;
+            margin-bottom: 0.5rem;
         }
         
         .permission-subitem:last-child {
@@ -506,7 +517,25 @@
     </style>
 }
 
-<div class="container-fluid">
+<div class="container-fluid p-0">
+    <!-- Encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Crear Rol</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Roles" asp-action="Index">Roles</a>
+                    </li>
+                    <li class="breadcrumb-item active">Crear</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
     <div class="role-form-container">
         <form asp-action="Create" method="post">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
@@ -536,88 +565,30 @@
                 <h3 class="permissions-title">Permisos</h3>
                 
                 @{
-                    var menuStructure = new Dictionary<string, List<string>>
-                    {
-                        {
-                            "Configuración", new List<string>
-                            {
-                                "Empresas", "Roles", "Impuestos", "Plazos de Pago", "Retenciones", 
-                                "Comprobantes Fiscales", "Configuración General"
-                            }
-                        },
-                        {
-                            "Inventario", new List<string>
-                            {
-                                "Productos", "Categorías", "Marcas", "Unidades de Medida", 
-                                "Almacenes", "Contenedores", "Familias"
-                            }
-                        },
-                        {
-                            "Menú", new List<string>
-                            {
-                                "Gestión de Menú", "Items de Menú", "Recetas", "Modificadores", 
-                                "Grupos de Modificadores", "Variantes de Producto"
-                            }
-                        },
-                        {
-                            "Reportes", new List<string>
-                            {
-                                "Reportes de Ventas", "Reportes de Inventario", "Reportes Contables", 
-                                "Reportes de Impuestos", "Reportes Financieros"
-                            }
-                        },
-                        {
-                            "Punto de Venta", new List<string>
-                            {
-                                "ALL", "Crear Orden", "Manejar órdenes de otros usuarios", "Cancelar Productos",
-                                "Descuentos", "Dividir Mesas", "Modificar Facturas", "Cierre de Caja",
-                                "Pantalla de Pago", "Cancelar Orden", "Transferir Órdenes", "Cierre del Día",
-                                "Reservaciones", "Mover Productos a otra Mesa", "Mover Productos a otra Área",
-                                "Mover Silla", "Mover Mesas", "CXC", "Valores Esperados Cuadre de Caja", "POS"
-                            }
-                        },
-                        {
-                            "Ventas", new List<string>
-                            {
-                                "Facturas", "Clientes", "Cotizaciones", "Órdenes de Venta", "Devoluciones"
-                            }
-                        },
-                        {
-                            "Compras", new List<string>
-                            {
-                                "Órdenes de Compra", "Proveedores", "Recepción de Mercancía", "Facturas de Compra"
-                            }
-                        },
-                        {
-                            "Contabilidad", new List<string>
-                            {
-                                "Catálogo de Cuentas", "Asientos Contables", "Entradas de Diario", 
-                                "Balance General", "Estado de Resultados", "Libro Diario", "Libro Mayor"
-                            }
-                        },
-                        {
-                            "Bancos", new List<string>
-                            {
-                                "Cuentas Bancarias", "Transacciones", "Conciliación Bancaria", "Cheques"
-                            }
-                        }
-                    };
+                    // Usar la estructura oficial de permisos del sistema
+                    var permisosEstructura = ViewBag.PermisosEstructura as Dictionary<string, Dictionary<string, string>> ?? SistemaContable.Models.PermisosSistema.EstructuraPermisos;
                 }
                 
-                @foreach (var category in menuStructure)
+                @foreach (var category in permisosEstructura)
                 {
                     <div class="permission-category" id="category-@category.Key.Replace(" ", "")">
-                        <div class="permission-item" onclick="toggleCategory('@category.Key.Replace(" ", "")')">
-                            <span class="permission-name">@category.Key</span>
-                            <i class="fas fa-chevron-right permission-arrow"></i>
+                        <div class="permission-item">
+                            <div class="d-flex align-items-center" onclick="toggleCategory('@category.Key.Replace(" ", "")')">
+                                <span class="permission-name">@category.Key</span>
+                                <i class="fas fa-chevron-right permission-arrow"></i>
+                            </div>
+                            <div class="toggle-switch category-toggle" onclick="toggleCategoryPermissions(this, '@category.Key.Replace(" ", "")')">
+                                <input type="checkbox" class="category-checkbox" />
+                                <div class="toggle-switch-slider"></div>
+                            </div>
                         </div>
                         <div class="permission-subcategories">
                             @foreach (var subcategory in category.Value)
                             {
                                 <div class="permission-subitem">
-                                    <span class="permission-subname">@subcategory</span>
-                                    <div class="toggle-switch" onclick="togglePermission(this, '@category.Key', '@subcategory')">
-                                        <input type="checkbox" name="permisosSeleccionados" value="@category.Key.@subcategory" />
+                                    <span class="permission-subname">@subcategory.Value</span>
+                                    <div class="toggle-switch" onclick="togglePermission(this, '@category.Key', '@subcategory.Value')">
+                                        <input type="checkbox" name="permisosSeleccionados" value="@subcategory.Key" />
                                         <div class="toggle-switch-slider"></div>
                                     </div>
                                 </div>
@@ -650,17 +621,60 @@
             checkbox.checked = !checkbox.checked;
             toggleElement.classList.toggle('active', checkbox.checked);
             
-            // If it's "ALL", toggle all other permissions in the category
-            if (permission === 'ALL') {
-                const categoryElement = document.getElementById('category-' + category.replace(/\s/g, ''));
-                const allToggles = categoryElement.querySelectorAll('.toggle-switch');
-                const allChecked = checkbox.checked;
-                
-                allToggles.forEach(toggle => {
-                    const cb = toggle.querySelector('input[type="checkbox"]');
-                    cb.checked = allChecked;
-                    toggle.classList.toggle('active', allChecked);
-                });
+            // Actualizar el estado del toggle de categoría
+            const categoryId = category.replace(/\s/g, '');
+            updateCategoryToggle(categoryId);
+        }
+        
+        // Función para toggle de toda una categoría
+        function toggleCategoryPermissions(categoryToggle, categoryId) {
+            const categoryElement = document.getElementById('category-' + categoryId);
+            const categoryCheckbox = categoryToggle.querySelector('input[type="checkbox"]');
+            
+            // Toggle del checkbox principal
+            categoryCheckbox.checked = !categoryCheckbox.checked;
+            categoryToggle.classList.toggle('active', categoryCheckbox.checked);
+            
+            // Encontrar todos los toggles de permisos en esta categoría
+            const permissionToggles = categoryElement.querySelectorAll('.permission-subcategories .toggle-switch');
+            
+            // Aplicar el estado a todos los permisos de la categoría
+            permissionToggles.forEach(toggle => {
+                const checkbox = toggle.querySelector('input[type="checkbox"]');
+                checkbox.checked = categoryCheckbox.checked;
+                toggle.classList.toggle('active', categoryCheckbox.checked);
+            });
+            
+            // Expandir la categoría si se está marcando
+            if (categoryCheckbox.checked) {
+                categoryElement.classList.add('expanded');
+            }
+        }
+        
+        // Función para actualizar el estado del toggle de categoría cuando se cambian permisos individuales
+        function updateCategoryToggle(categoryId) {
+            const categoryElement = document.getElementById('category-' + categoryId);
+            const categoryToggle = categoryElement.querySelector('.category-toggle');
+            const categoryCheckbox = categoryToggle.querySelector('input[type="checkbox"]');
+            const permissionCheckboxes = categoryElement.querySelectorAll('.permission-subcategories input[type="checkbox"]');
+            
+            const totalPermissions = permissionCheckboxes.length;
+            const checkedPermissions = Array.from(permissionCheckboxes).filter(cb => cb.checked).length;
+            
+            // Si todos están marcados, marcar el toggle de categoría
+            if (checkedPermissions === totalPermissions && totalPermissions > 0) {
+                categoryCheckbox.checked = true;
+                categoryToggle.classList.add('active');
+            }
+            // Si ninguno está marcado, desmarcar el toggle de categoría
+            else if (checkedPermissions === 0) {
+                categoryCheckbox.checked = false;
+                categoryToggle.classList.remove('active');
+            }
+            // Si algunos están marcados, mantener estado indeterminado
+            else {
+                categoryCheckbox.checked = false;
+                categoryToggle.classList.remove('active');
             }
         }
         
@@ -671,6 +685,12 @@
                 if (checkbox.checked) {
                     toggle.classList.add('active');
                 }
+            });
+            
+            // Inicializar el estado de los toggles de categoría
+            document.querySelectorAll('.permission-category').forEach(category => {
+                const categoryId = category.id.replace('category-', '');
+                updateCategoryToggle(categoryId);
             });
         });
     </script>

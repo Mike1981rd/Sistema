@@ -3,12 +3,12 @@
 
 /* Global styles */
 html {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
 
@@ -46,6 +46,27 @@ body {
 .bg-success { background-color: var(--aurora-success) !important; }
 .bg-warning { background-color: var(--aurora-warning) !important; }
 .bg-danger { background-color: var(--aurora-danger) !important; }
+
+/* Ajustes de tamaño de fuente específicos */
+.breadcrumb {
+  font-size: 0.8rem;
+}
+
+.h4, h4 {
+  font-size: 1.2rem;
+}
+
+.card-title {
+  font-size: 1rem;
+}
+
+.table {
+  font-size: 0.85rem;
+}
+
+.btn {
+  font-size: 0.85rem;
+}
 
 /* Ajustes tipográficos para Inter */
 h1, h2, h3, h4, h5, h6 {

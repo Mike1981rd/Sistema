@@ -13,14 +13,14 @@ namespace SistemaContable.Models
             ["Configuración"] = new Dictionary<string, string>
             {
                 ["configuracion.roles"] = "Roles",
+                ["configuracion.usuarios"] = "Usuarios",
                 ["configuracion.empresa"] = "Empresa",
                 ["configuracion.impuestos"] = "Impuestos",
                 ["configuracion.familias"] = "Familias",
                 ["configuracion.categorias"] = "Categorías",
                 ["configuracion.plazos_pago"] = "Plazos de Pago",
                 ["configuracion.retenciones"] = "Retenciones",
-                ["configuracion.comprobantes_fiscales"] = "Comprobantes Fiscales",
-                ["configuracion.usuarios"] = "Usuarios"
+                ["configuracion.comprobantes_fiscales"] = "Comprobantes Fiscales"
             },
             ["Ventas"] = new Dictionary<string, string>
             {

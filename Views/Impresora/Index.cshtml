@@ -292,6 +292,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
                 <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" id="impresoraId" name="id" />
                     <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
                 </form>

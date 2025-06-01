@@ -32,6 +32,7 @@ namespace SistemaContable.Models
 
         // Navegación
         public virtual Empresa? Empresa { get; set; }
+        public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
         
         // Fechas de auditoría
         [Required]

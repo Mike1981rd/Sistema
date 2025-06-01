@@ -81,10 +81,28 @@
                                     </td>
                                     <td>
                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn" style="background:#EC5800;color:#FFFFFF;">Editar</a>
-                                        <button type="button" class="btn @(item.Estado ? "btn-secondary" : "btn-primary")" 
-                                                onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', @item.Estado.ToString().ToLower())">
-                                            @(item.Estado ? "Desactivar" : "Activar")
-                                        </button>
+                                        @if (item.Estado)
+                                        {
+                                            <button type="button" class="btn btn-secondary" 
+                                                    onclick="if(confirm('¿Desactivar almacén @item.Nombre?')) { document.getElementById('formDesactivar_@item.Id').submit(); }">
+                                                Desactivar
+                                            </button>
+                                            <form id="formDesactivar_@item.Id" asp-action="ToggleEstado" method="post" style="display:none;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-primary" 
+                                                    onclick="if(confirm('¿Activar almacén @item.Nombre?')) { document.getElementById('formActivar_@item.Id').submit(); }">
+                                                Activar
+                                            </button>
+                                            <form id="formActivar_@item.Id" asp-action="ToggleEstado" method="post" style="display:none;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                            </form>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -106,27 +124,6 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para cambio de estado -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="mensajeConfirmacion"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
-                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
-                    <input type="hidden" id="almacenId" name="id" />
-                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <style>
@@ -162,14 +159,5 @@
                 ]
             });
         });
-
-        function confirmarCambioEstado(id, nombre, estado) {
-            document.getElementById('almacenId').value = id;
-            var accion = estado ? 'desactivar' : 'activar';
-            document.getElementById('mensajeConfirmacion').textContent = 
-                `¿Está seguro que desea ${accion} el almacén "${nombre}"?`;
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-            modal.show();
-        }
     </script>
 } 

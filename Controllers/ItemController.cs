@@ -40,15 +40,18 @@ namespace SistemaContable.Controllers
         // GET: Item
         [HttpGet]
         [Route("/inventario/servicios")]
-        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? categoriaId, int? proveedorId, int? almacenId, int? marcaId, int? pageNumber)
+        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? categoriaId, int? proveedorId, int? almacenId, int? marcaId, int? pageNumber, string tab)
         {
             var empresaId = _userService.GetEmpresaId();
+            
+            // Set the tab filter
+            ViewBag.Tab = tab;
 
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
-            ViewData["CodeSortParm"] = sortOrder == "Code" ? "code_desc" : "Code";
-            ViewData["CategorySortParm"] = sortOrder == "Category" ? "category_desc" : "Category";
-            ViewData["StockSortParm"] = sortOrder == "Stock" ? "stock_desc" : "Stock";
+            ViewData["NombreSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["CodigoSortParm"] = sortOrder == "codigo" ? "codigo_desc" : "codigo";
+            ViewData["CategoriaSortParm"] = sortOrder == "categoria" ? "categoria_desc" : "categoria";
+            ViewData["StockSortParm"] = sortOrder == "stock" ? "stock_desc" : "stock";
 
             if (searchString != null)
             {
@@ -122,25 +125,36 @@ namespace SistemaContable.Controllers
                 query = query.Where(i => i.MarcaId == marcaId.Value);
             }
 
+            // Filtrar por estado según el tab
+            if (tab == "Inactivos")
+            {
+                query = query.Where(i => !i.Estado);
+            }
+            else
+            {
+                // Por defecto mostrar solo activos
+                query = query.Where(i => i.Estado);
+            }
+
             // Aplicar ordenamiento
             switch (sortOrder)
             {
                 case "name_desc":
                     query = query.OrderByDescending(i => i.Nombre);
                     break;
-                case "Code":
+                case "codigo":
                     query = query.OrderBy(i => i.Codigo);
                     break;
-                case "code_desc":
+                case "codigo_desc":
                     query = query.OrderByDescending(i => i.Codigo);
                     break;
-                case "Category":
+                case "categoria":
                     query = query.OrderBy(i => i.Categoria.Nombre);
                     break;
-                case "category_desc":
+                case "categoria_desc":
                     query = query.OrderByDescending(i => i.Categoria.Nombre);
                     break;
-                case "Stock":
+                case "stock":
                     query = query.OrderBy(i => i.StockActual);
                     break;
                 case "stock_desc":
@@ -1727,6 +1741,44 @@ namespace SistemaContable.Controllers
                 .ToListAsync();
             
             return Json(contenedores);
+        }
+
+        // GET: Item/CambiarEstado/5
+        [HttpGet]
+        public async Task<IActionResult> CambiarEstado(int id)
+        {
+            var empresaId = _userService.GetEmpresaId();
+            var item = await _context.Items
+                .FirstOrDefaultAsync(m => m.Id == id && m.EmpresaId == empresaId);
+
+            if (item == null)
+            {
+                TempData["Error"] = "Item no encontrado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Cambiar el estado
+            item.Estado = !item.Estado;
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                
+                if (item.Estado)
+                {
+                    TempData["Success"] = $"Item {item.Nombre} activado correctamente.";
+                }
+                else
+                {
+                    TempData["Success"] = $"Item {item.Nombre} desactivado correctamente.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cambiar el estado del item.";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

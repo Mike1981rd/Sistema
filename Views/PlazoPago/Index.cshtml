@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Plazos de Pago";
+    var tab = Context.Request.Query["tab"].ToString();
+    var isInactivos = tab == "Inactivos";
 }
 
 @section Styles {
@@ -14,57 +16,41 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
         }
 
-        /* SOLUCIÓN RÁPIDA Y AGRESIVA PARA ICONOS */
-        .btn-group.no-gap {
-            display: inline-block !important;
-            font-size: 0 !important;
-            line-height: 0 !important;
-            letter-spacing: -1px !important;
+        /* Botones de acción sin fondo */
+        .btn-group {
+            display: inline-flex !important;
+            justify-content: center !important;
+            gap: 0 !important;
         }
 
-        .btn-group.no-gap .btn {
-            display: inline-block !important;
-            padding: 4px 6px !important;
+        .btn-group .btn {
+            padding: 0.25rem 0.5rem !important;
             margin: 0 !important;
-            border: none !important;
-            background: none !important;
-            font-size: 14px !important;
-            line-height: 1 !important;
-            vertical-align: top !important;
-        }
-
-        .btn-group.no-gap .btn + .btn {
-            margin-left: -5px !important;
+            border: none;
+            background: transparent;
+            transition: transform 0.2s, color 0.2s;
         }
         
-        /* FUERZA BRUTA: Eliminar TODOS los espacios */
-        .btn-group.no-gap * {
-            margin: 0 !important;
-            padding: 2px 4px !important;
-            border: 0 !important;
+        /* Forzar que no haya espacio entre botones */
+        .btn-group > .btn:not(:first-child) {
+            margin-left: -1px !important;
         }
 
         .btn-group .btn:hover {
             transform: scale(1.2);
         }
 
-        /* Colores específicos de hover */
-        .btn-group .text-primary:hover {
-            color: #0062ff !important;
-        }
-
-        .btn-group .text-danger:hover {
-            color: #dc3545 !important;
-        }
-
-        .btn-group .text-success:hover {
-            color: #218838 !important;
-        }
-
         /* Hover en filas */
         .table-hover tbody tr:hover {
             background-color: rgba(0, 123, 255, 0.05);
             cursor: pointer;
+        }
+
+        /* Quitar borde del card-header */
+        .card-header {
+            border-bottom: none !important;
+            background-color: transparent !important;
+            padding-bottom: 0 !important;
         }
 
         /* Pestañas activas */
@@ -78,14 +64,7 @@
             margin-bottom: -1px;
         }
 
-        /* Fondo principal */
-        .aurora-main {
-            background-color: #f5f7fa;
-            min-height: calc(100vh - 60px);
-            padding: 20px;
-        }
-
-        /* Estilo para el botón de exportar */
+        /* Botón de exportar */
         .dropdown-toggle::after {
             display: inline-block;
             margin-left: 0.5em;
@@ -108,6 +87,22 @@
             border-color: #dde0e6;
         }
 
+        /* DataTables */
+        .dataTables_length {
+            width: 100%;
+            margin-bottom: 15px;
+            padding-left: 0;
+        }
+
+        .dataTables_length select {
+            min-width: 60px;
+        }
+
+        div.dataTables_wrapper div.dataTables_length {
+            float: left;
+            padding-top: 0.5em;
+        }
+        
         /* Fix para el selector de registros */
         .dataTables_length label {
             display: flex !important;
@@ -120,6 +115,33 @@
             width: auto !important;
             padding-right: 30px !important;
         }
+
+        /* Fix espaciado de iconos - solución agresiva */
+        .btn-group.no-gap {
+            display: inline-block !important;
+            font-size: 0 !important;
+        }
+        .btn-group.no-gap .btn {
+            font-size: 14px !important;
+            display: inline-block !important;
+            margin: 0 !important;
+            padding: 4px 8px !important;
+            border: none !important;
+        }
+        .btn-group.no-gap .btn + .btn {
+            margin-left: -5px !important;
+        }
+
+        /* Responsive para móvil */
+        @@media (max-width: 768px) {
+            .table-responsive table {
+                font-size: 0.875rem;
+            }
+            
+            .btn-group .btn {
+                padding: 0.2rem 0.4rem !important;
+            }
+        }
     </style>
 }
 
@@ -128,10 +150,13 @@
     <div class="row mb-4">
         <div class="col-12">
             <h1 class="h4">Plazos de Pago</h1>
-            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block">
                 <ol class="breadcrumb pt-0">
                     <li class="breadcrumb-item">
                         <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Configuracion" asp-action="Index">Configuración</a>
                     </li>
                     <li class="breadcrumb-item active">Plazos de Pago</li>
                 </ol>
@@ -144,20 +169,20 @@
         <div class="card-header">
             <ul class="nav border-0">
                 <li class="nav-item">
-                    <a class="nav-link @(ViewBag.Tab == "Activos" || ViewBag.Tab == null ? "active" : "") border-0 position-relative" 
+                    <a class="nav-link @(!isInactivos ? "active" : "")" 
                        asp-action="Index" asp-route-tab="Activos">
                         Activos
-                        @if (ViewBag.Tab == "Activos" || ViewBag.Tab == null)
+                        @if (!isInactivos)
                         {
                             <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
                         }
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "") border-0 position-relative" 
+                    <a class="nav-link @(isInactivos ? "active" : "")" 
                        asp-action="Index" asp-route-tab="Inactivos">
                         Inactivos
-                        @if (ViewBag.Tab == "Inactivos")
+                        @if (isInactivos)
                         {
                             <span class="position-absolute" style="bottom: 0; left: 0; right: 0; height: 2px; background-color: #007bff;"></span>
                         }
@@ -175,7 +200,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
-
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -193,7 +217,7 @@
             <!-- Dropdown Exportar -->
             <div class="dropdown d-inline-block me-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                        data-bs-toggle="dropdown">
                     <i class="fas fa-file-export me-1"></i> Exportar
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -210,7 +234,7 @@
             </div>
             <!-- Botón Nuevo -->
             <a asp-action="Create" class="btn btn-primary btn-sm px-3">
-                <i class="fas fa-plus me-1"></i> Nuevo plazo
+                <i class="fas fa-plus me-1"></i> Nuevo Plazo
             </a>
         </div>
     </div>
@@ -233,18 +257,17 @@
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
-                                <td>@Html.DisplayFor(modelItem => item.Dias) días</td>
-                                <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
+                                <td>@item.Nombre</td>
+                                <td>@item.Dias</td>
+                                <td>@(string.IsNullOrEmpty(item.Descripcion) ? "-" : item.Descripcion)</td>
                                 <td>
-                                    @if(item.Estado) {
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check"></i> Activo
-                                        </span>
-                                    } else {
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-times"></i> Inactivo
-                                        </span>
+                                    @if (item.Estado)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactivo</span>
                                     }
                                 </td>
                                 <td class="text-center">
@@ -254,19 +277,23 @@
                                         </a>
                                         @if (item.Estado)
                                         {
-                                            <button type="button" class="btn btn-sm text-danger p-0 m-0 border-0" 
-                                                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" 
-                                                    title="Desactivar">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
+                                            <form method="post" asp-action="ToggleEstado" style="display:inline;" onsubmit="return confirm('¿Desactivar plazo de pago @item.Nombre?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm text-danger p-0 m-0 border-0" title="Desactivar">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            </form>
                                         }
                                         else
                                         {
-                                            <button type="button" class="btn btn-sm text-success p-0 m-0 border-0" 
-                                                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" 
-                                                    title="Activar">
-                                                <i class="fas fa-check-circle"></i>
-                                            </button>
+                                            <form method="post" asp-action="ToggleEstado" style="display:inline;" onsubmit="return confirm('¿Activar plazo de pago @item.Nombre?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm text-success p-0 m-0 border-0" title="Activar">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
+                                            </form>
                                         }
                                     </div>
                                 </td>
@@ -274,30 +301,6 @@
                         }
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de confirmación estándar -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="mensajeConfirmacion"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" data-bs-dismiss="modal" 
-                        style="background:#787276;color:#FFFFFF;">Cancelar</button>
-                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
-                    <input type="hidden" id="plazoId" name="id" />
-                    <button type="submit" class="btn" 
-                            style="background:#007848;color:#FFFFFF;">Confirmar</button>
-                </form>
             </div>
         </div>
     </div>
@@ -373,14 +376,5 @@
                 $('#plazosTable').DataTable().button(2).trigger();
             });
         });
-
-        function confirmarCambioEstado(id, nombre, estaActivo) {
-            document.getElementById('plazoId').value = id;
-            var accion = estaActivo ? 'desactivar' : 'activar';
-            document.getElementById('mensajeConfirmacion').textContent = 
-                `¿Está seguro que desea ${accion} el plazo de pago "${nombre}"?`;
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-            modal.show();
-        }
     </script>
 }

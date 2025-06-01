@@ -230,13 +230,13 @@
                                         </button>
                                         @if (item.Activo)
                                         {
-                                            <button class="btn btn-sm text-danger" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
+                                            <button class="btn btn-sm text-danger" onclick="toggleEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
                                                 <i class="fas fa-ban"></i>
                                             </button>
                                         }
                                         else
                                         {
-                                            <button class="btn btn-sm text-success" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" title="Activar">
+                                            <button class="btn btn-sm text-success" onclick="toggleEstado(@item.Id, '@item.Nombre', false)" title="Activar">
                                                 <i class="fas fa-check-circle"></i>
                                             </button>
                                         }
@@ -251,27 +251,11 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para cambio de estado -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="mensajeConfirmacion"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
-                <form asp-controller="configuracion" asp-action="comprobantes-fiscales-toggle-estado" method="post" id="formToggleEstado">
-                    <input type="hidden" id="comprobanteId" name="id" />
-                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Form oculto para toggle estado -->
+<form id="toggleForm" action="/configuracion/comprobantes-fiscales/toggle-estado" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="toggleId" />
+</form>
 
 @section Scripts {
     <script>
@@ -325,13 +309,16 @@
             });
         });
 
-        function confirmarCambioEstado(id, nombre, estaActivo) {
-            document.getElementById('comprobanteId').value = id;
-            var accion = estaActivo ? 'desactivar' : 'activar';
-            document.getElementById('mensajeConfirmacion').textContent = 
-                `¿Está seguro que desea ${accion} el comprobante fiscal "${nombre}"?`;
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-            modal.show();
+        // Función ultra simple para toggle estado
+        function toggleEstado(id, nombre, activo) {
+            const accion = activo ? 'desactivar' : 'activar';
+            
+            if (confirm(`¿Está seguro que desea ${accion} el comprobante fiscal ${nombre}?`)) {
+                const form = document.getElementById('toggleForm');
+                form.action = `/configuracion/comprobantes-fiscales/toggle-estado/${id}`;
+                document.getElementById('toggleId').value = id;
+                form.submit();
+            }
         }
     </script>
 } 

@@ -34,12 +34,22 @@ namespace SistemaContable.Controllers
             }
 
             var roles = await _context.Roles
+                .Include(r => r.Usuarios)
                 .Where(r => r.EmpresaId == empresaId && r.Activo)
                 .OrderBy(r => r.Prioridad)
                 .ThenBy(r => r.Nombre)
                 .ToListAsync();
 
             ViewBag.RolesDestacados = roles.Take(4).ToList();
+            
+            // Obtener todos los usuarios activos de la empresa
+            var todosLosUsuarios = await _context.Usuarios
+                .Include(u => u.Rol)
+                .Where(u => u.EmpresaId == empresaId && u.Activo)
+                .OrderBy(u => u.NombreCompleto)
+                .ToListAsync();
+                
+            ViewBag.TodosLosUsuarios = todosLosUsuarios;
             
             return View(roles);
         }

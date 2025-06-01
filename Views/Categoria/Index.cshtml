@@ -120,44 +120,42 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para cambio de estado -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="mensajeConfirmacion"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" data-bs-dismiss="modal" style="background:#787276;color:#FFFFFF;">Cancelar</button>
-                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
-                    <input type="hidden" id="categoriaId" name="id" />
-                    <button type="submit" class="btn" style="background:#007848;color:#FFFFFF;">Confirmar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
             $('#categoriasTable').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                    "processing": "Procesando...",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "zeroRecords": "No se encontraron resultados",
+                    "emptyTable": "No hay datos disponibles en la tabla",
+                    "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "search": "Buscar:",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
                 },
-                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                dom: '<"d-flex justify-content-between align-items-center mb-3"<"dataTables_length"l><"dataTables_filter"f>>' +
+                     '<"table-responsive"t>' +
+                     '<"d-flex justify-content-between align-items-center mt-3"<"dataTables_info"i><"dataTables_paginate"p>>',
+                pageLength: 25,
+                responsive: true,
                 columnDefs: [
                     { 
-                        targets: -1, // Última columna (Acciones)
+                        targets: -1,
                         width: "80px",
                         orderable: false,
-                        className: 'action-column'
+                        className: 'action-column text-center'
                     }
                 ],
                 buttons: [
@@ -202,13 +200,42 @@
             });
         });
 
-        function confirmarCambioEstado(id, nombre, estado) {
-            document.getElementById('categoriaId').value = id;
-            var accion = estado ? 'desactivar' : 'activar';
-            document.getElementById('mensajeConfirmacion').textContent = 
-                `¿Está seguro que desea ${accion} la categoría "${nombre}"?`;
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-            modal.show();
+        // Función ultra simple para toggle - sin modal, solo confirm nativo
+        function confirmarCambioEstado(id, nombre, estaActivo) {
+            const accion = estaActivo === true ? 'desactivar' : 'activar';
+            const mensaje = estaActivo === true ? 
+                `¿Desactivar categoría ${nombre}?` : 
+                `¿Activar categoría ${nombre}?`;
+            
+            // Usar confirm nativo del navegador
+            if (confirm(mensaje)) {
+                // Crear form dinámico y enviar
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("ToggleEstado", "Categoria")';
+                
+                // Agregar el ID
+                const inputId = document.createElement('input');
+                inputId.type = 'hidden';
+                inputId.name = 'id';
+                inputId.value = id;
+                form.appendChild(inputId);
+                
+                // Agregar el token antiforgery
+                const token = document.querySelector('input[name="__RequestVerificationToken"]') || 
+                            document.querySelector('meta[name="csrf-token"]');
+                if (token) {
+                    const inputToken = document.createElement('input');
+                    inputToken.type = 'hidden';
+                    inputToken.name = '__RequestVerificationToken';
+                    inputToken.value = token.value || token.getAttribute('content');
+                    form.appendChild(inputToken);
+                }
+                
+                // Agregar al body y enviar
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
     </script>
 }
@@ -249,11 +276,32 @@
             border-color: #dde0e6;
         }
 
-        /* Asegurar que la flecha no tape el número en el selector */
+        /* FIX CRÍTICO PARA DATATABLES - NO MODIFICAR */
+        .dataTables_length label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            font-weight: normal !important;
+            margin-bottom: 0 !important;
+        }
+
         .dataTables_length select {
-            min-width: 60px;
-            text-align: center;
-            padding-right: 25px !important;
+            min-width: 60px !important;
+            width: auto !important;
+            display: inline-block !important;
+        }
+
+        .dataTables_filter label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            font-weight: normal !important;
+            margin-bottom: 0 !important;
+        }
+
+        .dataTables_filter input {
+            width: auto !important;
+            display: inline-block !important;
         }
 
         /* ESTILOS FORZADOS - NO MODIFICAR */

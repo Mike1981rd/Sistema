@@ -47,13 +47,7 @@
 
         /* Pestañas activas */
         .nav-link.active {
-            border-bottom: 2px solid #007bff !important;
             font-weight: 500;
-        }
-
-        .nav-link {
-            padding-bottom: 10px;
-            margin-bottom: -1px;
         }
 
         /* Botón de exportar */
@@ -171,7 +165,7 @@
         <div class="card-header">
             <ul class="nav border-0">
                 <li class="nav-item">
-                    <a class="nav-link @(ViewBag.Tab == "Activos" || ViewBag.Tab == null ? "active" : "")" 
+                    <a class="nav-link @(ViewBag.Tab == "Activos" || ViewBag.Tab == null ? "active" : "") border-0 position-relative" 
                        asp-action="Index" asp-route-tab="Activos">
                         Activos
                         @if (ViewBag.Tab == "Activos" || ViewBag.Tab == null)
@@ -181,7 +175,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "")" 
+                    <a class="nav-link @(ViewBag.Tab == "Inactivos" ? "active" : "") border-0 position-relative" 
                        asp-action="Index" asp-route-tab="Inactivos">
                         Inactivos
                         @if (ViewBag.Tab == "Inactivos")

@@ -2,7 +2,7 @@
   --aurora-primary: #020710;
   --aurora-secondary: #0a2463;
   --aurora-accent: #3e92cc;
-  --aurora-light: #d8e1e9;
+  --aurora-light: #FFFFFF;
   --aurora-success: #2ecc71;
   --aurora-warning: #f39c12;
   --aurora-danger: #e74c3c;
@@ -13,6 +13,19 @@
   --aurora-gray-900: #212529;
   --sidebar-width: 260px;
   --header-height: 60px;
+}
+
+/* Optimización global de fuentes para mejor nitidez */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Estructura principal */
@@ -37,6 +50,14 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  font-family: 'Poppins', sans-serif;
+  /* Optimización para renderizado de fuentes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "kern" 1;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .aurora-sidebar::-webkit-scrollbar {
@@ -91,6 +112,7 @@
   text-decoration: none;
   transition: all 0.2s;
   border-left: 3px solid transparent;
+  font-size: 0.97rem;
 }
 
 .aurora-nav-item:hover {
@@ -381,7 +403,7 @@
   color: var(--aurora-light);
   text-decoration: none;
   transition: all 0.2s;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   margin-bottom: 2px;
 }
 

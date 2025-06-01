@@ -72,6 +72,13 @@
             cursor: pointer;
         }
 
+        /* Quitar borde del card-header */
+        .card-header {
+            border-bottom: none !important;
+            background-color: transparent !important;
+            padding-bottom: 0 !important;
+        }
+
         /* Pestañas activas */
         .nav-link.active {
             border-bottom: 2px solid #007bff !important;
@@ -277,19 +284,23 @@
                                         </a>
                                         @if (item.Estado)
                                         {
-                                            <button type="button" class="btn btn-sm text-danger p-0 m-0 border-0" 
-                                                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" 
-                                                    title="Desactivar">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
+                                            <form method="post" asp-action="ToggleEstado" style="display:inline;" onsubmit="return confirm('¿Desactivar impuesto @item.Nombre?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm text-danger p-0 m-0 border-0" title="Desactivar">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            </form>
                                         }
                                         else
                                         {
-                                            <button type="button" class="btn btn-sm text-success p-0 m-0 border-0" 
-                                                    onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" 
-                                                    title="Activar">
-                                                <i class="fas fa-check-circle"></i>
-                                            </button>
+                                            <form method="post" asp-action="ToggleEstado" style="display:inline;" onsubmit="return confirm('¿Activar impuesto @item.Nombre?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm text-success p-0 m-0 border-0" title="Activar">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
+                                            </form>
                                         }
                                     </div>
                                 </td>
@@ -302,29 +313,6 @@
     </div>
 </div>
 
-<!-- Modal de confirmación estándar -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="mensajeConfirmacion"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" data-bs-dismiss="modal" 
-                        style="background:#787276;color:#FFFFFF;">Cancelar</button>
-                <form asp-action="ToggleEstado" method="post" id="formToggleEstado">
-                    <input type="hidden" id="impuestoId" name="id" />
-                    <button type="submit" class="btn" 
-                            style="background:#007848;color:#FFFFFF;">Confirmar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
@@ -396,14 +384,5 @@
                 $('#impuestosTable').DataTable().button(2).trigger();
             });
         });
-
-        function confirmarCambioEstado(id, nombre, estaActivo) {
-            document.getElementById('impuestoId').value = id;
-            var accion = estaActivo ? 'desactivar' : 'activar';
-            document.getElementById('mensajeConfirmacion').textContent = 
-                `¿Está seguro que desea ${accion} el impuesto "${nombre}"?`;
-            var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-            modal.show();
-        }
     </script>
 }

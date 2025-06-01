@@ -101,6 +101,9 @@ namespace SistemaContable.Data
         
         // Roles y permisos
         public DbSet<Rol> Roles { get; set; }
+        
+        // Usuarios
+        public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -1019,6 +1022,45 @@ namespace SistemaContable.Data
                       .WithMany()
                       .HasForeignKey(e => e.EmpresaId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para Usuario
+            builder.Entity<Usuario>(entity =>
+            {
+                entity.ToTable("Usuarios");
+                entity.HasKey(e => e.Id);
+                
+                // Propiedades requeridas
+                entity.Property(e => e.NombreCompleto).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.NombreUsuario).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(256); // Requerido en BD pero no en modelo
+                entity.Property(e => e.EmpresaId).IsRequired();
+                entity.Property(e => e.FechaCreacion).IsRequired();
+                entity.Property(e => e.Activo).HasDefaultValue(true);
+                
+                // Propiedades opcionales
+                entity.Property(e => e.PinPOS).HasMaxLength(4);
+                entity.Property(e => e.Telefono).HasMaxLength(50);
+                entity.Property(e => e.Email).HasMaxLength(100);
+                entity.Property(e => e.Direccion).HasMaxLength(200);
+                entity.Property(e => e.Ciudad).HasMaxLength(100);
+                entity.Property(e => e.EstadoProvincia).HasMaxLength(100);
+                entity.Property(e => e.CodigoPostal).HasMaxLength(20);
+                entity.Property(e => e.FotoUrl).HasMaxLength(500);
+                
+                // Índice único por empresa
+                entity.HasIndex(e => new { e.NombreUsuario, e.EmpresaId }).IsUnique();
+                
+                // Relaciones
+                entity.HasOne(u => u.Empresa)
+                    .WithMany()
+                    .HasForeignKey(u => u.EmpresaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(u => u.Rol)
+                    .WithMany(r => r.Usuarios)
+                    .HasForeignKey(u => u.RolId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

@@ -19,7 +19,10 @@
       "Bash(mv:*)",
       "Bash(dotnet build)",
       "Bash(dotnet ef database:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(dotnet restore)",
+      "Bash(chmod:*)",
+      "Bash(true)"
     ],
     "deny": []
   },

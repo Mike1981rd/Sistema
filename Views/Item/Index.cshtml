@@ -262,13 +262,13 @@
                                         </a>
                                         @if (item.Estado)
                                         {
-                                            <button class="btn btn-sm text-danger" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
+                                            <button class="btn btn-sm text-danger" onclick="confirmarDesactivar(@item.Id, '@item.Nombre')" title="Desactivar">
                                                 <i class="fas fa-ban"></i>
                                             </button>
                                         }
                                         else
                                         {
-                                            <button class="btn btn-sm text-success" onclick="confirmarCambioEstado(@item.Id, '@item.Nombre', false)" title="Activar">
+                                            <button class="btn btn-sm text-success" onclick="confirmarActivar(@item.Id, '@item.Nombre')" title="Activar">
                                                 <i class="fas fa-check-circle"></i>
                                             </button>
                                         }
@@ -323,25 +323,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        function confirmarCambioEstado(id, nombre, esActivo) {
-            const accion = esActivo ? 'desactivar' : 'activar';
-            const titulo = `¿${esActivo ? 'Desactivar' : 'Activar'} item?`;
-            const texto = `¿Está seguro que desea ${accion} el item ${nombre}?`;
-            
-            Swal.fire({
-                title: titulo,
-                text: texto,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, continuar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/Item/CambiarEstado/${id}`;
-                }
-            });
+        // Función ultra simple para activar
+        function confirmarActivar(id, nombre) {
+            if (confirm(`¿Activar item ${nombre}?`)) {
+                window.location.href = `/Item/CambiarEstado/${id}`;
+            }
+        }
+
+        // Función ultra simple para desactivar
+        function confirmarDesactivar(id, nombre) {
+            if (confirm(`¿Desactivar item ${nombre}?`)) {
+                window.location.href = `/Item/CambiarEstado/${id}`;
+            }
         }
         
         function imprimirCodigoBarras(id) {
