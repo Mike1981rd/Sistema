@@ -79,21 +79,51 @@
 
         .logo-container {
             text-align: center;
-            margin-bottom: 1.2rem;
+            margin-bottom: 2rem;
+            padding: 0.5rem;
         }
 
         .logo {
-            max-height: 48px;
+            max-height: 90px;
+            max-width: 200px;
             width: auto;
-            margin-bottom: 0.6rem;
+            height: auto;
+            margin-bottom: 1rem;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+            transition: all 0.3s ease;
+            object-fit: contain;
+            opacity: 1;
         }
 
-        .logo-text {
-            color: var(--aurora-primary);
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin: 0;
-            letter-spacing: -0.3px;
+        .logo:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+        }
+
+
+        /* Fallback si el logo no carga */
+        .logo-fallback {
+            display: none;
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--aurora-accent), var(--aurora-secondary));
+            border-radius: 20px;
+            margin: 0 auto 1rem;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(62, 146, 204, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .logo-fallback:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(62, 146, 204, 0.4);
         }
 
         .form-group {
@@ -317,8 +347,10 @@
     <div class="login-container">
         <div class="login-card">
             <div class="logo-container">
-                <img src="~/images/logo.png" alt="Aurora Logo" class="logo" />
-                <h1 class="logo-text">Sistema Contable Aurora</h1>
+                <img src="~/images/logo.png" alt="Aurora Logo" class="logo" id="mainLogo" />
+                <div class="logo-fallback" id="logoFallback">
+                    <i class="fas fa-chart-line"></i>
+                </div>
             </div>
 
             <form id="loginForm" asp-controller="Auth" asp-action="Login" method="post">
@@ -379,6 +411,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Manejo del logo y fallback - versión simplificada
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainLogo = document.getElementById('mainLogo');
+            const logoFallback = document.getElementById('logoFallback');
+            
+            // Si el logo no carga, mostrar fallback
+            mainLogo.onerror = function() {
+                console.log('Logo no pudo cargar, mostrando fallback');
+                mainLogo.style.display = 'none';
+                logoFallback.style.display = 'flex';
+            };
+            
+            // El logo se muestra inmediatamente, sin efectos de carga
+            console.log('Logo inicializado correctamente');
+        });
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             const btn = document.getElementById('loginBtn');
             btn.classList.add('loading');
