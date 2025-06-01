@@ -37,6 +37,7 @@ builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Registro de repositorios para Cuenta Contable y Contacto
 builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
@@ -81,10 +82,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
-
-// Usar sesión
+// Usar sesión ANTES de Authorization
 app.UseSession();
+
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "catalogoCuentas",

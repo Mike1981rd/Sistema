@@ -1,3 +1,5 @@
+@inject SistemaContable.Services.IAuthService AuthService
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -261,17 +263,56 @@
                     <div class="aurora-header-icon">
                         <i class="fas fa-question-circle"></i>
                     </div>
+                    @{
+                        var currentUser = AuthService.GetCurrentUser();
+                    }
                     <div class="dropdown">
-                        <div class="aurora-header-icon" data-bs-toggle="dropdown">
-                            <div class="aurora-user-avatar">
-                                A
+                        <div class="aurora-header-icon" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="aurora-user-avatar" title="@(currentUser?.NombreCompleto ?? "Usuario")">
+                                @if (currentUser != null && !string.IsNullOrEmpty(currentUser.FotoUrl))
+                                {
+                                    <img src="~/uploads/usuarios/@currentUser.FotoUrl" alt="@currentUser.NombreCompleto" />
+                                }
+                                else
+                                {
+                                    @(currentUser?.NombreCompleto?.Substring(0, 1).ToUpper() ?? "U")
+                                }
                             </div>
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/perfil"><i class="fas fa-user me-2"></i> Perfil</a></li>
+                            @if (currentUser != null)
+                            {
+                                <li class="dropdown-header">
+                                    <div class="d-flex align-items-center">
+                                        <div class="aurora-user-avatar-large me-2">
+                                            @if (!string.IsNullOrEmpty(currentUser.FotoUrl))
+                                            {
+                                                <img src="~/uploads/usuarios/@currentUser.FotoUrl" alt="@currentUser.NombreCompleto" />
+                                            }
+                                            else
+                                            {
+                                                @currentUser.NombreCompleto.Substring(0, 1).ToUpper()
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">@currentUser.NombreCompleto</div>
+                                            <small class="text-muted">@currentUser.Email</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                            }
+                            <li><a class="dropdown-item" href="/Usuarios/Edit/@(currentUser?.Id)"><i class="fas fa-user me-2"></i> Mi Perfil</a></li>
                             <li><a class="dropdown-item" href="/configuracion"><i class="fas fa-cog me-2"></i> Configuración</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+                            <li>
+                                <form method="post" action="/Auth/Logout" style="display: inline-block; width: 100%;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </div>
                 </div>
