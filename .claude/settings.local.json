@@ -22,7 +22,8 @@
       "Bash(rg:*)",
       "Bash(dotnet restore)",
       "Bash(chmod:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(dotnet build:*)"
     ],
     "deny": []
   },

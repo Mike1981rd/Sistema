@@ -1,4 +1,5 @@
 @inject SistemaContable.Services.IAuthService AuthService
+@inject SistemaContable.Services.IPermisosService PermisosService
 
 <!DOCTYPE html>
 <html lang="es">
@@ -62,97 +63,169 @@
                 <img src="~/images/logo.png" alt="Aurora" class="aurora-logo aurora-logo-large" />
             </div>
             <nav class="aurora-nav">
-                <a href="/" class="aurora-nav-item active" data-title="Dashboard">
-                    <span class="aurora-nav-icon"><i class="fas fa-home"></i></span>
-                    <span>Dashboard</span>
-                </a>
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Configuración">
-                    <span class="aurora-nav-icon"><i class="fas fa-cogs"></i></span>
-                    <span>Configuración</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/configuracion/roles" class="aurora-submenu-item" data-title="Roles">
-                        <i class="fas fa-user-shield me-2"></i>Roles
-                    </a>
-                    <a href="/Usuarios" class="aurora-submenu-item" data-title="Usuarios">
-                        <i class="fas fa-user-cog me-2"></i>Usuarios
-                    </a>
-                    <a href="/Empresas/Configurar" class="aurora-submenu-item" data-title="Empresa">
-                        <i class="fas fa-building me-2"></i>Empresa
-                    </a>
-                    <a href="/Impuestos" class="aurora-submenu-item" data-title="Impuestos">
-                        <i class="fas fa-percentage me-2"></i>Impuestos
-                    </a>
-                    <a href="/Familia" class="aurora-submenu-item" data-title="Familias">
-                        <i class="fas fa-users me-2"></i>Familias
-                    </a>
-                    <a href="/Categoria" class="aurora-submenu-item" data-title="Categorías">
-                        <i class="fas fa-tags me-2"></i>Categorías
-                    </a>
-                    <a href="/PlazoPago" class="aurora-submenu-item" data-title="Plazos de Pago">
-                        <i class="fas fa-clock me-2"></i>Plazos de Pago
-                    </a>
-                    <a href="/configuracion/retenciones" class="aurora-submenu-item" data-title="Retenciones">
-                        <i class="fas fa-hand-holding-usd me-2"></i>Retenciones
-                    </a>
-                    <a href="/configuracion/comprobantes-fiscales" class="aurora-submenu-item" data-title="Comprobantes Fiscales">
-                        <i class="fas fa-file-invoice me-2"></i>Comprobantes Fiscales
-                    </a>
-                </div>
+                @{
+                    var usuarioActual = AuthService.GetCurrentUser();
+                    var usuarioId = usuarioActual?.Id ?? 0;
+                    
+                    // Verificar permisos para cada sección del menú
+                    var puedeVerDashboard = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "dashboard") : false;
+                    var puedeVerConfiguracion = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "configuracion") : false;
+                    var puedeVerVentas = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "ventas") : false;
+                    var puedeVerCompras = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "compras") : false;
+                    var puedeVerInventario = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "inventario") : false;
+                    var puedeVerPOS = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "pos") : false;
+                    var puedeVerBancos = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "bancos") : false;
+                    var puedeVerContabilidad = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "contabilidad") : false;
+                    var puedeVerReportes = usuarioId > 0 ? await PermisosService.PuedeVerMenuAsync(usuarioId, "reportes") : false;
+                    
+                    // Permisos específicos de configuración
+                    var puedeVerRoles = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.roles") : false;
+                    var puedeVerUsuarios = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.usuarios") : false;
+                    var puedeVerEmpresa = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.empresa") : false;
+                    var puedeVerImpuestos = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.impuestos") : false;
+                    var puedeVerFamilias = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.familias") : false;
+                    var puedeVerCategorias = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.categorias") : false;
+                    var puedeVerPlazos = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.plazos_pago") : false;
+                    var puedeVerRetenciones = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.retenciones") : false;
+                    var puedeVerComprobantes = usuarioId > 0 ? await PermisosService.TienePermisoAsync(usuarioId, "configuracion.comprobantes_fiscales") : false;
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Ventas">
-                    <span class="aurora-nav-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                    <span>Ventas</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/ventas/facturas" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
-                    <a href="/ventas/clientes" class="aurora-submenu-item" data-title="Clientes">Clientes</a>
-                    <a href="/ventas/cotizaciones" class="aurora-submenu-item" data-title="Cotizaciones">Cotizaciones</a>
-                    <a href="/ventas/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
-                </div>
+                @if (puedeVerDashboard || usuarioId == 0)
+                {
+                    <a href="/" class="aurora-nav-item active" data-title="Dashboard">
+                        <span class="aurora-nav-icon"><i class="fas fa-home"></i></span>
+                        <span>Dashboard</span>
+                    </a>
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Compras">
-                    <span class="aurora-nav-icon"><i class="fas fa-shopping-cart"></i></span>
-                    <span>Compras</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/Compras" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
-                    <a href="/compras/proveedores" class="aurora-submenu-item" data-title="Proveedores">Proveedores</a>
-                    <a href="/compras/gastos" class="aurora-submenu-item" data-title="Gastos">Gastos</a>
-                    <a href="/compras/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
-                </div>
+                @if (puedeVerConfiguracion || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Configuración">
+                        <span class="aurora-nav-icon"><i class="fas fa-cogs"></i></span>
+                        <span>Configuración</span>
+                    </a>
+                    <div class="aurora-submenu">
+                        @if (puedeVerRoles || usuarioId == 0)
+                        {
+                            <a href="/configuracion/roles" class="aurora-submenu-item" data-title="Roles">
+                                <i class="fas fa-user-shield me-2"></i>Roles
+                            </a>
+                        }
+                        @if (puedeVerUsuarios || usuarioId == 0)
+                        {
+                            <a href="/Usuarios" class="aurora-submenu-item" data-title="Usuarios">
+                                <i class="fas fa-user-cog me-2"></i>Usuarios
+                            </a>
+                        }
+                        @if (puedeVerEmpresa || usuarioId == 0)
+                        {
+                            <a href="/Empresas/Configurar" class="aurora-submenu-item" data-title="Empresa">
+                                <i class="fas fa-building me-2"></i>Empresa
+                            </a>
+                        }
+                        @if (puedeVerImpuestos || usuarioId == 0)
+                        {
+                            <a href="/Impuestos" class="aurora-submenu-item" data-title="Impuestos">
+                                <i class="fas fa-percentage me-2"></i>Impuestos
+                            </a>
+                        }
+                        @if (puedeVerFamilias || usuarioId == 0)
+                        {
+                            <a href="/Familia" class="aurora-submenu-item" data-title="Familias">
+                                <i class="fas fa-users me-2"></i>Familias
+                            </a>
+                        }
+                        @if (puedeVerCategorias || usuarioId == 0)
+                        {
+                            <a href="/Categoria" class="aurora-submenu-item" data-title="Categorías">
+                                <i class="fas fa-tags me-2"></i>Categorías
+                            </a>
+                        }
+                        @if (puedeVerPlazos || usuarioId == 0)
+                        {
+                            <a href="/PlazoPago" class="aurora-submenu-item" data-title="Plazos de Pago">
+                                <i class="fas fa-clock me-2"></i>Plazos de Pago
+                            </a>
+                        }
+                        @if (puedeVerRetenciones || usuarioId == 0)
+                        {
+                            <a href="/configuracion/retenciones" class="aurora-submenu-item" data-title="Retenciones">
+                                <i class="fas fa-hand-holding-usd me-2"></i>Retenciones
+                            </a>
+                        }
+                        @if (puedeVerComprobantes || usuarioId == 0)
+                        {
+                            <a href="/configuracion/comprobantes-fiscales" class="aurora-submenu-item" data-title="Comprobantes Fiscales">
+                                <i class="fas fa-file-invoice me-2"></i>Comprobantes Fiscales
+                            </a>
+                        }
+                    </div>
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Inventario">
-                    <span class="aurora-nav-icon"><i class="fas fa-boxes"></i></span>
-                    <span>Inventario</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/Almacen" class="aurora-submenu-item" data-title="Almacenes">
-                        <i class="fas fa-warehouse me-2"></i>Almacenes
+                @if (puedeVerVentas || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Ventas">
+                        <span class="aurora-nav-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                        <span>Ventas</span>
                     </a>
-                    <!-- Ocultando Impresoras, Categorías y Ajustes
-                    <a href="/Impresora/Index" class="aurora-submenu-item" data-title="Impresoras">
-                        <i class="fas fa-print me-2"></i>Impresoras
-                    </a>
-                    -->
-                    <a href="/inventario/servicios" class="aurora-submenu-item" data-title="Items">
-                        <i class="fas fa-box me-2"></i>Items
-                    </a>
-                    <!-- 
-                    <a href="/inventario/categorias" class="aurora-submenu-item" data-title="Categorías">
-                        <i class="fas fa-tags me-2"></i>Categorías
-                    </a>
-                    <a href="/inventario/ajustes" class="aurora-submenu-item" data-title="Ajustes">
-                        <i class="fas fa-sliders-h me-2"></i>Ajustes
-                    </a>
-                    -->
-                </div>
+                    <div class="aurora-submenu">
+                        <a href="/ventas/facturas" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
+                        <a href="/ventas/clientes" class="aurora-submenu-item" data-title="Clientes">Clientes</a>
+                        <a href="/ventas/cotizaciones" class="aurora-submenu-item" data-title="Cotizaciones">Cotizaciones</a>
+                        <a href="/ventas/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
+                    </div>
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Punto de Venta">
-                    <span class="aurora-nav-icon"><i class="fas fa-cash-register"></i></span>
-                    <span>Punto de Venta</span>
-                </a>
-                <div class="aurora-submenu">
+                @if (puedeVerCompras || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Compras">
+                        <span class="aurora-nav-icon"><i class="fas fa-shopping-cart"></i></span>
+                        <span>Compras</span>
+                    </a>
+                    <div class="aurora-submenu">
+                        <a href="/Compras" class="aurora-submenu-item" data-title="Facturas">Facturas</a>
+                        <a href="/compras/proveedores" class="aurora-submenu-item" data-title="Proveedores">Proveedores</a>
+                        <a href="/compras/gastos" class="aurora-submenu-item" data-title="Gastos">Gastos</a>
+                        <a href="/compras/devoluciones" class="aurora-submenu-item" data-title="Devoluciones">Devoluciones</a>
+                    </div>
+                }
+                
+                @if (puedeVerInventario || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Inventario">
+                        <span class="aurora-nav-icon"><i class="fas fa-boxes"></i></span>
+                        <span>Inventario</span>
+                    </a>
+                    <div class="aurora-submenu">
+                        <a href="/Almacen" class="aurora-submenu-item" data-title="Almacenes">
+                            <i class="fas fa-warehouse me-2"></i>Almacenes
+                        </a>
+                        <!-- Ocultando Impresoras, Categorías y Ajustes
+                        <a href="/Impresora/Index" class="aurora-submenu-item" data-title="Impresoras">
+                            <i class="fas fa-print me-2"></i>Impresoras
+                        </a>
+                        -->
+                        <a href="/inventario/servicios" class="aurora-submenu-item" data-title="Items">
+                            <i class="fas fa-box me-2"></i>Items
+                        </a>
+                        <!-- 
+                        <a href="/inventario/categorias" class="aurora-submenu-item" data-title="Categorías">
+                            <i class="fas fa-tags me-2"></i>Categorías
+                        </a>
+                        <a href="/inventario/ajustes" class="aurora-submenu-item" data-title="Ajustes">
+                            <i class="fas fa-sliders-h me-2"></i>Ajustes
+                        </a>
+                        -->
+                    </div>
+                }
+                
+                @if (puedeVerPOS || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Punto de Venta">
+                        <span class="aurora-nav-icon"><i class="fas fa-cash-register"></i></span>
+                        <span>Punto de Venta</span>
+                    </a>
+                    <div class="aurora-submenu">
                     <a href="/pos/tamanos" class="aurora-submenu-item" data-title="Tamaños">
                         <i class="fas fa-ruler-combined me-2"></i>Tamaños
                     </a>
@@ -195,44 +268,54 @@
                     <a href="/Impresora/Index" class="aurora-submenu-item" data-title="Impresoras">
                         <i class="fas fa-print me-2"></i>Impresoras
                     </a>
-                    <a href="/RutaImpresora" class="aurora-submenu-item" data-title="Rutas de Impresora">
-                        <i class="fas fa-route me-2"></i>Rutas de Impresora
+                        <a href="/RutaImpresora" class="aurora-submenu-item" data-title="Rutas de Impresora">
+                            <i class="fas fa-route me-2"></i>Rutas de Impresora
+                        </a>
+                    </div>
+                }
+                
+                @if (puedeVerBancos || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Bancos">
+                        <span class="aurora-nav-icon"><i class="fas fa-university"></i></span>
+                        <span>Bancos</span>
                     </a>
-                </div>
+                    <div class="aurora-submenu">
+                        <a href="/bancos/cuentas" class="aurora-submenu-item" data-title="Cuentas">Cuentas</a>
+                        <a href="/bancos/transacciones" class="aurora-submenu-item" data-title="Transacciones">Transacciones</a>
+                        <a href="/bancos/conciliacion" class="aurora-submenu-item" data-title="Conciliación">Conciliación</a>
+                    </div>
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Bancos">
-                    <span class="aurora-nav-icon"><i class="fas fa-university"></i></span>
-                    <span>Bancos</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/bancos/cuentas" class="aurora-submenu-item" data-title="Cuentas">Cuentas</a>
-                    <a href="/bancos/transacciones" class="aurora-submenu-item" data-title="Transacciones">Transacciones</a>
-                    <a href="/bancos/conciliacion" class="aurora-submenu-item" data-title="Conciliación">Conciliación</a>
-                </div>
-                
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Contabilidad">
-                    <span class="aurora-nav-icon"><i class="fas fa-calculator"></i></span>
-                    <span>Contabilidad</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/contabilidad/catalogo" class="aurora-submenu-item" data-title="Catálogo de cuentas">Catálogo de cuentas</a>
-                    <a href="/contabilidad/entradas-diario" class="aurora-submenu-item" data-title="Entradas de diario">
-                        <i class="fas fa-journal-whills me-2"></i>Entradas de diario
+                @if (puedeVerContabilidad || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Contabilidad">
+                        <span class="aurora-nav-icon"><i class="fas fa-calculator"></i></span>
+                        <span>Contabilidad</span>
                     </a>
-                    <a href="/contabilidad/libro-diario" class="aurora-submenu-item" data-title="Libro diario">Libro diario</a>
-                    <a href="/contabilidad/libro-mayor" class="aurora-submenu-item" data-title="Libro mayor">Libro mayor</a>
-                </div>
+                    <div class="aurora-submenu">
+                        <a href="/contabilidad/catalogo" class="aurora-submenu-item" data-title="Catálogo de cuentas">Catálogo de cuentas</a>
+                        <a href="/contabilidad/entradas-diario" class="aurora-submenu-item" data-title="Entradas de diario">
+                            <i class="fas fa-journal-whills me-2"></i>Entradas de diario
+                        </a>
+                        <a href="/contabilidad/libro-diario" class="aurora-submenu-item" data-title="Libro diario">Libro diario</a>
+                        <a href="/contabilidad/libro-mayor" class="aurora-submenu-item" data-title="Libro mayor">Libro mayor</a>
+                    </div>
+                }
                 
-                <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Reportes">
-                    <span class="aurora-nav-icon"><i class="fas fa-chart-bar"></i></span>
-                    <span>Reportes</span>
-                </a>
-                <div class="aurora-submenu">
-                    <a href="/reportes/estado-resultados" class="aurora-submenu-item" data-title="Estado de resultados">Estado de resultados</a>
-                    <a href="/reportes/balance-general" class="aurora-submenu-item" data-title="Balance general">Balance general</a>
-                    <a href="/reportes/impuestos" class="aurora-submenu-item" data-title="Impuestos">Impuestos</a>
-                    <a href="/reportes/ventas" class="aurora-submenu-item" data-title="Reportes de ventas">Reportes de ventas</a>
-                </div>
+                @if (puedeVerReportes || usuarioId == 0)
+                {
+                    <a href="javascript:void(0)" class="aurora-nav-item has-submenu" data-toggle="submenu" data-title="Reportes">
+                        <span class="aurora-nav-icon"><i class="fas fa-chart-bar"></i></span>
+                        <span>Reportes</span>
+                    </a>
+                    <div class="aurora-submenu">
+                        <a href="/reportes/estado-resultados" class="aurora-submenu-item" data-title="Estado de resultados">Estado de resultados</a>
+                        <a href="/reportes/balance-general" class="aurora-submenu-item" data-title="Balance general">Balance general</a>
+                        <a href="/reportes/impuestos" class="aurora-submenu-item" data-title="Impuestos">Impuestos</a>
+                        <a href="/reportes/ventas" class="aurora-submenu-item" data-title="Reportes de ventas">Reportes de ventas</a>
+                    </div>
+                }
             </nav>
             <div class="aurora-sidebar-toggler" id="sidebarCollapseToggler">
                 <i class="fas fa-angle-left"></i>

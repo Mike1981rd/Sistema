@@ -38,6 +38,7 @@ builder.Services.AddScoped<IImpuestoService, ImpuestoService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPlazoPagoService, PlazoPagoService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPermisosService, PermisosService>();
 
 // Registro de repositorios para Cuenta Contable y Contacto
 builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
