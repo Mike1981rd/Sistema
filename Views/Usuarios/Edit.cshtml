@@ -1,0 +1,398 @@
+@model SistemaContable.Models.Usuario
+
+@{
+    ViewData["Title"] = "Editar Usuario";
+}
+
+@section Styles {
+    <style>
+        /* Estilos para el formulario */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Estilo para etiquetas requeridas */
+        .form-label.required::after {
+            content: "*";
+            color: var(--bs-danger);
+            margin-left: 0.25rem;
+        }
+
+        .section-divider {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Estilos para foto de perfil */
+        .photo-upload-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid #e9ecef;
+            overflow: hidden;
+            margin: 0 auto 1rem;
+            position: relative;
+            background-color: #f8f9fa;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #adb5bd;
+        }
+
+        .photo-upload-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .photo-upload-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Checkbox para cambiar contraseña */
+        .password-section {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Toggle de contraseña */
+        .password-input-group {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #495057;
+        }
+
+        /* Responsive para móvil */
+        @@media (max-width: 768px) {
+            .form-container {
+                padding: 0 1rem;
+            }
+            
+            .photo-preview {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .photo-placeholder {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid p-0">
+    <!-- Encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Editar Usuario</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                    </li>
+                    <li class="breadcrumb-item active">Editar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data" class="form-container">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <!-- Foto de perfil -->
+                <div class="photo-upload-container">
+                    <div class="photo-preview">
+                        @if (!string.IsNullOrEmpty(Model.FotoUrl))
+                        {
+                            <img id="photoPreview" src="~/uploads/usuarios/@Model.FotoUrl" alt="@Model.NombreCompleto" />
+                            <div class="photo-placeholder" id="photoPlaceholder" style="display: none;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="photo-placeholder" id="photoPlaceholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <img id="photoPreview" style="display: none;" />
+                        }
+                    </div>
+                    <input type="file" id="fotoInput" name="foto" accept="image/*" style="display: none;" />
+                    <button type="button" class="photo-upload-btn" onclick="document.getElementById('fotoInput').click();">
+                        <i class="fas fa-camera me-2"></i>Cambiar Foto
+                    </button>
+                </div>
+
+                <!-- Información básica -->
+                <div class="section-divider">
+                    <h5 class="section-title">Información Básica</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NombreCompleto" class="form-label required"></label>
+                            <input asp-for="NombreCompleto" class="form-control" />
+                            <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NombreUsuario" class="form-label required"></label>
+                            <input asp-for="NombreUsuario" class="form-control" />
+                            <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección de cambio de contraseña -->
+                    <div class="password-section">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="cambiarPassword" name="cambiarPassword" value="true">
+                            <label class="form-check-label" for="cambiarPassword">
+                                Cambiar contraseña
+                            </label>
+                        </div>
+                        <div id="passwordFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label">Nueva Contraseña</label>
+                                    <div class="password-input-group">
+                                        <input type="password" id="password" name="password" class="form-control" />
+                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                            <i class="fas fa-eye" id="password-icon"></i>
+                                        </button>
+                                    </div>
+                                    <span class="text-danger" id="passwordError"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña</label>
+                                    <div class="password-input-group">
+                                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" />
+                                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                            <i class="fas fa-eye" id="confirmPassword-icon"></i>
+                                        </button>
+                                    </div>
+                                    <span class="text-danger" id="confirmPasswordError"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RolId" class="form-label required"></label>
+                            <select asp-for="RolId" asp-items="ViewBag.RolId" class="form-select">
+                                <option value="">-- Seleccionar Rol --</option>
+                            </select>
+                            <span asp-validation-for="RolId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PinPOS" class="form-label"></label>
+                            <input asp-for="PinPOS" class="form-control" maxlength="4" placeholder="4 dígitos" />
+                            <span asp-validation-for="PinPOS" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="section-divider">
+                    <h5 class="section-title">Información de Contacto</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Telefono" class="form-label"></label>
+                            <input asp-for="Telefono" class="form-control" type="tel" />
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dirección -->
+                <div class="section-divider">
+                    <h5 class="section-title">Dirección</h5>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label asp-for="Direccion" class="form-label"></label>
+                            <input asp-for="Direccion" class="form-control" />
+                            <span asp-validation-for="Direccion" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Ciudad" class="form-label"></label>
+                            <input asp-for="Ciudad" class="form-control" />
+                            <span asp-validation-for="Ciudad" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="EstadoProvincia" class="form-label"></label>
+                            <input asp-for="EstadoProvincia" class="form-control" />
+                            <span asp-validation-for="EstadoProvincia" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="CodigoPostal" class="form-label"></label>
+                            <input asp-for="CodigoPostal" class="form-control" />
+                            <span asp-validation-for="CodigoPostal" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Preview de imagen con alta calidad
+        document.getElementById('fotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('photoPreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('photoPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Toggle para mostrar/ocultar contraseñas
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-icon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Mostrar/ocultar campos de contraseña
+        document.getElementById('cambiarPassword').addEventListener('change', function() {
+            const passwordFields = document.getElementById('passwordFields');
+            const passwordInputs = passwordFields.querySelectorAll('input');
+            
+            if (this.checked) {
+                passwordFields.style.display = 'block';
+                passwordInputs.forEach(input => input.required = true);
+            } else {
+                passwordFields.style.display = 'none';
+                passwordInputs.forEach(input => {
+                    input.required = false;
+                    input.value = '';
+                });
+                // Limpiar errores
+                document.getElementById('passwordError').textContent = '';
+                document.getElementById('confirmPasswordError').textContent = '';
+            }
+        });
+
+        // Validación de contraseñas
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (document.getElementById('cambiarPassword').checked) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                let isValid = true;
+
+                // Limpiar errores previos
+                document.getElementById('passwordError').textContent = '';
+                document.getElementById('confirmPasswordError').textContent = '';
+
+                if (password.length < 6) {
+                    document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 6 caracteres';
+                    isValid = false;
+                }
+
+                if (password !== confirmPassword) {
+                    document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Validación de PIN POS - solo números
+        document.getElementById('PinPOS').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Mantener estado del checkbox después de validación fallida
+        @if (ViewBag.CambiarPassword == true)
+        {
+            <text>
+            document.getElementById('cambiarPassword').checked = true;
+            document.getElementById('cambiarPassword').dispatchEvent(new Event('change'));
+            </text>
+        }
+    </script>
+}

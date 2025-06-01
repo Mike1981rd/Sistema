@@ -1,0 +1,341 @@
+@model SistemaContable.Models.Usuario
+
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
+
+@section Styles {
+    <style>
+        /* Estilos para el formulario */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Estilo para etiquetas requeridas */
+        .form-label.required::after {
+            content: "*";
+            color: var(--bs-danger);
+            margin-left: 0.25rem;
+        }
+
+        .section-divider {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Estilos para foto de perfil */
+        .photo-upload-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid #e9ecef;
+            overflow: hidden;
+            margin: 0 auto 1rem;
+            position: relative;
+            background-color: #f8f9fa;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #adb5bd;
+        }
+
+        .photo-upload-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .photo-upload-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Toggle de contraseña */
+        .password-input-group {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #495057;
+        }
+
+        /* Responsive para móvil */
+        @@media (max-width: 768px) {
+            .form-container {
+                padding: 0 1rem;
+            }
+            
+            .photo-preview {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .photo-placeholder {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid p-0">
+    <!-- Encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Crear Nuevo Usuario</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                    </li>
+                    <li class="breadcrumb-item active">Crear Nuevo</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Alertas de éxito/error -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="form-container">
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <!-- Foto de perfil -->
+                <div class="photo-upload-container">
+                    <div class="photo-preview">
+                        <div class="photo-placeholder" id="photoPlaceholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <img id="photoPreview" style="display: none;" />
+                    </div>
+                    <input type="file" id="fotoInput" name="foto" accept="image/*" style="display: none;" />
+                    <button type="button" class="photo-upload-btn" onclick="document.getElementById('fotoInput').click();">
+                        <i class="fas fa-camera me-2"></i>Subir Foto
+                    </button>
+                </div>
+
+                <!-- Información básica -->
+                <div class="section-divider">
+                    <h5 class="section-title">Información Básica</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NombreCompleto" class="form-label required"></label>
+                            <input asp-for="NombreCompleto" class="form-control" />
+                            <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NombreUsuario" class="form-label required"></label>
+                            <input asp-for="NombreUsuario" class="form-control" />
+                            <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label required">Contraseña</label>
+                            <div class="password-input-group">
+                                <input type="password" id="password" name="password" class="form-control" required />
+                                <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye" id="password-icon"></i>
+                                </button>
+                            </div>
+                            <span class="text-danger" id="passwordError">@Html.ValidationMessage("password")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirmPassword" class="form-label required">Confirmar Contraseña</label>
+                            <div class="password-input-group">
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPassword-icon"></i>
+                                </button>
+                            </div>
+                            <span class="text-danger" id="confirmPasswordError">@Html.ValidationMessage("confirmPassword")</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RolId" class="form-label required"></label>
+                            <select asp-for="RolId" asp-items="ViewBag.RolId" class="form-select">
+                                <option value="">-- Seleccionar Rol --</option>
+                            </select>
+                            <span asp-validation-for="RolId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PinPOS" class="form-label"></label>
+                            <input asp-for="PinPOS" class="form-control" maxlength="4" placeholder="4 dígitos" />
+                            <span asp-validation-for="PinPOS" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="section-divider">
+                    <h5 class="section-title">Información de Contacto</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Telefono" class="form-label"></label>
+                            <input asp-for="Telefono" class="form-control" type="tel" />
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dirección -->
+                <div class="section-divider">
+                    <h5 class="section-title">Dirección</h5>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label asp-for="Direccion" class="form-label"></label>
+                            <input asp-for="Direccion" class="form-control" />
+                            <span asp-validation-for="Direccion" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Ciudad" class="form-label"></label>
+                            <input asp-for="Ciudad" class="form-control" />
+                            <span asp-validation-for="Ciudad" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="EstadoProvincia" class="form-label"></label>
+                            <input asp-for="EstadoProvincia" class="form-control" />
+                            <span asp-validation-for="EstadoProvincia" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="CodigoPostal" class="form-label"></label>
+                            <input asp-for="CodigoPostal" class="form-control" />
+                            <span asp-validation-for="CodigoPostal" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Preview de imagen con alta calidad
+        document.getElementById('fotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('photoPreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('photoPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Toggle para mostrar/ocultar contraseñas
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-icon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Validación de contraseñas - no prevenir submit, dejar que el servidor valide
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Solo mostrar advertencias visuales, no prevenir el submit
+            if (password.length > 0 && password.length < 6) {
+                document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 6 caracteres';
+            }
+
+            if (password !== confirmPassword && confirmPassword.length > 0) {
+                document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+            }
+        });
+
+        // Validación de PIN POS - solo números
+        document.getElementById('PinPOS').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+}
