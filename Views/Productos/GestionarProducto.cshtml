@@ -326,40 +326,104 @@
                                 </div>
                             </div>
 
-                            <!-- Pestaña 4: Inventario -->
+                            <!-- Pestaña 4: Recetas -->
                             <div class="tab-pane fade" id="inventario" role="tabpanel" aria-labelledby="inventario-tab">
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="itemId">Item de Inventario <span class="text-danger">*</span></label>
-                                            <select class="form-control select2" id="itemId" name="ItemId" required>
-                                                <option value="">Seleccione un item</option>
-                                            </select>
-                                            <div class="invalid-feedback">El item es requerido</div>
-                                        </div>
+                                <div class="container-fluid px-0 mt-3">
+                                    <!-- Botones de acción superiores -->
+                                    <div class="d-flex gap-2 mb-4">
+                                        <button type="button" class="btn btn-receta-styled" id="btnAddItem">
+                                            <i class="fas fa-plus"></i>
+                                            <span>Agregar Item</span>
+                                        </button>
+                                        <button type="button" class="btn btn-receta-styled" id="btnAddRecipe">
+                                            <i class="fas fa-plus"></i>
+                                            <span>Agregar Receta</span>
+                                        </button>
+                                        <button type="button" class="btn btn-receta-styled" id="btnExportRecipe">
+                                            <i class="fas fa-file-export"></i>
+                                            <span>Exportar Receta</span>
+                                        </button>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="cantidad">Cantidad</label>
-                                            <input type="number" class="form-control" id="cantidad" name="Cantidad" step="0.0001" value="1">
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="itemContenedorId">Contenedor</label>
-                                            <select class="form-control select2" id="itemContenedorId" name="ItemContenedorId">
-                                                <option value="">Sin contenedor</option>
-                                            </select>
+                                    <!-- Tabla de ingredientes -->
+                                    <div class="receta-table-container">
+                                        <table class="table receta-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 30%">Nombre</th>
+                                                    <th style="width: 15%">Marca</th>
+                                                    <th style="width: 12%">Cantidad</th>
+                                                    <th style="width: 15%">Unidad</th>
+                                                    <th style="width: 12%">Costo</th>
+                                                    <th style="width: 12%">Subtotal</th>
+                                                    <th style="width: 50px"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recetasTableBody">
+                                                <!-- Las filas se agregarán dinámicamente -->
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="table-footer-row">
+                                                    <td colspan="4" class="text-end fw-bold">Total:</td>
+                                                    <td class="fw-bold" id="totalReceta">$0.00</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+
+                                    <!-- Panel de información de costos -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <div class="cost-info-panel">
+                                                <h5 class="panel-title">Información de Costos</h5>
+                                                
+                                                <div class="cost-info-row">
+                                                    <span>Costo Total de Ingredientes:</span>
+                                                    <span id="costoTotalIngredientes">$0.00</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row">
+                                                    <span>Precio Venta Producto:</span>
+                                                    <span id="precioVentaProducto">$0.00</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row">
+                                                    <span>Precio Questions:</span>
+                                                    <span id="precioQuestions">$0.00</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row highlighted">
+                                                    <span>Precio de Venta Sugerido:</span>
+                                                    <span id="precioVentaSugerido">$0.00</span>
+                                                </div>
+                                                
+                                            </div>
+                                            
+                                            <!-- Slider de margen -->
+                                            <div class="margin-slider-container mt-4 p-3">
+                                                <label class="form-label mb-3">Margen de Ganancia</label>
+                                                <div class="slider-wrapper">
+                                                    <div class="slider-labels d-flex justify-content-between mb-2">
+                                                        <span class="text-muted">0%</span>
+                                                        <span class="text-muted">100%</span>
+                                                    </div>
+                                                    <input type="range" class="form-range custom-range" id="margenSlider" 
+                                                           min="0" max="100" value="50" step="1">
+                                                    <div class="text-center mt-3">
+                                                        <span class="badge bg-primary fs-6" id="margenValue">50%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="recipe-notes">
+                                                <h5 class="panel-title">Notas de la Receta</h5>
+                                                <textarea class="form-control" id="notasReceta" rows="4" placeholder="Agregar notas o instrucciones especiales..."></textarea>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="alert alert-info mt-3">
-                                    <i class="fas fa-info-circle"></i> 
-                                    La gestión de recetas y composición de productos será implementada en una próxima actualización.
                                 </div>
                             </div>
 
@@ -551,6 +615,96 @@
     </div>
 </div>
 
+<!-- Popup personalizado para seleccionar item -->
+<div id="popupSeleccionarItem" class="custom-popup" style="display: none;">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h5 class="popup-title">Lista de artículos</h5>
+            <button type="button" class="btn-close-popup" onclick="cerrarPopupItems()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="popup-body">
+            <!-- Barra de búsqueda -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-filter text-muted"></i>
+                        </span>
+                        <span class="input-group-text bg-light" style="cursor: pointer;" onclick="limpiarFiltros()">
+                            <i class="fas fa-times text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" id="buscarItem" placeholder="Buscar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros de categorías -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Marca</label>
+                    <select class="form-select form-select-sm" id="filtroMarca">
+                        <option value="">Elegir marca</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Categoría</label>
+                    <select class="form-select form-select-sm" id="filtroCategoria">
+                        <option value="">Elegir la categoría</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Subcategoría</label>
+                    <select class="form-select form-select-sm" id="filtroSubcategoria">
+                        <option value="">Elija subcategoría</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de items -->
+            <div class="table-responsive" style="max-height: 400px;">
+                <table class="table table-hover">
+                    <thead class="table-light" style="position: sticky; top: 0;">
+                        <tr>
+                            <th style="width: 100px;">SELECCIONAR</th>
+                            <th>NOMBRE</th>
+                            <th>MARCA</th>
+                            <th>CATEGORÍA</th>
+                            <th>SUBCATEGORÍA</th>
+                            <th>IMPUESTO</th>
+                            <th>ESTADO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaItems">
+                        <!-- Se cargará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted">Show</span>
+                    <select class="form-select form-select-sm" style="width: auto;" id="itemsPerPage">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-muted">entries</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-secondary" id="btnPrevious">Previous</button>
+                    <span class="badge bg-primary">1</span>
+                    <button class="btn btn-sm btn-secondary" id="btnNext">Next</button>
+                </div>
+                <span class="text-muted" id="showingInfo">Showing 1 to 2 of 2 entries</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Offcanvas para crear/editar categoría -->
 <div class="offcanvas offcanvas-end offcanvas-lg bg-white border-primary" tabindex="-1" id="offcanvasCategoria" aria-labelledby="offcanvasCategoriaLabel">
     <div class="offcanvas-header">
@@ -603,7 +757,397 @@
                     }
                 });
             }
+
+            // Funcionalidad de recetas
+            initRecetasFunctionality();
         });
+
+        // Función para inicializar la funcionalidad de recetas
+        function initRecetasFunctionality() {
+            // Event listeners para los botones
+            document.getElementById('btnAddItem')?.addEventListener('click', function() {
+                agregarItem();
+            });
+
+            document.getElementById('btnAddRecipe')?.addEventListener('click', function() {
+                agregarReceta();
+            });
+
+            document.getElementById('btnExportRecipe')?.addEventListener('click', function() {
+                exportarReceta();
+            });
+
+            // Event listener para el slider de margen
+            const margenSlider = document.getElementById('margenSlider');
+            const margenValue = document.getElementById('margenValue');
+            
+            if (margenSlider && margenValue) {
+                margenSlider.addEventListener('input', function() {
+                    margenValue.textContent = this.value + '%';
+                    calcularCostos();
+                });
+            }
+
+            // Event listeners para inputs de cantidad
+            document.addEventListener('input', function(e) {
+                if (e.target.matches('.receta-table input[type="number"]:not([readonly])')) {
+                    actualizarSubtotal(e.target);
+                }
+            });
+
+            // Event listeners para botones de eliminar
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.btn-remove, .btn-remove *')) {
+                    eliminarIngrediente(e.target.closest('tr'));
+                }
+            });
+
+            // Inicializar tabla vacía
+            if (document.getElementById('recetasTableBody').children.length === 0) {
+                mostrarTablaVacia();
+            }
+        }
+
+        // Mostrar tabla vacía con mensaje
+        function mostrarTablaVacia() {
+            const tbody = document.getElementById('recetasTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-utensils fa-2x mb-2 text-muted"></i><br>
+                        No hay ingredientes en la receta.<br>
+                        <small>Haga clic en "Agregar Item" para comenzar a crear su receta.</small>
+                    </td>
+                </tr>
+            `;
+            
+            // Limpiar totales
+            document.getElementById('totalReceta').textContent = '$0.00';
+            document.getElementById('costoTotalIngredientes').textContent = '$0.00';
+            document.getElementById('precioVentaSugerido').textContent = '$0.00';
+        }
+
+        // Variable para almacenar los items
+        let itemsCache = [];
+
+        // Función para agregar item
+        function agregarItem() {
+            // Primero verificar si ya existe la tabla vacía
+            const tbody = document.getElementById('recetasTableBody');
+            if (tbody.querySelector('td[colspan="7"]')) {
+                tbody.innerHTML = '';
+            }
+
+            // Mostrar el popup personalizado
+            document.getElementById('popupSeleccionarItem').style.display = 'flex';
+            cargarItemsDisponibles();
+        }
+        
+        // Función para cerrar el popup
+        function cerrarPopupItems() {
+            document.getElementById('popupSeleccionarItem').style.display = 'none';
+        }
+        
+        // Función para limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('buscarItem').value = '';
+            document.getElementById('filtroMarca').value = '';
+            document.getElementById('filtroCategoria').value = '';
+            document.getElementById('filtroSubcategoria').value = '';
+            mostrarItemsEnModal(itemsCache);
+        }
+
+        // Cargar items disponibles desde la base de datos
+        function cargarItemsDisponibles() {
+            // Mostrar loading
+            const tbody = document.getElementById('listaItems');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando items...</td></tr>';
+            
+            // Llamar al API para obtener items
+            fetch('/api/item/buscar?activos=true')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        itemsCache = data.items;
+                        mostrarItemsEnModal(data.items);
+                        cargarFiltros(data.items);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar items</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar items</td></tr>';
+                });
+        }
+        
+        // Cargar filtros con los datos únicos
+        function cargarFiltros(items) {
+            // Cargar marcas únicas
+            const marcas = [...new Set(items.filter(i => i.marca).map(i => i.marca.nombre))].sort();
+            const selectMarca = document.getElementById('filtroMarca');
+            selectMarca.innerHTML = '<option value="">Elegir marca</option>';
+            marcas.forEach(marca => {
+                selectMarca.innerHTML += `<option value="${marca}">${marca}</option>`;
+            });
+            
+            // Cargar categorías únicas
+            const categorias = [...new Set(items.filter(i => i.categoria).map(i => i.categoria.nombre))].sort();
+            const selectCategoria = document.getElementById('filtroCategoria');
+            selectCategoria.innerHTML = '<option value="">Elegir la categoría</option>';
+            categorias.forEach(cat => {
+                selectCategoria.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        // Mostrar items en el modal
+        function mostrarItemsEnModal(items) {
+            const tbody = document.getElementById('listaItems');
+            
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se encontraron items</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td class="text-center">
+                        <button type="button" class="btn-seleccionar-item" 
+                                onclick="seleccionarItem(${item.id})" title="Seleccionar item">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                    <td>${item.nombre}</td>
+                    <td>${item.marca?.nombre || 'Default'}</td>
+                    <td>${item.categoria?.nombre || '-'}</td>
+                    <td>-</td>
+                    <td>Exento</td>
+                    <td><span class="badge bg-success">Active</span></td>
+                </tr>
+            `).join('');
+            
+            // Actualizar información de paginación
+            document.getElementById('showingInfo').textContent = `Showing 1 to ${items.length} of ${items.length} entries`;
+        }
+
+        // Función para seleccionar un item del modal
+        function seleccionarItem(itemId) {
+            const item = itemsCache.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-item-id', item.id);
+            
+            // Crear opciones para contenedores
+            let contenedoresOptions = '<option value="">Seleccione unidad...</option>';
+            if (item.contenedores && item.contenedores.length > 0) {
+                contenedoresOptions += item.contenedores.map(cont => 
+                    `<option value="${cont.id}" data-costo="${cont.costoUnitario || 0}">${cont.unidadMedida?.nombre || cont.nombre}</option>`
+                ).join('');
+            }
+            
+            newRow.innerHTML = `
+                <td data-id="${item.id}">${item.nombre}</td>
+                <td>${item.marca?.nombre || '-'}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm cantidad-input" value="1" min="0" step="0.01">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm contenedor-select unidad-select" onchange="actualizarCostoContenedor(this)">
+                        ${contenedoresOptions}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm costo-input" value="0.00" min="0" step="0.01" readonly>
+                </td>
+                <td class="subtotal-cell">$0.00</td>
+                <td>
+                    <button type="button" class="btn btn-remove" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            document.getElementById('recetasTableBody').appendChild(newRow);
+            cerrarPopupItems();
+            
+            // Si hay solo un contenedor, seleccionarlo automáticamente
+            if (item.contenedores && item.contenedores.length === 1) {
+                const selectElement = newRow.querySelector('.contenedor-select');
+                selectElement.value = item.contenedores[0].id;
+                actualizarCostoContenedor(selectElement);
+            }
+        }
+
+        // Función para actualizar el costo cuando se selecciona un contenedor
+        function actualizarCostoContenedor(selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const costo = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+            const row = selectElement.closest('tr');
+            const costoInput = row.querySelector('.costo-input');
+            
+            costoInput.value = costo.toFixed(2);
+            actualizarSubtotal(row.querySelector('.cantidad-input'));
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('buscarItem').value.toLowerCase();
+            const marcaFilter = document.getElementById('filtroMarca').value;
+            const categoriaFilter = document.getElementById('filtroCategoria').value;
+            
+            const itemsFiltrados = itemsCache.filter(item => {
+                const matchSearch = !searchTerm || 
+                    item.nombre.toLowerCase().includes(searchTerm) ||
+                    (item.codigo && item.codigo.toLowerCase().includes(searchTerm));
+                    
+                const matchMarca = !marcaFilter || item.marca?.nombre === marcaFilter;
+                const matchCategoria = !categoriaFilter || item.categoria?.nombre === categoriaFilter;
+                
+                return matchSearch && matchMarca && matchCategoria;
+            });
+            
+            mostrarItemsEnModal(itemsFiltrados);
+        }
+        
+        // Event listeners para filtros
+        document.getElementById('buscarItem')?.addEventListener('input', aplicarFiltros);
+        document.getElementById('filtroMarca')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filtroCategoria')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filtroSubcategoria')?.addEventListener('change', aplicarFiltros);
+        
+        // Cerrar popup al hacer clic fuera
+        document.getElementById('popupSeleccionarItem').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarPopupItems();
+            }
+        });
+
+        // Función para actualizar subtotal
+        function actualizarSubtotal(input) {
+            const row = input.closest('tr');
+            const cantidadInput = row.querySelector('.cantidad-input');
+            const costoInput = row.querySelector('.costo-input');
+            const subtotalCell = row.querySelector('.subtotal-cell');
+            
+            if (cantidadInput && costoInput && subtotalCell) {
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const costo = parseFloat(costoInput.value) || 0;
+                const subtotal = cantidad * costo;
+                
+                subtotalCell.textContent = '$' + subtotal.toFixed(2);
+                calcularTotales();
+            }
+        }
+
+        // Función para calcular totales
+        function calcularTotales() {
+            const subtotalCells = document.querySelectorAll('.receta-table .subtotal-cell');
+            let total = 0;
+            
+            subtotalCells.forEach(cell => {
+                const valor = parseFloat(cell.textContent.replace('$', '')) || 0;
+                total += valor;
+            });
+            
+            document.getElementById('totalReceta').textContent = '$' + total.toFixed(2);
+            document.getElementById('costoTotalIngredientes').textContent = '$' + total.toFixed(2);
+            calcularCostos();
+        }
+
+        // Función para calcular costos y precio sugerido
+        function calcularCostos() {
+            const costoTotal = parseFloat(document.getElementById('totalReceta').textContent.replace('$', '')) || 0;
+            const margen = parseFloat(document.getElementById('margenSlider').value) || 0;
+            const precioVenta = parseFloat(document.getElementById('precioVentaProducto').textContent.replace('$', '')) || 0;
+            const precioQuestions = parseFloat(document.getElementById('precioQuestions').textContent.replace('$', '')) || 0;
+            
+            // Calcular precio sugerido basado en el costo total y margen
+            const precioSugerido = costoTotal * (1 + margen / 100) + precioQuestions;
+            document.getElementById('precioVentaSugerido').textContent = '$' + precioSugerido.toFixed(2);
+        }
+
+        // Función para eliminar ingrediente
+        function eliminarIngrediente(row) {
+            Swal.fire({
+                title: '¿Eliminar ingrediente?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    row.remove();
+                    calcularTotales();
+                    
+                    // Si no quedan filas, mostrar tabla vacía
+                    if (document.getElementById('recetasTableBody').children.length === 0) {
+                        mostrarTablaVacia();
+                    }
+                }
+            });
+        }
+
+        // Función para importar receta
+        function importarReceta() {
+            Swal.fire({
+                title: 'Importar Receta',
+                text: 'Seleccione un archivo de receta (.json o .csv)',
+                input: 'file',
+                inputAttributes: {
+                    'accept': '.json,.csv',
+                    'aria-label': 'Subir archivo de receta'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Importar',
+                cancelButtonText: 'Cancelar'
+            });
+        }
+
+        // Función para agregar receta
+        function agregarReceta() {
+            // Por ahora mostrar mensaje de funcionalidad en desarrollo
+            Swal.fire({
+                title: 'Agregar Receta',
+                text: 'Esta funcionalidad permitirá agregar una receta existente como ingrediente',
+                icon: 'info'
+            });
+        }
+
+        // Función para exportar receta (ya no se usa pero la dejamos por si acaso)
+        function exportarReceta() {
+            const ingredientes = [];
+            document.querySelectorAll('#recetasTableBody tr').forEach(row => {
+                const ingrediente = row.querySelector('.ingrediente-select')?.selectedOptions[0]?.text || '';
+                const cantidad = row.querySelector('.cantidad-input')?.value || '';
+                const unidad = row.querySelector('.unidad-select')?.value || '';
+                const costo = row.querySelector('.costo-input')?.value || '';
+                
+                if (ingrediente) {
+                    ingredientes.push({
+                        ingrediente,
+                        cantidad,
+                        unidad,
+                        costo
+                    });
+                }
+            });
+            
+            if (ingredientes.length === 0) {
+                Swal.fire('Sin datos', 'No hay ingredientes para exportar', 'warning');
+                return;
+            }
+            
+            // Simular descarga
+            Swal.fire({
+                title: 'Receta exportada',
+                text: 'La receta ha sido exportada exitosamente',
+                icon: 'success'
+            });
+        }
     </script>
 }
 
@@ -613,4 +1157,370 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Estilos específicos de la página -->
     <link href="~/css/productos/productos.css" rel="stylesheet" />
+    
+    <style>
+        /* Estilos para botones de recetas con diseño mejorado */
+        .btn-receta-styled {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #0A1172;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(10, 17, 114, 0.15);
+            cursor: pointer;
+        }
+        
+        .btn-receta-styled:hover {
+            background-color: #080e5a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 17, 114, 0.25);
+            color: white;
+        }
+        
+        .btn-receta-styled:active {
+            transform: translateY(0);
+        }
+        
+        .btn-receta-styled i {
+            font-size: 16px;
+        }
+        
+        /* Tabla de recetas con estilo limpio */
+        .receta-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .receta-table {
+            margin-bottom: 0;
+        }
+        
+        .receta-table thead {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .receta-table thead th {
+            font-weight: 600;
+            color: #495057;
+            padding: 15px;
+            border-bottom: none;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .receta-table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .receta-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .receta-table .form-control-sm,
+        .receta-table .form-select-sm {
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            font-size: 14px;
+        }
+        
+        .receta-table .form-control-sm:focus,
+        .receta-table .form-select-sm:focus {
+            border-color: #0A1172;
+            box-shadow: 0 0 0 0.2rem rgba(10, 17, 114, 0.25);
+        }
+        
+        /* Campo readonly */
+        .receta-table input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
+        /* Ocultar flecha del select de unidades */
+        .receta-table .unidad-select,
+        .receta-table .form-select-sm {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-image: none !important;
+            padding-right: 0.75rem !important;
+        }
+        
+        /* Botón eliminar */
+        .receta-table .btn-remove {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dc3545;
+            background: white;
+            color: #dc3545;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .receta-table .btn-remove:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        /* Footer de la tabla */
+        .table-footer-row {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .table-footer-row td {
+            padding: 15px;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        /* Panel de información de costos */
+        .cost-info-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .cost-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .cost-info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .cost-info-row.highlighted {
+            background-color: #f8f9fa;
+            margin: 0 -20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #0A1172;
+        }
+        
+        .margen-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .margen-input-group input {
+            width: 80px;
+            text-align: right;
+        }
+        
+        /* Panel de notas */
+        .recipe-notes {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .recipe-notes textarea {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        
+        .recipe-notes textarea:focus {
+            border-color: #0A1172;
+            box-shadow: 0 0 0 0.2rem rgba(10, 17, 114, 0.25);
+        }
+        
+        /* Slider de margen */
+        .margin-slider-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .custom-range {
+            height: 8px;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        .custom-range::-webkit-slider-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .custom-range::-webkit-slider-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #0A1172;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .custom-range::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .custom-range::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #0A1172;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider-labels {
+            font-size: 12px;
+        }
+        
+        /* Estilos para el popup personalizado de selección de items */
+        .custom-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .popup-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: popupFadeIn 0.3s ease-out;
+        }
+        
+        @@keyframes popupFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .popup-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #212529;
+        }
+        
+        .btn-close-popup {
+            background: none;
+            border: none;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .btn-close-popup:hover {
+            background-color: #e9ecef;
+            color: #000;
+        }
+        
+        .popup-body {
+            padding: 20px;
+            max-height: calc(90vh - 80px);
+            overflow-y: auto;
+        }
+        
+        /* Botón de selección estético */
+        .btn-seleccionar-item {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #0A1172;
+            background: white;
+            color: #0A1172;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-seleccionar-item:hover {
+            background-color: #0A1172;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(10, 17, 114, 0.3);
+        }
+        
+        .btn-seleccionar-item:active {
+            transform: scale(0.95);
+        }
+        
+        .custom-popup .table tbody tr:hover {
+            background-color: rgba(10, 17, 114, 0.05);
+        }
+        
+        /* Mejorar el input de búsqueda */
+        .custom-popup .input-group-text {
+            border-color: #e9ecef;
+        }
+        
+        .custom-popup .form-control:focus {
+            border-color: #0A1172;
+            box-shadow: 0 0 0 0.2rem rgba(10, 17, 114, 0.25);
+        }
+    </style>
 }

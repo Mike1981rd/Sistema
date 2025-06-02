@@ -169,7 +169,7 @@
         <div class="card-header">
             <ul class="nav border-0">
                 <li class="nav-item">
-                    <a class="nav-link @(!isInactivos ? "active" : "")" 
+                    <a class="nav-link @(!isInactivos ? "active" : "") border-0 position-relative" 
                        asp-action="Index" asp-route-tab="Activos">
                         Activos
                         @if (!isInactivos)
@@ -179,7 +179,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(isInactivos ? "active" : "")" 
+                    <a class="nav-link @(isInactivos ? "active" : "") border-0 position-relative" 
                        asp-action="Index" asp-route-tab="Inactivos">
                         Inactivos
                         @if (isInactivos)

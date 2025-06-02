@@ -3,33 +3,27 @@
     ViewData["Title"] = "Almacenes";
     var tab = ViewBag.Tab ?? "Activos";
 }
-<div class="container-fluid px-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h3 class="mt-4 mb-2" style="font-weight:normal">Lista de almacenes</h3>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                    <li class="breadcrumb-item">Inventario</li>
-                    <li class="breadcrumb-item active" aria-current="page">Almacenes</li>
+
+<div class="container-fluid p-0">
+    <!-- Encabezado con título y breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h4">Almacenes</h1>
+            <nav class="breadcrumb-container d-none d-sm-block d-lg-inline-block" aria-label="breadcrumb">
+                <ol class="breadcrumb pt-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="/inventario">Inventario</a>
+                    </li>
+                    <li class="breadcrumb-item active">Almacenes</li>
                 </ol>
             </nav>
         </div>
-        <div>
-            <a asp-action="Create" class="btn" style="background:#3944BC;color:#FFFFFF;">
-                <i class="fas fa-plus me-1"></i> Nuevo Almacén
-            </a>
-        </div>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
+    <!-- Pestañas -->
     <div class="card mb-4">
         <div class="card-header">
             <ul class="nav border-0">
@@ -53,18 +47,60 @@
                 </li>
             </ul>
         </div>
-        <div class="card-body">
+    </div>
+
+    <!-- Alertas -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Barra de acciones -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <!-- Espacio para posible búsqueda en el futuro -->
+        </div>
+        <div class="col-md-8 text-end">
+            <div class="dropdown d-inline-block me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" id="export-excel"><i class="fas fa-file-excel me-2 text-success"></i>Excel</button></li>
+                    <li><button class="dropdown-item" id="export-pdf"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF</button></li>
+                    <li><button class="dropdown-item" id="export-csv"><i class="fas fa-file-csv me-2 text-primary"></i>CSV</button></li>
+                </ul>
+            </div>
+            <a asp-action="Create" class="btn btn-primary btn-sm px-3">
+                <i class="fas fa-plus me-1"></i> Nuevo Almacén
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabla principal -->
+    <div class="card">
+        <div class="card-body p-0">
             @if (Model.Any())
             {
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="tablaAlmacenes">
-                        <thead>
-                            <tr style="background-color: #f8f9fa;">
-                                <th>NOMBRE</th>
-                                <th>CORREO ELECTRÓNICO</th>
-                                <th>TELÉFONO</th>
-                                <th>ESTADO</th>
-                                <th>ACCIÓN</th>
+                    <table class="table table-striped table-hover mb-0" id="tablaAlmacenes">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Correo Electrónico</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,30 +115,24 @@
                                             @(item.Estado ? "Activo" : "Inactivo")
                                         </span>
                                     </td>
-                                    <td>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn" style="background:#EC5800;color:#FFFFFF;">Editar</a>
-                                        @if (item.Estado)
-                                        {
-                                            <button type="button" class="btn btn-secondary" 
-                                                    onclick="if(confirm('¿Desactivar almacén @item.Nombre?')) { document.getElementById('formDesactivar_@item.Id').submit(); }">
-                                                Desactivar
-                                            </button>
-                                            <form id="formDesactivar_@item.Id" asp-action="ToggleEstado" method="post" style="display:none;">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn btn-primary" 
-                                                    onclick="if(confirm('¿Activar almacén @item.Nombre?')) { document.getElementById('formActivar_@item.Id').submit(); }">
-                                                Activar
-                                            </button>
-                                            <form id="formActivar_@item.Id" asp-action="ToggleEstado" method="post" style="display:none;">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                            </form>
-                                        }
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm text-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            @if (item.Estado)
+                                            {
+                                                <button class="btn btn-sm text-danger" onclick="toggleEstado(@item.Id, '@item.Nombre', true)" title="Desactivar">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm text-success" onclick="toggleEstado(@item.Id, '@item.Nombre', false)" title="Activar">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -112,11 +142,26 @@
             }
             else
             {
-                <div class="alert alert-info mb-0">
-                    No hay almacenes @(tab == "Activos" ? "activos" : "inactivos") para mostrar.
-                    @if (ViewBag.SugerirCambiarPestana == true)
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-warehouse fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">No hay almacenes @(tab == "Activos" ? "activos" : "inactivos")</h5>
+                    <p class="text-muted">
+                        @if (ViewBag.SugerirCambiarPestana == true)
+                        {
+                            <span>Hay almacenes <a asp-action="Index" asp-route-tab="@ViewBag.HayAlmacenesEnOtraPestana">@ViewBag.HayAlmacenesEnOtraPestana.ToLower()</a>.</span>
+                        }
+                        else
+                        {
+                            <span>Comienza creando tu primer almacén.</span>
+                        }
+                    </p>
+                    @if (tab == "Activos")
                     {
-                        <span>Hay almacenes <a asp-action="Index" asp-route-tab="@ViewBag.HayAlmacenesEnOtraPestana">@ViewBag.HayAlmacenesEnOtraPestana.ToLower()</a>.</span>
+                        <a asp-action="Create" class="btn btn-primary" style="background-color: #0A1172; border-color: #0A1172;">
+                            <i class="fas fa-plus me-1"></i>Crear Primer Almacén
+                        </a>
                     }
                 </div>
             }
@@ -124,40 +169,175 @@
     </div>
 </div>
 
+<!-- Form oculto para toggle estado -->
+<form id="toggleForm" asp-action="ToggleEstado" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="toggleId" />
+</form>
 
 @section Scripts {
     <style>
-        .nav-link.active {
-            border-bottom: 2px solid #007bff !important;
-            font-weight: 500;
+        /* Estilos heredados de comprobantes */
+        .btn-primary.btn-sm {
+            background-color: #0A1172 !important;
+            border-color: #0A1172 !important;
+            border-radius: 4px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
         }
-        .nav-link {
-            padding-bottom: 10px;
-            margin-bottom: -1px;
+
+        .btn-group {
+            display: flex !important;
+            width: auto !important;
+            justify-content: center !important;
+            gap: 0 !important;
         }
-        
-        /* Aumentar el ancho del selector para evitar que la flecha tape el número */
+
+        .btn-group .btn {
+            padding: 0.25rem 0.25rem !important;
+            margin: 0 !important;
+        }
+
+        .btn-outline-secondary {
+            border-color: #e3e6f0;
+            color: #6c757d;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #444;
+            border-color: #dde0e6;
+        }
+
+        /* CSS críticos del estándar */
+        .dataTables_length label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+
         .dataTables_length select {
             width: 70px !important;
             padding-right: 25px !important;
             text-align: center !important;
         }
+
+        .dropdown-toggle::after {
+            display: inline-block;
+            margin-left: 0.5em;
+            vertical-align: 0.15em;
+            content: "";
+            border-top: 0.3em solid;
+            border-right: 0.3em solid transparent;
+            border-bottom: 0;
+            border-left: 0.3em solid transparent;
+        }
+
+        /* Estilos para las pestañas */
+        .nav-link.active {
+            border-bottom: 2px solid #007bff !important;
+            font-weight: 500;
+        }
+
+        .nav-link {
+            padding-bottom: 10px;
+            margin-bottom: -1px;
+        }
     </style>
     
     <script>
         $(document).ready(function () {
+            // DataTable con funcionalidad de exportación
             $('#tablaAlmacenes').DataTable({
+                responsive: true,
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
-                    lengthMenu: 'Mostrar _MENU_ registros'
+                    "processing": "Procesando...",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "zeroRecords": "No se encontraron resultados",
+                    "emptyTable": "Ningún dato disponible en esta tabla",
+                    "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "search": "Buscar:",
+                    "loadingRecords": "Cargando...",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
                 },
-                pageLength: 50,
-                order: [[1, 'asc']], // Ordenar por nombre (columna 1) de forma ascendente
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel me-2 text-success"></i>Excel',
+                        className: 'btn btn-sm btn-outline-secondary me-2',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3] // Excluir columna de acciones
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf me-2 text-danger"></i>PDF',
+                        className: 'btn btn-sm btn-outline-secondary me-2',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3] // Excluir columna de acciones
+                        }
+                    },
+                    {
+                        extend: 'csv',
+                        text: '<i class="fas fa-file-csv me-2 text-primary"></i>CSV',
+                        className: 'btn btn-sm btn-outline-secondary',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3] // Excluir columna de acciones
+                        }
+                    }
+                ],
+                pageLength: 25,
+                order: [[0, 'asc']], // Ordenar por nombre
                 lengthMenu: [
                     [10, 25, 50, 100, -1],
                     ['10', '25', '50', '100', 'Todos']
+                ],
+                columnDefs: [
+                    { 
+                        targets: -1, // Última columna (Acciones)
+                        orderable: false,
+                        searchable: false
+                    }
                 ]
             });
+
+            // Conectar los botones del dropdown con los botones de DataTables
+            $('#export-excel').on('click', function() {
+                $('#tablaAlmacenes').DataTable().button(0).trigger();
+            });
+
+            $('#export-pdf').on('click', function() {
+                $('#tablaAlmacenes').DataTable().button(1).trigger();
+            });
+
+            $('#export-csv').on('click', function() {
+                $('#tablaAlmacenes').DataTable().button(2).trigger();
+            });
         });
+
+        // Función para toggle estado (igual a comprobantes)
+        function toggleEstado(id, nombre, activo) {
+            const accion = activo ? 'desactivar' : 'activar';
+            
+            if (confirm(`¿Está seguro que desea ${accion} el almacén ${nombre}?`)) {
+                const form = document.getElementById('toggleForm');
+                form.action = `/Almacen/ToggleEstado/${id}`;
+                document.getElementById('toggleId').value = id;
+                form.submit();
+            }
+        }
     </script>
 } 
