@@ -54,9 +54,14 @@ namespace SistemaContable.ViewModels.Productos
         public int CategoriaId { get; set; }
         public CategoriaSimpleDto Categoria { get; set; }
         
-        // Impuesto
+        // Impuesto (mantener por compatibilidad)
+        [Obsolete("Use Impuestos collection instead")]
         public int? ImpuestoId { get; set; }
+        [Obsolete("Use Impuestos collection instead")]
         public ImpuestoSimpleDto? Impuesto { get; set; }
+        
+        // Nueva colección de impuestos
+        public List<ImpuestoSimpleDto> Impuestos { get; set; } = new List<ImpuestoSimpleDto>();
         
         // Ruta de Impresión
         public int? RutaImpresoraId { get; set; }

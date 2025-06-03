@@ -24,14 +24,18 @@ namespace SistemaContable.Controllers
         /// <summary>
         /// Vista principal - Lista de productos
         /// </summary>
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tab = "Activos")
         {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            
             var productos = await _context.ProductosVenta
                 .Include(p => p.Categoria)
                 .Include(p => p.Impuesto)
+                .Where(p => p.EmpresaId == empresaId)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
+            ViewBag.Tab = tab;
             return View(productos);
         }
 
@@ -382,6 +386,7 @@ namespace SistemaContable.Controllers
             
             Console.WriteLine($"[ProductosController] ObtenerDatosCategoria ID={id}: " +
                          $"impuestoId={categoria.impuestoId}, " +
+                         $"propinaImpuestoId={categoria.propinaImpuestoId}, " +
                          $"cuentaVentasId={categoria.cuentaVentasId}, " +
                          $"cuentaComprasInventariosId={categoria.cuentaComprasInventariosId}");
             

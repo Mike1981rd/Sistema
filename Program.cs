@@ -11,7 +11,16 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        // Mantener nombres de propiedades en PascalCase (como vienen del C#)
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        // Permitir trailing commas
+        options.JsonSerializerOptions.AllowTrailingCommas = true;
+        // Incluir campos null en la respuesta
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never;
+    });
 
 // Configurar sesión
 builder.Services.AddDistributedMemoryCache();

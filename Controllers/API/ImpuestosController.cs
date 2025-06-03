@@ -39,7 +39,16 @@ namespace SistemaContable.Controllers.API
 
                 if (!string.IsNullOrWhiteSpace(term))
                 {
-                    query = query.Where(i => i.Nombre.Contains(term));
+                    // Si el término es un número, buscar por ID exacto
+                    if (int.TryParse(term, out int impuestoId))
+                    {
+                        query = query.Where(i => i.Id == impuestoId);
+                    }
+                    else
+                    {
+                        // Si no es un número, buscar por nombre
+                        query = query.Where(i => i.Nombre.Contains(term));
+                    }
                 }
 
                 var impuestos = await query

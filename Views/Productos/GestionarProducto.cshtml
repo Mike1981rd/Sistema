@@ -83,20 +83,20 @@
                                             <small class="form-text text-muted" style="min-height: 1.2em; display: block;">El código PLU se asignará automáticamente al guardar</small>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="nombreCortoTPV" class="form-label">Nombre Corto (TPV)</label>
-                                            <input type="text" id="nombreCortoTPV" name="NombreCortoTPV" class="form-control"
-                                                   maxlength="20">
-                                            <span style="min-height: 1.2em; display: block;"></span>
+                                            <label for="nombre" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
+                                            <input type="text" id="nombre" name="Nombre" class="form-control" 
+                                                   required maxlength="100">
+                                            <span class="invalid-feedback" style="min-height: 1.2em; display: block;">El nombre es requerido</span>
                                         </div>
                                     </div>
 
                                     <!-- Fila 2 de Campos -->
                                     <div class="row gx-3 mb-3">
                                         <div class="col-md-6">
-                                            <label for="nombre" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
-                                            <input type="text" id="nombre" name="Nombre" class="form-control" 
-                                                   required maxlength="100">
-                                            <span class="invalid-feedback" style="min-height: 1.2em; display: block;">El nombre es requerido</span>
+                                            <label for="nombreCortoTPV" class="form-label">Nombre Corto (TPV)</label>
+                                            <input type="text" id="nombreCortoTPV" name="NombreCortoTPV" class="form-control"
+                                                   maxlength="20">
+                                            <span style="min-height: 1.2em; display: block;"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="categoriaId" class="form-label">Categoría <span class="text-danger">*</span></label>

@@ -57,9 +57,15 @@ namespace SistemaContable.Models
         [ForeignKey("CategoriaId")]
         public virtual Categoria? Categoria { get; set; }
         
+        // Mantener por compatibilidad pero marcar como obsoleto
+        [Obsolete("Use ProductoVentaImpuestos collection instead. This field will be removed in future versions.")]
         public int? ImpuestoId { get; set; }
         [ForeignKey("ImpuestoId")]
+        [Obsolete("Use ProductoVentaImpuestos collection instead. This field will be removed in future versions.")]
         public virtual Impuesto? Impuesto { get; set; }
+        
+        // Nueva relación muchos-a-muchos con Impuestos
+        public virtual ICollection<ProductoVentaImpuesto>? ProductoVentaImpuestos { get; set; }
         
         public int? RutaImpresoraId { get; set; }
         [ForeignKey("RutaImpresoraId")]

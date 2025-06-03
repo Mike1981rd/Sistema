@@ -18,6 +18,24 @@ namespace SistemaContable.Controllers.API
             _empresaService = empresaService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCategorias()
+        {
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            
+            var categorias = await _context.Categorias
+                .Where(c => c.EmpresaId == empresaId && c.Estado)
+                .OrderBy(c => c.Nombre)
+                .Select(c => new 
+                {
+                    id = c.Id,
+                    nombre = c.Nombre
+                })
+                .ToListAsync();
+
+            return Ok(categorias);
+        }
+
         [HttpGet("Buscar")]
         public async Task<IActionResult> Buscar(string term = "")
         {

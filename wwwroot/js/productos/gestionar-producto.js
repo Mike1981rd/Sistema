@@ -1,7 +1,17 @@
 // gestionar-producto.js - Version limpia
 // Clonado exactamente del módulo Items
 
+// Variable para controlar si la pestaña de recetas ha sido abierta
+let recetaTabOpened = false;
+let recetaDataLoaded = false;
+
+// Verificar que jQuery esté disponible
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery no está disponible!');
+}
+
 $(document).ready(function() {
+    console.log('Document ready ejecutado en gestionar-producto.js');
     // Solo el código del Select2 de categorías clonado de Items
     initCategoriasSelect2();
     
@@ -32,25 +42,60 @@ $(document).ready(function() {
     // Agregar manejo de herencia de categorías
     initCategoriaInheritance();
     
+    // Detectar cuando se abre la pestaña de recetas
+    $('#inventario-tab').on('click', function() {
+        recetaTabOpened = true;
+        const productoId = $('#productoId').val();
+        if (productoId && productoId !== '0' && !recetaDataLoaded) {
+            cargarRecetaExistente(productoId);
+            recetaDataLoaded = true;
+        }
+    });
+    
     // El campo de costo ahora es readonly y se actualiza desde la receta
     // por lo que removemos el listener de input
     
-    // Si estamos editando un producto, cargar su receta y datos
+    // Si estamos editando un producto, cargar su datos (pero no la receta automáticamente)
     const productoId = $('#productoId').val();
-    if (productoId && productoId !== '0') {
-        cargarDatosProductoExistente(productoId);
-        cargarRecetaExistente(productoId);
+    console.log('ProductoId encontrado en el DOM:', productoId);
+    console.log('Tipo de productoId:', typeof productoId);
+    
+    if (productoId && productoId !== '0' && productoId !== '') {
+        console.log('Iniciando carga de producto existente con ID:', productoId);
+        // Deshabilitar la herencia mientras se cargan los datos
+        allowInheritancePopup = false;
+        // Esperar un poco para asegurar que TinyMCE esté inicializado
+        setTimeout(() => {
+            console.log('Ejecutando cargarDatosProductoExistente después del timeout');
+            cargarDatosProductoExistente(productoId);
+        }, 1000); // Aumentar el timeout a 1 segundo
+    } else {
+        console.log('No se encontró productoId válido, modo creación');
     }
 });
+
+// Variable global para controlar cuándo mostrar el popup de herencia
+let allowInheritancePopup = false;
 
 // Función para manejar la herencia de datos desde la categoría
 function initCategoriaInheritance() {
     let ultimaCategoriaCreada = null;
     
+    // Activar el popup después de un pequeño delay para evitar que aparezca en la carga inicial
+    setTimeout(() => {
+        allowInheritancePopup = true;
+    }, 2000);
+    
     $('#categoriaId').off('change.inheritance').on('change.inheritance', function() {
         const categoriaId = $(this).val();
         
         if (!categoriaId) return;
+        
+        // No procesar si no está permitido mostrar el popup (carga inicial)
+        if (!allowInheritancePopup) {
+            console.log('Omitiendo herencia durante carga inicial');
+            return;
+        }
         
         // Verificar si es una categoría recién creada
         const dataItem = $('#categoriaId').select2('data')[0];
@@ -219,13 +264,22 @@ function initCategoriaInheritance() {
                         if (response.impuestoId) {
                             console.log(`Heredando impuesto ID: ${response.impuestoId} a la pestaña de precios`);
                             impuestosParaSeleccionar.push(response.impuestoId);
+                        } else {
+                            console.log('No hay impuesto regular para heredar');
                         }
                         
                         // Agregar impuesto de propina si existe
                         if (response.propinaImpuestoId) {
                             console.log(`Heredando impuesto de propina ID: ${response.propinaImpuestoId} a la pestaña de precios`);
+                            console.log(`Tipo de propinaImpuestoId: ${typeof response.propinaImpuestoId}`);
+                            console.log(`Valor de propinaImpuestoId: ${response.propinaImpuestoId}`);
                             impuestosParaSeleccionar.push(response.propinaImpuestoId);
+                        } else {
+                            console.log('No hay impuesto de propina para heredar');
+                            console.log('Valor de response.propinaImpuestoId:', response.propinaImpuestoId);
                         }
+                        
+                        console.log('Lista final de impuestos para seleccionar:', impuestosParaSeleccionar);
                         
                         // Si hay impuestos para seleccionar, procesar
                         if (impuestosParaSeleccionar.length > 0) {
@@ -234,54 +288,63 @@ function initCategoriaInheritance() {
                                     // Limpiar selección actual
                                     $firstImpuestoSelect.val(null).trigger('change');
                                     
-                                    // Promesas para cargar cada impuesto
-                                    let promesasImpuestos = impuestosParaSeleccionar.map(impuestoId => {
-                                        return new Promise((resolveImpuesto) => {
-                                            $.ajax({
-                                                url: `/Impuestos/Buscar?term=${impuestoId}&exactId=true`,
-                                                type: 'GET',
-                                                success: function(data) {
-                                                    if (data.results && data.results.length > 0) {
-                                                        const impuestoOption = data.results[0];
-                                                        // Crear la opción si no existe
-                                                        if (!$firstImpuestoSelect.find(`option[value="${impuestoOption.id}"]`).length) {
-                                                            const newOption = new Option(impuestoOption.text, impuestoOption.id, false, false);
-                                                            $firstImpuestoSelect.append(newOption);
-                                                        }
-                                                        
-                                                        // IMPORTANTE: Extraer y guardar el porcentaje del impuesto
-                                                        // El texto tiene formato "Nombre X%" - necesitamos extraer el X
-                                                        const match = impuestoOption.text.match(/(\d+(?:\.\d+)?)\s*%/);
-                                                        if (match) {
-                                                            const porcentaje = parseFloat(match[1]);
-                                                            window.impuestosDataGlobal = window.impuestosDataGlobal || {};
-                                                            window.impuestosDataGlobal[impuestoOption.id] = porcentaje;
-                                                            console.log(`Guardando porcentaje del impuesto ${impuestoOption.id}: ${porcentaje}%`);
-                                                        }
+                                    // Cargar todos los impuestos disponibles y luego seleccionar los requeridos
+                                    $.ajax({
+                                        url: '/api/impuestos',
+                                        type: 'GET',
+                                        data: { search: '', page: 1 },
+                                        success: function(impuestosDisponibles) {
+                                            console.log('Impuestos disponibles:', impuestosDisponibles);
+                                            
+                                            // Procesar cada impuesto para seleccionar
+                                            impuestosParaSeleccionar.forEach(impuestoId => {
+                                                const impuestoEncontrado = impuestosDisponibles.find(imp => imp.id == impuestoId);
+                                                
+                                                if (impuestoEncontrado) {
+                                                    console.log(`✅ Impuesto ${impuestoId} encontrado:`, impuestoEncontrado);
+                                                    
+                                                    const textoImpuesto = `${impuestoEncontrado.nombre} (${impuestoEncontrado.porcentaje}%)`;
+                                                    
+                                                    // Crear la opción si no existe
+                                                    if (!$firstImpuestoSelect.find(`option[value="${impuestoEncontrado.id}"]`).length) {
+                                                        const newOption = new Option(textoImpuesto, impuestoEncontrado.id, false, false);
+                                                        $firstImpuestoSelect.append(newOption);
                                                     }
-                                                    resolveImpuesto();
-                                                },
-                                                error: function() {
-                                                    console.error(`Error al cargar impuesto ${impuestoId}`);
-                                                    resolveImpuesto();
+                                                    
+                                                    // Guardar el porcentaje del impuesto
+                                                    window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                                                    window.impuestosDataGlobal[impuestoEncontrado.id] = parseFloat(impuestoEncontrado.porcentaje);
+                                                    console.log(`Guardando porcentaje del impuesto ${impuestoEncontrado.id}: ${impuestoEncontrado.porcentaje}%`);
+                                                } else {
+                                                    console.warn(`❌ Impuesto ${impuestoId} NO ENCONTRADO en impuestos disponibles.`);
+                                                    
+                                                    // Si no se encuentra, crear una opción temporal para que no falle
+                                                    const textoTemporal = `Impuesto ${impuestoId} (No disponible)`;
+                                                    if (!$firstImpuestoSelect.find(`option[value="${impuestoId}"]`).length) {
+                                                        const newOption = new Option(textoTemporal, impuestoId, false, false);
+                                                        $firstImpuestoSelect.append(newOption);
+                                                    }
                                                 }
                                             });
-                                        });
-                                    });
-                                    
-                                    // Esperar a que todos los impuestos se carguen y luego seleccionarlos
-                                    Promise.all(promesasImpuestos).then(() => {
-                                        const selectedValues = impuestosParaSeleccionar.map(id => id.toString());
-                                        $firstImpuestoSelect.val(selectedValues).trigger('change');
-                                        if (response.impuestoId) camposActualizados.push('Impuesto');
-                                        if (response.propinaImpuestoId) camposActualizados.push('Impuesto de Propina');
-                                        
-                                        // Disparar el cálculo del precio total después de seleccionar los impuestos
-                                        setTimeout(() => {
-                                            $firstImpuestoSelect.trigger('select2:select');
-                                        }, 100);
-                                        
-                                        resolve(true);
+                                            
+                                            // Seleccionar todos los impuestos
+                                            const selectedValues = impuestosParaSeleccionar.map(id => id.toString());
+                                            $firstImpuestoSelect.val(selectedValues).trigger('change');
+                                            
+                                            if (response.impuestoId) camposActualizados.push('Impuesto');
+                                            if (response.propinaImpuestoId) camposActualizados.push('Impuesto de Propina');
+                                            
+                                            // Disparar el cálculo del precio total
+                                            setTimeout(() => {
+                                                $firstImpuestoSelect.trigger('select2:select');
+                                            }, 100);
+                                            
+                                            resolve(true);
+                                        },
+                                        error: function(xhr, status, error) {
+                                            console.error('Error al cargar impuestos disponibles:', error);
+                                            resolve(false);
+                                        }
                                     });
                                 })
                             );
@@ -1301,6 +1364,65 @@ function guardarProducto() {
     const productoId = $('#productoId').val();
     const esNuevo = !productoId || productoId === '0';
     
+    // Verificar si hay una imagen nueva para subir
+    const imagenArchivo = $('#imagenArchivo')[0].files[0];
+    
+    if (imagenArchivo) {
+        // Si hay imagen nueva, primero subirla
+        subirImagenYGuardarProducto(imagenArchivo, productoId, esNuevo);
+    } else {
+        // Si no hay imagen nueva, guardar producto directamente
+        guardarProductoSinImagen(productoId, esNuevo);
+    }
+}
+
+// Función para subir imagen y luego guardar producto
+function subirImagenYGuardarProducto(archivo, productoId, esNuevo) {
+    const formDataImagen = new FormData();
+    formDataImagen.append('imagen', archivo);
+    formDataImagen.append('tipo', 'producto');
+    
+    // Mostrar loading
+    Swal.fire({
+        title: 'Subiendo imagen...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    $.ajax({
+        url: '/api/upload/imagen', // Necesitaremos crear este endpoint
+        type: 'POST',
+        data: formDataImagen,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            if (response.success && response.url) {
+                // Imagen subida exitosamente, guardar producto con la URL
+                $('#imagenUrl').val(response.url);
+                guardarProductoSinImagen(productoId, esNuevo);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al subir la imagen: ' + (response.mensaje || 'Error desconocido')
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al subir la imagen'
+            });
+        }
+    });
+}
+
+// Función para guardar producto sin manejar imagen nueva
+function guardarProductoSinImagen(productoId, esNuevo) {
     // Recolectar datos del formulario
     const formData = new FormData($('#formProducto')[0]);
     
@@ -1364,6 +1486,43 @@ function guardarProducto() {
     producto.Costo = parseFloat($('#costo').val()) || 0;
     producto.OrdenClasificacion = parseInt($('#ordenClasificacion').val()) || 0;
     
+    // Asegurar que se incluya la URL de la imagen
+    const imagenUrl = $('#imagenUrl').val();
+    if (imagenUrl) {
+        producto.ImagenUrl = imagenUrl;
+    }
+    
+    // Extraer ImpuestoIds de la pestaña de precios
+    const filaImpuestos = document.querySelector('#priceRowsContainer .price-row');
+    console.log('Fila de impuestos encontrada:', filaImpuestos);
+    
+    if (filaImpuestos) {
+        const $selectImpuestos = $(filaImpuestos).find('.select2-impuestos');
+        console.log('Select de impuestos encontrado:', $selectImpuestos.length > 0);
+        
+        const impuestosSeleccionados = $selectImpuestos.val();
+        console.log('Valor del select2 de impuestos:', impuestosSeleccionados);
+        console.log('Tipo de impuestosSeleccionados:', typeof impuestosSeleccionados);
+        console.log('Es array:', Array.isArray(impuestosSeleccionados));
+        
+        if (impuestosSeleccionados && impuestosSeleccionados.length > 0) {
+            // Enviar array de impuestos
+            producto.ImpuestoIds = impuestosSeleccionados.map(id => parseInt(id));
+            // Mantener compatibilidad con campo único
+            producto.ImpuestoId = parseInt(impuestosSeleccionados[0]) || null;
+            console.log('ImpuestoIds extraídos:', producto.ImpuestoIds);
+            console.log('ImpuestoId (compatibilidad):', producto.ImpuestoId);
+        } else {
+            producto.ImpuestoIds = [];
+            producto.ImpuestoId = null;
+            console.log('No hay impuestos seleccionados en la pestaña de precios');
+        }
+    } else {
+        console.log('No se encontró la fila de impuestos');
+        producto.ImpuestoIds = [];
+        producto.ImpuestoId = null;
+    }
+    
     // Mostrar loading
     Swal.fire({
         title: 'Guardando...',
@@ -1406,11 +1565,11 @@ function guardarProducto() {
             
             console.log('ID del producto:', nuevoProductoId);
             
-            // Si hay ingredientes en la receta, guardarlos
-            if ($('#recetasTableBody tr').length > 0 && !$('#recetasTableBody').find('td[colspan="7"]').length) {
+            // Solo guardar receta si la pestaña fue abierta (y hay cambios en la receta)
+            if (recetaTabOpened && $('#recetasTableBody tr').length > 0 && !$('#recetasTableBody').find('td[colspan="7"]').length) {
                 guardarReceta(nuevoProductoId);
             } else {
-                // No hay receta, mostrar éxito
+                // No hay cambios en la receta o la pestaña no fue abierta, mostrar éxito
                 Swal.fire({
                     icon: 'success',
                     title: 'Guardado exitoso',
@@ -1634,85 +1793,281 @@ function cargarContenedoresParaItem(itemId, row, selectedContenedorId) {
 
 // Función para cargar datos del producto existente (modo edición)
 function cargarDatosProductoExistente(productoId) {
+    console.log('=== INICIO cargarDatosProductoExistente ===');
+    console.log('ProductoId recibido:', productoId);
+    console.log('URL que se llamará:', `/api/productos/${productoId}`);
+    
+    // Verificar que los campos existan en el DOM
+    console.log('Verificando campos del formulario:');
+    console.log('- Campo nombre existe:', $('#nombre').length > 0);
+    console.log('- Campo nombreCortoTPV existe:', $('#nombreCortoTPV').length > 0);
+    console.log('- Campo plu existe:', $('#plu').length > 0);
+    console.log('- Campo categoriaId existe:', $('#categoriaId').length > 0);
+    
     $.ajax({
         url: `/api/productos/${productoId}`,
         type: 'GET',
-        success: function(response) {
+        dataType: 'json',
+        xhrFields: {
+            withCredentials: true
+        },
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        success: function(response, textStatus, xhr) {
+            console.log('=== DEPURACIÓN CARGA DE PRODUCTO ===');
+            console.log('Estado HTTP:', xhr.status);
+            console.log('Texto de estado:', textStatus);
+            console.log('Respuesta completa del API:', response);
+            console.log('Tipo de respuesta:', typeof response);
+            console.log('Propiedades de la respuesta:', Object.keys(response || {}));
+            
+            // Log adicional para verificar estructura
             if (response) {
-                console.log('Cargando datos del producto:', response);
+                console.log('¿Tiene response.value?', response.hasOwnProperty('value'));
+                console.log('¿Tiene response.Value?', response.hasOwnProperty('Value'));
+                console.log('¿Tiene response.id?', response.hasOwnProperty('id'));
+                console.log('¿Tiene response.Id?', response.hasOwnProperty('Id'));
+                console.log('JSON.stringify de response:', JSON.stringify(response, null, 2));
+            }
+            
+            // Verificar si la respuesta tiene una estructura válida
+            let productData = response;
+            
+            // Intentar diferentes estructuras de respuesta
+            if (response && response.value) {
+                // Si viene envuelto en ActionResult
+                productData = response.value;
+                console.log('Usando response.value:', productData);
+            } else if (response && response.Value) {
+                // Si viene con Value en mayúscula
+                productData = response.Value;
+                console.log('Usando response.Value:', productData);
+            } else if (response && response.result) {
+                // Si viene con result
+                productData = response.result;
+                console.log('Usando response.result:', productData);
+            }
+            
+            // Validación más flexible - verificar si tiene propiedades de producto
+            const tieneIdValido = productData && (productData.Id || productData.id);
+            const tieneNombreValido = productData && (productData.Nombre || productData.nombre);
+            
+            console.log('¿Tiene ID válido?', tieneIdValido);
+            console.log('¿Tiene Nombre válido?', tieneNombreValido);
+            
+            if (tieneIdValido || tieneNombreValido) {
+                console.log('Cargando datos del producto:', productData);
+                console.log('ID del producto:', productData.Id || productData.id);
+                console.log('Nombre del producto:', productData.Nombre || productData.nombre);
                 
-                // Llenar campos básicos
-                $('#nombre').val(response.nombre || '');
-                $('#nombreCortoTPV').val(response.nombreCortoTPV || '');
-                $('#descripcionEditor').val(response.descripcion || '');
-                $('#plu').val(response.plu || '');
-                $('#colorBotonTPV_value').val(response.colorBotonTPV || '#d62828');
-                $('#costo').val(response.costo || 0);
-                $('#ordenClasificacion').val(response.ordenClasificacion || 0);
+                // Llenar campos básicos (usando PascalCase del API)
+                $('#nombre').val(productData.Nombre || '');
+                $('#nombreCortoTPV').val(productData.NombreCortoTPV || '');
+                $('#descripcionEditor').val(productData.Descripcion || '');
+                $('#plu').val(productData.PLU || '');
+                $('#colorBotonTPV_value').val(productData.ColorBotonTPV || '#d62828');
+                $('#costo').val(productData.Costo || 0);
+                $('#ordenClasificacion').val(productData.OrdenClasificacion || 0);
                 
                 // Actualizar el color picker si existe
                 if (window.pickrInstance) {
-                    window.pickrInstance.setColor(response.colorBotonTPV || '#d62828');
+                    window.pickrInstance.setColor(productData.ColorBotonTPV || '#d62828');
                 }
                 
-                // Llenar checkboxes
-                $('#esActivo').prop('checked', response.esActivo);
-                $('#permiteModificadores').prop('checked', response.permiteModificadores);
-                $('#requierePuntoCoccion').prop('checked', response.requierePuntoCoccion);
-                $('#disponibleParaVenta').prop('checked', response.disponibleParaVenta);
-                $('#requierePreparacion').prop('checked', response.requierePreparacion);
+                // Llenar checkboxes (usando PascalCase del API)
+                $('#esActivo').prop('checked', productData.EsActivo);
+                $('#permiteModificadores').prop('checked', productData.PermiteModificadores);
+                $('#requierePuntoCoccion').prop('checked', productData.RequierePuntoCoccion);
+                $('#disponibleParaVenta').prop('checked', productData.DisponibleParaVenta);
+                $('#requierePreparacion').prop('checked', productData.RequierePreparacion);
                 
                 // Tiempo de preparación
-                if (response.tiempoPreparacion) {
-                    $('#tiempoPreparacion').val(response.tiempoPreparacion);
+                if (productData.TiempoPreparacion) {
+                    $('#tiempoPreparacion').val(productData.TiempoPreparacion);
                     $('#divTiempoPreparacion').show();
                 }
                 
-                // Cargar categoría
-                if (response.categoria) {
-                    const categoriaOption = new Option(response.categoria.nombre, response.categoria.id, true, true);
-                    $('#categoriaId').append(categoriaOption).trigger('change');
+                // Cargar categoría (sin activar herencia)
+                if (productData.Categoria) {
+                    console.log('Cargando categoría:', productData.Categoria);
+                    const categoriaOption = new Option(productData.Categoria.Nombre, productData.Categoria.Id, true, true);
+                    $('#categoriaId').append(categoriaOption);
+                    // No usar trigger('change') para evitar activar la herencia durante la carga inicial
+                    $('#categoriaId').val(productData.Categoria.Id);
                 }
                 
                 // Cargar ruta de impresora
-                if (response.rutaImpresoraId) {
-                    $('#rutaImpresoraId').val(response.rutaImpresoraId).trigger('change');
+                if (productData.RutaImpresoraId) {
+                    $('#rutaImpresoraId').val(productData.RutaImpresoraId).trigger('change');
                 }
                 
                 // Cargar precio en la primera fila de precios
-                if (response.precioVenta > 0) {
-                    $('.precio-base').first().val(response.precioVenta).trigger('input');
+                if (productData.PrecioVenta > 0) {
+                    $('.precio-base').first().val(productData.PrecioVenta).trigger('input');
+                }
+                
+                // Cargar impuestos en el select2 de la primera fila
+                const $firstImpuestoSelect = $('.select2-impuestos').first();
+                if ($firstImpuestoSelect.length > 0) {
+                    let impuestosParaCargar = [];
+                    
+                    // Primero, verificar si hay múltiples impuestos (nueva estructura)
+                    if (productData.Impuestos && productData.Impuestos.length > 0) {
+                        console.log('Cargando múltiples impuestos:', productData.Impuestos);
+                        impuestosParaCargar = productData.Impuestos.map(imp => ({
+                            id: imp.Id || imp.id,
+                            nombre: imp.Nombre || imp.nombre,
+                            porcentaje: imp.Porcentaje || imp.porcentaje
+                        }));
+                    }
+                    // Si no hay múltiples impuestos, verificar el campo único (compatibilidad)
+                    else if (productData.ImpuestoId) {
+                        console.log('Cargando impuesto único (compatibilidad):', productData.ImpuestoId);
+                        if (productData.Impuesto) {
+                            impuestosParaCargar = [{
+                                id: productData.ImpuestoId,
+                                nombre: productData.Impuesto.Nombre || productData.Impuesto.nombre,
+                                porcentaje: productData.Impuesto.Porcentaje || productData.Impuesto.porcentaje
+                            }];
+                        } else {
+                            // Si no viene el objeto Impuesto, solo tenemos el ID
+                            impuestosParaCargar = [{ id: productData.ImpuestoId }];
+                        }
+                    }
+                    
+                    if (impuestosParaCargar.length > 0) {
+                        // Array para guardar las promesas de carga
+                        let promesasImpuestos = impuestosParaCargar.map(impuesto => {
+                            return new Promise((resolve) => {
+                                // Si ya tenemos el nombre y porcentaje, no necesitamos buscar
+                                if (impuesto.nombre && impuesto.porcentaje !== undefined) {
+                                    const text = `${impuesto.nombre} (${impuesto.porcentaje}%)`;
+                                    if (!$firstImpuestoSelect.find(`option[value="${impuesto.id}"]`).length) {
+                                        const newOption = new Option(text, impuesto.id, false, false);
+                                        $firstImpuestoSelect.append(newOption);
+                                    }
+                                    // Guardar el porcentaje en el store global
+                                    window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                                    window.impuestosDataGlobal[impuesto.id] = impuesto.porcentaje;
+                                    resolve();
+                                } else {
+                                    // Si solo tenemos el ID, buscar los detalles
+                                    $.ajax({
+                                        url: `/Impuestos/Buscar?term=${impuesto.id}&exactId=true`,
+                                        type: 'GET',
+                                        success: function(data) {
+                                            console.log(`Respuesta de búsqueda de impuesto ${impuesto.id}:`, data);
+                                            if (data.results && data.results.length > 0) {
+                                                const impuestoData = data.results[0];
+                                                // Crear la opción si no existe
+                                                if (!$firstImpuestoSelect.find(`option[value="${impuestoData.id}"]`).length) {
+                                                    const newOption = new Option(impuestoData.text, impuestoData.id, false, false);
+                                                    $firstImpuestoSelect.append(newOption);
+                                                }
+                                                // Guardar el porcentaje en el store global
+                                                if (impuestoData.porcentaje !== undefined) {
+                                                    window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                                                    window.impuestosDataGlobal[impuestoData.id] = parseFloat(impuestoData.porcentaje);
+                                                }
+                                            }
+                                            resolve();
+                                        },
+                                        error: function(xhr) {
+                                            console.error(`Error al cargar impuesto ${impuesto.id}:`, xhr);
+                                            resolve();
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                        
+                        // Esperar a que todos los impuestos se carguen y luego seleccionarlos
+                        Promise.all(promesasImpuestos).then(() => {
+                            const idsParaSeleccionar = impuestosParaCargar.map(imp => imp.id.toString());
+                            $firstImpuestoSelect.val(idsParaSeleccionar).trigger('change');
+                            console.log('Impuestos cargados y seleccionados:', idsParaSeleccionar);
+                            
+                            // Disparar el cálculo del precio total
+                            setTimeout(() => {
+                                $firstImpuestoSelect.trigger('select2:select');
+                            }, 100);
+                        });
+                    }
                 }
                 
                 // Cargar cuentas contables
-                cargarCuentaContable('#cuentaVentasId', response.cuentaVentasId);
-                cargarCuentaContable('#cuentaComprasInventariosId', response.cuentaComprasInventariosId);
-                cargarCuentaContable('#cuentaCostoVentasGastosId', response.cuentaCostoVentasGastosId);
-                cargarCuentaContable('#cuentaDescuentosId', response.cuentaDescuentosId);
-                cargarCuentaContable('#cuentaDevolucionesId', response.cuentaDevolucionesId);
-                cargarCuentaContable('#cuentaAjustesId', response.cuentaAjustesId);
-                cargarCuentaContable('#cuentaCostoMateriaPrimaId', response.cuentaCostoMateriaPrimaId);
+                cargarCuentaContable('#cuentaVentasId', productData.CuentaVentasId);
+                cargarCuentaContable('#cuentaComprasInventariosId', productData.CuentaComprasInventariosId);
+                cargarCuentaContable('#cuentaCostoVentasGastosId', productData.CuentaCostoVentasGastosId);
+                cargarCuentaContable('#cuentaDescuentosId', productData.CuentaDescuentosId);
+                cargarCuentaContable('#cuentaDevolucionesId', productData.CuentaDevolucionesId);
+                cargarCuentaContable('#cuentaAjustesId', productData.CuentaAjustesId);
+                cargarCuentaContable('#cuentaCostoMateriaPrimaId', productData.CuentaCostoMateriaPrimaId);
                 
                 // Cargar imagen si existe
-                if (response.imagenUrl) {
-                    $('#imagenUrl').val(response.imagenUrl);
-                    $('#imagenPreview').attr('src', response.imagenUrl).show();
+                if (productData.ImagenUrl) {
+                    $('#imagenUrl').val(productData.ImagenUrl);
+                    $('#imagenPreview').attr('src', productData.ImagenUrl).show();
                     $('#uploadPlaceholder').hide();
                     $('#removeImageBtn').show();
                 }
                 
                 // Actualizar TinyMCE si existe
-                if (typeof tinymce !== 'undefined') {
-                    tinymce.get('descripcionEditor')?.setContent(response.descripcion || '');
+                if (typeof tinymce !== 'undefined' && tinymce.get('descripcionEditor')) {
+                    try {
+                        tinymce.get('descripcionEditor').setContent(productData.Descripcion || '');
+                    } catch (e) {
+                        console.log('TinyMCE no está listo aún, estableciendo valor directo en textarea');
+                        $('#descripcionEditor').val(productData.Descripcion || '');
+                    }
+                } else {
+                    // Si TinyMCE no está disponible, establecer el valor directamente
+                    $('#descripcionEditor').val(productData.Descripcion || '');
                 }
+                
+                // Después de cargar todos los datos, permitir la herencia nuevamente
+                setTimeout(() => {
+                    allowInheritancePopup = true;
+                    console.log('Herencia de categoría activada después de cargar datos del producto');
+                }, 1000);
+            } else {
+                console.error('Datos del producto no válidos:');
+                console.error('Response completo:', response);
+                console.error('ProductData:', productData);
+                console.error('Estructura de productData:', JSON.stringify(productData, null, 2));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los datos del producto. Respuesta inválida del servidor.'
+                });
             }
         },
-        error: function(xhr) {
-            console.error('Error al cargar datos del producto:', xhr);
+        error: function(xhr, textStatus, errorThrown) {
+            console.error('Error al cargar datos del producto:');
+            console.error('Estado HTTP:', xhr.status);
+            console.error('Texto de estado:', textStatus);
+            console.error('Error:', errorThrown);
+            console.error('Respuesta del servidor:', xhr.responseText);
+            
+            let mensaje = 'No se pudieron cargar los datos del producto';
+            
+            if (xhr.status === 404) {
+                mensaje = 'Producto no encontrado';
+            } else if (xhr.status === 400) {
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    mensaje = errorResponse.mensaje || mensaje;
+                } catch (e) {
+                    // No se pudo parsear la respuesta
+                }
+            }
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudieron cargar los datos del producto'
+                text: mensaje
             });
         }
     });

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaContable.ViewModels.Productos
@@ -49,7 +50,12 @@ namespace SistemaContable.ViewModels.Productos
         [Required(ErrorMessage = "La categoría es requerida")]
         public int CategoriaId { get; set; }
         
+        // Mantener por compatibilidad
+        [Obsolete("Use ImpuestoIds instead")]
         public int? ImpuestoId { get; set; }
+        
+        // Nueva lista de impuestos
+        public List<int> ImpuestoIds { get; set; } = new List<int>();
         
         public int? RutaImpresoraId { get; set; }
         

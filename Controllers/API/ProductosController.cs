@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaContable.Data;
 using SistemaContable.Models;
+using SistemaContable.Services;
 using SistemaContable.ViewModels.Productos;
 using System;
 using System.Collections.Generic;
@@ -15,10 +16,12 @@ namespace SistemaContable.Controllers.API
     public class ProductosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmpresaService _empresaService;
 
-        public ProductosController(ApplicationDbContext context)
+        public ProductosController(ApplicationDbContext context, IEmpresaService empresaService)
         {
             _context = context;
+            _empresaService = empresaService;
         }
 
         /// <summary>
@@ -31,10 +34,18 @@ namespace SistemaContable.Controllers.API
         {
             try
             {
-                // Query base con includes necesarios
+                // Obtener empresa actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
+                // Query base con includes necesarios, filtrando por empresa
                 var query = _context.ProductosVenta
                     .Include(p => p.Categoria)
                     .Include(p => p.Variantes)
+                    .Where(p => p.EmpresaId == empresaId)
                     .AsQueryable();
 
                 // Aplicar filtros
@@ -158,16 +169,25 @@ namespace SistemaContable.Controllers.API
         {
             try
             {
-                // Query con todas las relaciones necesarias
+                // Obtener empresa actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
+                // Query con todas las relaciones necesarias, filtrando por empresa
                 var producto = await _context.ProductosVenta
                     .Include(p => p.Categoria)
                     .Include(p => p.Impuesto)
+                    .Include(p => p.ProductoVentaImpuestos)
+                        .ThenInclude(pvi => pvi.Impuesto)
                     .Include(p => p.RutaImpresora)
                     .Include(p => p.Variantes)
                     .Include(p => p.ProductoModificadorGrupos)
                         .ThenInclude(pmg => pmg.GrupoModificadores)
                             .ThenInclude(g => g.Modificadores)
-                    .FirstOrDefaultAsync(p => p.Id == id);
+                    .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
 
                 if (producto == null)
                 {
@@ -219,6 +239,7 @@ namespace SistemaContable.Controllers.API
                     }
                 };
 
+                // Mantener compatibilidad con campo único de impuesto
                 if (producto.Impuesto != null)
                 {
                     productoDto.Impuesto = new ImpuestoSimpleDto
@@ -227,6 +248,20 @@ namespace SistemaContable.Controllers.API
                         Nombre = producto.Impuesto.Nombre,
                         Porcentaje = producto.Impuesto.Porcentaje
                     };
+                }
+                
+                // Mapear la nueva colección de impuestos
+                if (producto.ProductoVentaImpuestos != null && producto.ProductoVentaImpuestos.Any())
+                {
+                    productoDto.Impuestos = producto.ProductoVentaImpuestos
+                        .OrderBy(pvi => pvi.Orden)
+                        .Select(pvi => new ImpuestoSimpleDto
+                        {
+                            Id = pvi.Impuesto.Id,
+                            Nombre = pvi.Impuesto.Nombre,
+                            Porcentaje = pvi.Impuesto.Porcentaje
+                        })
+                        .ToList();
                 }
 
                 if (producto.RutaImpresora != null)
@@ -271,6 +306,7 @@ namespace SistemaContable.Controllers.API
                     }).ToList() ?? new List<ModificadorSimpleDto>()
                 }).ToList() ?? new List<GrupoModificadoresAsignadoDto>();
 
+                // Devolver explícitamente Ok() para evitar el wrapper de ActionResult
                 return Ok(productoDto);
             }
             catch (Exception ex)
@@ -371,11 +407,45 @@ namespace SistemaContable.Controllers.API
                     CuentaDescuentosId = productoDto.CuentaDescuentosId,
                     CuentaDevolucionesId = productoDto.CuentaDevolucionesId,
                     CuentaAjustesId = productoDto.CuentaAjustesId,
-                    CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId
+                    CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId,
+                    // Auditoría
+                    UsuarioCreacionId = 1 // TODO: Obtener del usuario actual cuando se implemente autenticación
                 };
 
                 _context.ProductosVenta.Add(producto);
                 await _context.SaveChangesAsync();
+                
+                // Guardar impuestos múltiples
+                if (productoDto.ImpuestoIds != null && productoDto.ImpuestoIds.Any())
+                {
+                    foreach (var impuestoId in productoDto.ImpuestoIds.Distinct())
+                    {
+                        var productoImpuesto = new ProductoVentaImpuesto
+                        {
+                            ProductoVentaId = producto.Id,
+                            ImpuestoId = impuestoId,
+                            Orden = productoDto.ImpuestoIds.IndexOf(impuestoId),
+                            EmpresaId = productoDto.EmpresaId,
+                            UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                        };
+                        _context.ProductoVentaImpuestos.Add(productoImpuesto);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+                // Si no se enviaron ImpuestoIds pero sí ImpuestoId (compatibilidad)
+                else if (productoDto.ImpuestoId.HasValue)
+                {
+                    var productoImpuesto = new ProductoVentaImpuesto
+                    {
+                        ProductoVentaId = producto.Id,
+                        ImpuestoId = productoDto.ImpuestoId.Value,
+                        Orden = 0,
+                        EmpresaId = productoDto.EmpresaId,
+                        UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                    };
+                    _context.ProductoVentaImpuestos.Add(productoImpuesto);
+                    await _context.SaveChangesAsync();
+                }
 
                 // Retornar el producto creado
                 return CreatedAtAction(
@@ -474,9 +544,53 @@ namespace SistemaContable.Controllers.API
                 producto.CuentaDevolucionesId = productoDto.CuentaDevolucionesId;
                 producto.CuentaAjustesId = productoDto.CuentaAjustesId;
                 producto.CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId;
+                // Auditoría
+                producto.UsuarioModificacionId = 1; // TODO: Obtener del usuario actual cuando se implemente autenticación
 
                 try
                 {
+                    await _context.SaveChangesAsync();
+                    
+                    // Obtener empresaId para los impuestos
+                    var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                    
+                    // Actualizar impuestos múltiples
+                    // Primero eliminar los impuestos existentes
+                    var impuestosExistentes = await _context.ProductoVentaImpuestos
+                        .Where(pvi => pvi.ProductoVentaId == producto.Id)
+                        .ToListAsync();
+                    _context.ProductoVentaImpuestos.RemoveRange(impuestosExistentes);
+                    
+                    // Luego agregar los nuevos
+                    if (productoDto.ImpuestoIds != null && productoDto.ImpuestoIds.Any())
+                    {
+                        foreach (var impuestoId in productoDto.ImpuestoIds.Distinct())
+                        {
+                            var productoImpuesto = new ProductoVentaImpuesto
+                            {
+                                ProductoVentaId = producto.Id,
+                                ImpuestoId = impuestoId,
+                                Orden = productoDto.ImpuestoIds.IndexOf(impuestoId),
+                                EmpresaId = empresaId,
+                                UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                            };
+                            _context.ProductoVentaImpuestos.Add(productoImpuesto);
+                        }
+                    }
+                    // Si no se enviaron ImpuestoIds pero sí ImpuestoId (compatibilidad)
+                    else if (productoDto.ImpuestoId.HasValue)
+                    {
+                        var productoImpuesto = new ProductoVentaImpuesto
+                        {
+                            ProductoVentaId = producto.Id,
+                            ImpuestoId = productoDto.ImpuestoId.Value,
+                            Orden = 0,
+                            EmpresaId = empresaId,
+                            UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                        };
+                        _context.ProductoVentaImpuestos.Add(productoImpuesto);
+                    }
+                    
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -555,6 +669,13 @@ namespace SistemaContable.Controllers.API
         {
             try
             {
+                // Obtener empresa actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
                 var producto = await _context.ProductosVenta
                     .Include(p => p.IngredientesDeEsteProducto)
                         .ThenInclude(ri => ri.Item)
@@ -562,7 +683,7 @@ namespace SistemaContable.Controllers.API
                     .Include(p => p.IngredientesDeEsteProducto)
                         .ThenInclude(ri => ri.ItemContenedor)
                             .ThenInclude(ic => ic.UnidadMedida)
-                    .FirstOrDefaultAsync(p => p.Id == productoId);
+                    .FirstOrDefaultAsync(p => p.Id == productoId && p.EmpresaId == empresaId);
 
                 if (producto == null)
                 {
@@ -611,17 +732,21 @@ namespace SistemaContable.Controllers.API
 
             try
             {
+                // Obtener empresa actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
                 var producto = await _context.ProductosVenta
                     .Include(p => p.IngredientesDeEsteProducto)
-                    .FirstOrDefaultAsync(p => p.Id == productoId);
+                    .FirstOrDefaultAsync(p => p.Id == productoId && p.EmpresaId == empresaId);
 
                 if (producto == null)
                 {
                     return NotFound(new { mensaje = "Producto no encontrado" });
                 }
-
-                // Obtener EmpresaId del producto
-                var empresaId = producto.EmpresaId;
 
                 // Actualizar información general de la receta
                 producto.NotasReceta = recetaDto.NotasReceta;
@@ -684,9 +809,16 @@ namespace SistemaContable.Controllers.API
         {
             try
             {
+                // Obtener empresa actual
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
                 var producto = await _context.ProductosVenta
                     .Include(p => p.IngredientesDeEsteProducto)
-                    .FirstOrDefaultAsync(p => p.Id == productoId);
+                    .FirstOrDefaultAsync(p => p.Id == productoId && p.EmpresaId == empresaId);
 
                 if (producto == null)
                 {

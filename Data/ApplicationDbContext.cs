@@ -98,6 +98,7 @@ namespace SistemaContable.Data
         public DbSet<ProductoModificadorGrupo> ProductosModificadoresGrupos { get; set; }
         public DbSet<RecetaIngrediente> RecetasIngredientes { get; set; }
         public DbSet<PaqueteComponente> PaquetesComponentes { get; set; }
+        public DbSet<ProductoVentaImpuesto> ProductoVentaImpuestos { get; set; }
         
         // Roles y permisos
         public DbSet<Rol> Roles { get; set; }
@@ -865,6 +866,34 @@ namespace SistemaContable.Data
                 entity.HasMany(p => p.ProductoModificadorGrupos)
                       .WithOne(pmg => pmg.Producto)
                       .HasForeignKey(pmg => pmg.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Relación muchos a muchos con Impuestos
+                entity.HasMany(p => p.ProductoVentaImpuestos)
+                      .WithOne(pvi => pvi.ProductoVenta)
+                      .HasForeignKey(pvi => pvi.ProductoVentaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configuración para ProductoVentaImpuesto
+            builder.Entity<ProductoVentaImpuesto>(entity =>
+            {
+                entity.ToTable("ProductoVentaImpuestos");
+                entity.HasKey(e => e.Id);
+                
+                // Índice único para evitar duplicados
+                entity.HasIndex(e => new { e.ProductoVentaId, e.ImpuestoId })
+                      .IsUnique();
+                      
+                // Relaciones
+                entity.HasOne(pvi => pvi.ProductoVenta)
+                      .WithMany(p => p.ProductoVentaImpuestos)
+                      .HasForeignKey(pvi => pvi.ProductoVentaId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(pvi => pvi.Impuesto)
+                      .WithMany()
+                      .HasForeignKey(pvi => pvi.ImpuestoId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
             

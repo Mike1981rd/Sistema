@@ -427,8 +427,11 @@ namespace SistemaContable.Controllers
             try
             {
                 var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                Console.WriteLine($"[ImpuestosController] Buscar - EmpresaId: {empresaId}, term: '{term}', exactId: {exactId}");
+                
                 if (empresaId <= 0)
                 {
+                    Console.WriteLine("[ImpuestosController] EmpresaId inválido");
                     return Json(new { results = new List<object>() });
                 }
 
@@ -438,10 +441,12 @@ namespace SistemaContable.Controllers
                 // Si exactId es true, buscar por ID exacto
                 if (exactId && !string.IsNullOrEmpty(term) && int.TryParse(term, out int impuestoId))
                 {
+                    Console.WriteLine($"[ImpuestosController] Buscando por ID exacto: {impuestoId}");
                     query = query.Where(i => i.Id == impuestoId);
                 }
                 else if (!string.IsNullOrEmpty(term))
                 {
+                    Console.WriteLine($"[ImpuestosController] Buscando por término: {term}");
                     query = query.Where(i => i.Nombre.Contains(term));
                 }
 
@@ -449,9 +454,16 @@ namespace SistemaContable.Controllers
                     .OrderBy(i => i.Nombre)
                     .Select(i => new { 
                         id = i.Id, 
-                        text = $"{i.Nombre} {(i.Porcentaje.HasValue ? i.Porcentaje.Value.ToString() + "%" : "")}"
+                        text = $"{i.Nombre} {(i.Porcentaje.HasValue ? i.Porcentaje.Value.ToString() + "%" : "")}",
+                        porcentaje = i.Porcentaje ?? 0
                     })
                     .ToListAsync();
+
+                Console.WriteLine($"[ImpuestosController] Encontrados {impuestos.Count} impuestos");
+                foreach (var imp in impuestos)
+                {
+                    Console.WriteLine($"[ImpuestosController] Impuesto: ID={imp.id}, text='{imp.text}', porcentaje={imp.porcentaje}");
+                }
 
                 return Json(new { results = impuestos });
             }
