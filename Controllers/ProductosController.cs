@@ -109,31 +109,6 @@ namespace SistemaContable.Controllers
             return View();
         }
 
-        /// <summary>
-        /// Vista de edición de producto
-        /// </summary>
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var producto = await _context.ProductosVenta.FindAsync(id);
-            if (producto == null)
-            {
-                return NotFound();
-            }
-            
-            var empresaId = await _empresaService.ObtenerEmpresaActualId();
-            if (empresaId <= 0)
-            {
-                return RedirectToAction("Index", "Empresas");
-            }
-            
-            await CargarDatosViewBag(empresaId);
-            return View("GestionarProducto", id);
-        }
 
         /// <summary>
         /// Vista de detalles del producto
@@ -162,6 +137,38 @@ namespace SistemaContable.Controllers
             }
 
             return View(producto);
+        }
+
+        /// <summary>
+        /// Vista de edición de producto
+        /// </summary>
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var empresaId = await _empresaService.ObtenerEmpresaActualId();
+            
+            if (empresaId <= 0)
+            {
+                return RedirectToAction("Index", "Empresas");
+            }
+
+            var producto = await _context.ProductosVenta
+                .Include(p => p.Categoria)
+                .Include(p => p.Impuesto)
+                .Include(p => p.RutaImpresora)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (producto == null)
+            {
+                return NotFound();
+            }
+
+            await CargarDatosViewBag(empresaId);
+            return View("GestionarProducto", id);
         }
 
         /// <summary>

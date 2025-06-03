@@ -8,7 +8,7 @@ namespace SistemaContable.Models.ViewModels
     {
         public int Id { get; set; }
         
-        public int ItemId { get; set; }
+        public int? ItemId { get; set; }
         
         [Display(Name = "Contenedor")]
         public int? ItemContenedorId { get; set; }

@@ -99,22 +99,18 @@
                                             <span class="invalid-feedback" style="min-height: 1.2em; display: block;">El nombre es requerido</span>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="ordenClasificacion" class="form-label">Orden de Clasificación</label>
-                                            <input type="number" id="ordenClasificacion" name="OrdenClasificacion" class="form-control" 
-                                                   value="0">
-                                            <span style="min-height: 1.2em; display: block;"></span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Fila 3 de Campos -->
-                                    <div class="row gx-3 mb-3">
-                                        <div class="col-md-6">
                                             <label for="categoriaId" class="form-label">Categoría <span class="text-danger">*</span></label>
                                             <select id="categoriaId" name="CategoriaId" class="form-select select2-categoria" required>
                                                 <option value="">Seleccione una categoría</option>
                                             </select>
                                             <span class="invalid-feedback" style="min-height: 1.2em; display: block;">La categoría es requerida</span>
                                         </div>
+                                        <!-- Campo de orden oculto -->
+                                        <input type="hidden" id="ordenClasificacion" name="OrdenClasificacion" value="0">
+                                    </div>
+
+                                    <!-- Fila 3 de Campos -->
+                                    <div class="row gx-3 mb-3">
                                         <div class="col-md-6">
                                             <label for="colorBotonTPV_value" class="form-label">Color del Botón (TPV)</label>
                                             <div class="input-group">
@@ -237,10 +233,10 @@
                                         <!-- Primera fila de precio (plantilla) -->
                                         <div class="row price-row gx-3 mb-3 align-items-center">
                                             <div class="col-md-3">
-                                                <label class="form-label">Precio base <span class="text-danger">*</span></label>
+                                                <label class="form-label">Precio base</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">$</span>
-                                                    <input type="number" class="form-control precio-base" data-original-name="PrecioBase" step="0.01" placeholder="0.00" required>
+                                                    <input type="number" class="form-control precio-base" data-original-name="PrecioBase" step="0.01" placeholder="0.00" value="0">
                                                 </div>
                                             </div>
                                             <div class="col-auto d-flex align-items-end pb-1">
@@ -258,10 +254,10 @@
                                                 <span class="h4 mx-2 text-muted">=</span>
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label">Precio Total <span class="text-danger">*</span></label>
+                                                <label class="form-label">Precio Total</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">$</span>
-                                                    <input type="number" class="form-control precio-total" data-original-name="PrecioTotal" step="0.01" placeholder="0.00" required>
+                                                    <input type="number" class="form-control precio-total" data-original-name="PrecioTotal" step="0.01" placeholder="0.00" value="0">
                                                 </div>
                                             </div>
                                             <div class="col-auto d-flex align-items-center">
@@ -285,11 +281,12 @@
                                         <h5 class="mb-3">Información de Costo y Margen</h5>
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <label for="costo">Costo <span class="text-danger">*</span></label>
+                                                <label for="costo">Costo (Calculado de Receta)</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">$</span>
-                                                    <input type="number" class="form-control" id="costo" name="Costo" step="0.01" min="0" required>
+                                                    <input type="number" class="form-control" id="costo" name="Costo" step="0.01" min="0" readonly value="0">
                                                 </div>
+                                                <small class="form-text text-muted">Se calcula automáticamente desde la pestaña de recetas</small>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -389,8 +386,18 @@
                                                 </div>
                                                 
                                                 <div class="cost-info-row">
-                                                    <span>Precio Questions:</span>
-                                                    <span id="precioQuestions">$0.00</span>
+                                                    <span>Costo Unitario:</span>
+                                                    <span id="costoUnitarioProducto">$0.00</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row">
+                                                    <span>Cantidad Base:</span>
+                                                    <span id="cantidadBaseProducto">1.00</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row">
+                                                    <span>Costo Total Producto:</span>
+                                                    <span id="costoTotalProducto">$0.00</span>
                                                 </div>
                                                 
                                                 <div class="cost-info-row highlighted">
@@ -825,6 +832,13 @@
             document.getElementById('totalReceta').textContent = '$0.00';
             document.getElementById('costoTotalIngredientes').textContent = '$0.00';
             document.getElementById('precioVentaSugerido').textContent = '$0.00';
+            
+            // Actualizar el campo de costo a 0
+            const costoInput = document.getElementById('costo');
+            if (costoInput) {
+                costoInput.value = '0.00';
+                $(costoInput).trigger('change');
+            }
         }
 
         // Variable para almacenar los items
@@ -1052,18 +1066,31 @@
             
             document.getElementById('totalReceta').textContent = '$' + total.toFixed(2);
             document.getElementById('costoTotalIngredientes').textContent = '$' + total.toFixed(2);
+            
+            // Actualizar el campo de costo en la pestaña de precios
+            const costoInput = document.getElementById('costo');
+            if (costoInput) {
+                costoInput.value = total.toFixed(2);
+                // Disparar evento para que se actualicen otros cálculos
+                $(costoInput).trigger('change');
+            }
+            
             calcularCostos();
+            calcularMargenGanancia();
         }
 
         // Función para calcular costos y precio sugerido
         function calcularCostos() {
-            const costoTotal = parseFloat(document.getElementById('totalReceta').textContent.replace('$', '')) || 0;
+            const costoTotalIngredientes = parseFloat(document.getElementById('totalReceta').textContent.replace('$', '')) || 0;
             const margen = parseFloat(document.getElementById('margenSlider').value) || 0;
             const precioVenta = parseFloat(document.getElementById('precioVentaProducto').textContent.replace('$', '')) || 0;
-            const precioQuestions = parseFloat(document.getElementById('precioQuestions').textContent.replace('$', '')) || 0;
+            const costoUnitarioProducto = parseFloat(document.getElementById('costoUnitarioProducto').textContent.replace('$', '')) || 0;
             
-            // Calcular precio sugerido basado en el costo total y margen
-            const precioSugerido = costoTotal * (1 + margen / 100) + precioQuestions;
+            // Usar el mayor entre el costo de ingredientes y el costo unitario del producto
+            const costoBase = Math.max(costoTotalIngredientes, costoUnitarioProducto);
+            
+            // Calcular precio sugerido basado en el costo base y margen
+            const precioSugerido = costoBase * (1 + margen / 100);
             document.getElementById('precioVentaSugerido').textContent = '$' + precioSugerido.toFixed(2);
         }
 
@@ -1148,6 +1175,33 @@
                 icon: 'success'
             });
         }
+        
+        // Función para calcular el margen de ganancia
+        function calcularMargenGanancia() {
+            // Obtener el costo desde el campo readonly
+            const costo = parseFloat($('#costo').val()) || 0;
+            
+            // Obtener el precio de venta de la primera fila de precios
+            const precioTotal = parseFloat($('.precio-total').first().val()) || 0;
+            
+            if (costo > 0 && precioTotal > 0) {
+                // Calcular margen: ((precio - costo) / costo) * 100
+                const margen = ((precioTotal - costo) / costo) * 100;
+                $('#margen').val(margen.toFixed(2));
+            } else {
+                $('#margen').val('0.00');
+            }
+        }
+        
+        // Agregar listeners para recalcular margen cuando cambien los precios
+        $(document).on('input', '.precio-total', function() {
+            calcularMargenGanancia();
+        });
+        
+        // También recalcular cuando cambie el costo (aunque sea readonly, puede cambiar por la receta)
+        $('#costo').on('change', function() {
+            calcularMargenGanancia();
+        });
     </script>
 }
 

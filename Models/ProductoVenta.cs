@@ -43,8 +43,7 @@ namespace SistemaContable.Models
         public bool RequierePuntoCoccion { get; set; } = false;
         
         // Relaciones existentes
-        [Required]
-        public int ItemId { get; set; }
+        public int? ItemId { get; set; }
         [ForeignKey("ItemId")]
         public virtual Item? Item { get; set; }
 
@@ -126,5 +125,15 @@ namespace SistemaContable.Models
         public int? CuentaCostoMateriaPrimaId { get; set; }
         [ForeignKey("CuentaCostoMateriaPrimaId")]
         public virtual CuentaContable? CuentaCostoMateriaPrima { get; set; }
+        
+        // Campos para Recetas
+        [StringLength(1000)]
+        public string? NotasReceta { get; set; }
+        
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? MargenGananciaReceta { get; set; }
+        
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? CostoTotalReceta { get; set; }
     }
 }

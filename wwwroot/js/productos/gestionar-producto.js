@@ -31,6 +31,16 @@ $(document).ready(function() {
     
     // Agregar manejo de herencia de categorías
     initCategoriaInheritance();
+    
+    // El campo de costo ahora es readonly y se actualiza desde la receta
+    // por lo que removemos el listener de input
+    
+    // Si estamos editando un producto, cargar su receta y datos
+    const productoId = $('#productoId').val();
+    if (productoId && productoId !== '0') {
+        cargarDatosProductoExistente(productoId);
+        cargarRecetaExistente(productoId);
+    }
 });
 
 // Función para manejar la herencia de datos desde la categoría
@@ -994,6 +1004,10 @@ function initPricingSystem() {
             isCalculatingTotal = true;
             calcularPrecioTotal();
             isCalculatingTotal = false;
+            // Actualizar precio en pestaña de recetas si es la primera fila
+            if (index === 0) {
+                actualizarPrecioEnRecetas();
+            }
         });
 
         precioTotalInput.addEventListener('input', function() {
@@ -1001,6 +1015,10 @@ function initPricingSystem() {
             isCalculatingBase = true;
             calcularPrecioBase();
             isCalculatingBase = false;
+            // Actualizar precio en pestaña de recetas si es la primera fila
+            if (index === 0) {
+                actualizarPrecioEnRecetas();
+            }
         });
 
         // Actualizar cuando cambien los impuestos seleccionados
@@ -1009,6 +1027,10 @@ function initPricingSystem() {
             isCalculatingTotal = true;
             calcularPrecioTotal();
             isCalculatingTotal = false;
+            // Actualizar precio en pestaña de recetas si es la primera fila
+            if (index === 0) {
+                actualizarPrecioEnRecetas();
+            }
         });
 
         // Botón eliminar
@@ -1106,6 +1128,8 @@ function initPricingSystem() {
     const firstRow = priceRowsContainer.querySelector('.price-row');
     if (firstRow) {
         initializePriceRow(firstRow, 0);
+        // Actualizar precio en recetas con el valor inicial
+        setTimeout(actualizarPrecioEnRecetas, 100);
     }
 
     // Botón añadir fila
@@ -1212,6 +1236,504 @@ function formatCuentaSelection(cuenta) {
     return cuenta.text;
 }
 
+// Función para actualizar el precio del producto en la pestaña de recetas
+function actualizarPrecioEnRecetas() {
+    // Obtener el precio total de la primera fila de precios
+    const primeraFila = document.querySelector('#priceRowsContainer .price-row');
+    if (!primeraFila) return;
+    
+    const precioTotalInput = primeraFila.querySelector('.precio-total');
+    if (!precioTotalInput) return;
+    
+    const precioTotal = parseFloat(precioTotalInput.value) || 0;
+    
+    // Actualizar el elemento en la pestaña de recetas
+    const precioVentaProductoElement = document.getElementById('precioVentaProducto');
+    if (precioVentaProductoElement) {
+        precioVentaProductoElement.textContent = '$' + precioTotal.toFixed(2);
+    }
+    
+    // Actualizar el costo unitario desde el campo de costo
+    const costoInput = document.getElementById('costo');
+    if (costoInput) {
+        const costoUnitario = parseFloat(costoInput.value) || 0;
+        const costoUnitarioElement = document.getElementById('costoUnitarioProducto');
+        if (costoUnitarioElement) {
+            costoUnitarioElement.textContent = '$' + costoUnitario.toFixed(2);
+        }
+        
+        // Calcular y actualizar el costo total (costo unitario * cantidad base)
+        const cantidadBase = 1; // Por defecto es 1, pero podríamos tener un campo para esto
+        const costoTotal = costoUnitario * cantidadBase;
+        const costoTotalElement = document.getElementById('costoTotalProducto');
+        if (costoTotalElement) {
+            costoTotalElement.textContent = '$' + costoTotal.toFixed(2);
+        }
+    }
+    
+    // También actualizar los cálculos de costos
+    if (typeof calcularCostos === 'function') {
+        calcularCostos();
+    }
+}
+
 // IMPORTANTE: Exponer las funciones globalmente para que funcionen los eventos onclick
 window.editCategoria = editCategoria;
+
+// Inicializar el manejo del formulario de producto
+$(document).ready(function() {
+    // Manejar el submit del formulario
+    $('#formProducto').on('submit', function(e) {
+        e.preventDefault();
+        guardarProducto();
+    });
+});
+
+// Función para guardar el producto completo
+function guardarProducto() {
+    // Validar el formulario
+    if (!$('#formProducto')[0].checkValidity()) {
+        $('#formProducto')[0].reportValidity();
+        return;
+    }
+    
+    // Obtener el ID del producto (si existe)
+    const productoId = $('#productoId').val();
+    const esNuevo = !productoId || productoId === '0';
+    
+    // Recolectar datos del formulario
+    const formData = new FormData($('#formProducto')[0]);
+    
+    // Convertir FormData a objeto
+    const producto = {};
+    
+    // Primero, obtener los valores de precio de la primera fila
+    const primeraFilaPrecio = document.querySelector('#priceRowsContainer .price-row');
+    if (primeraFilaPrecio) {
+        const precioBase = primeraFilaPrecio.querySelector('.precio-base')?.value || '0';
+        const precioTotal = primeraFilaPrecio.querySelector('.precio-total')?.value || '0';
+        producto.PrecioVenta = parseFloat(precioBase) || 0;
+    }
+    
+    formData.forEach((value, key) => {
+        // Ignorar campos de array de precios
+        if (key.startsWith('Precios[')) {
+            return;
+        }
+        
+        // Convertir strings vacíos a null para campos numéricos opcionales
+        if (value === '' && (key === 'TiempoPreparacion' || key === 'ImpuestoId' || 
+            key === 'RutaImpresoraId' || key === 'ItemId' || key === 'ItemContenedorId' ||
+            key === 'MarcaId' || key === 'UnidadMedidaInventarioId' || key === 'NivelMinimo' ||
+            key === 'StockActual' || key === 'Rendimiento' || key === 'CuentaVentasId' ||
+            key === 'CuentaComprasInventariosId' || key === 'CuentaCostoVentasGastosId' ||
+            key === 'CuentaDescuentosId' || key === 'CuentaDevolucionesId' || key === 'CuentaAjustesId' ||
+            key === 'CuentaCostoMateriaPrimaId')) {
+            producto[key] = null;
+        } else if (key === 'TiempoPreparacion' && value !== '') {
+            // Convertir a número si tiene valor
+            producto[key] = parseInt(value) || null;
+        } else if ((key === 'NivelMinimo' || key === 'StockActual' || key === 'Rendimiento' || 
+                   key === 'Costo' || key === 'OrdenClasificacion' || key === 'PrecioVenta') && value !== '') {
+            // Convertir a número para campos numéricos
+            producto[key] = parseFloat(value) || 0;
+        } else if ((key === 'MarcaId' || key === 'ImpuestoId' || key === 'RutaImpresoraId' ||
+                   key === 'ItemId' || key === 'ItemContenedorId' || key === 'UnidadMedidaInventarioId' ||
+                   key === 'CuentaVentasId' || key === 'CuentaComprasInventariosId' ||
+                   key === 'CuentaCostoVentasGastosId' || key === 'CuentaDescuentosId' ||
+                   key === 'CuentaDevolucionesId' || key === 'CuentaAjustesId' ||
+                   key === 'CuentaCostoMateriaPrimaId') && value !== '') {
+            // Convertir a número para IDs
+            producto[key] = parseInt(value) || null;
+        } else {
+            producto[key] = value;
+        }
+    });
+    
+    // Convertir valores booleanos
+    producto.EsActivo = $('#esActivo').is(':checked');
+    producto.PermiteModificadores = $('#permiteModificadores').is(':checked');
+    producto.RequierePuntoCoccion = $('#requierePuntoCoccion').is(':checked');
+    producto.DisponibleParaVenta = $('#disponibleParaVenta').is(':checked');
+    producto.RequierePreparacion = $('#requierePreparacion').is(':checked');
+    
+    // Asegurar que se envíe EmpresaId (por ahora hardcoded a 4)
+    producto.EmpresaId = 4;
+    
+    // Asegurar valores por defecto
+    producto.Costo = parseFloat($('#costo').val()) || 0;
+    producto.OrdenClasificacion = parseInt($('#ordenClasificacion').val()) || 0;
+    
+    // Mostrar loading
+    Swal.fire({
+        title: 'Guardando...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Determinar URL y método
+    const url = esNuevo ? '/api/productos' : `/api/productos/${productoId}`;
+    const method = esNuevo ? 'POST' : 'PUT';
+    
+    // Debug: Ver qué se está enviando
+    console.log('Datos a enviar:', producto);
+    console.log('URL:', url);
+    console.log('Método:', method);
+    
+    // Guardar producto principal
+    $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: JSON.stringify(producto),
+        success: function(response) {
+            console.log('Respuesta del servidor:', response);
+            
+            // Para POST (crear) la respuesta contiene el objeto completo
+            // Para PUT (actualizar) la respuesta puede ser vacía o contener el objeto
+            let nuevoProductoId;
+            
+            if (esNuevo) {
+                // Al crear, la respuesta debe contener el objeto con id
+                nuevoProductoId = response?.id || response?.value?.id;
+            } else {
+                // Al actualizar, usar el ID existente
+                nuevoProductoId = productoId;
+            }
+            
+            console.log('ID del producto:', nuevoProductoId);
+            
+            // Si hay ingredientes en la receta, guardarlos
+            if ($('#recetasTableBody tr').length > 0 && !$('#recetasTableBody').find('td[colspan="7"]').length) {
+                guardarReceta(nuevoProductoId);
+            } else {
+                // No hay receta, mostrar éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Guardado exitoso',
+                    text: esNuevo ? 'El producto ha sido creado correctamente' : 'El producto ha sido actualizado correctamente',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/Productos';
+                    }
+                });
+            }
+        },
+        error: function(xhr) {
+            console.error('Error completo:', xhr);
+            console.error('Respuesta del servidor:', xhr.responseJSON);
+            console.error('Texto de respuesta:', xhr.responseText);
+            
+            let mensajeError = 'Error al guardar el producto';
+            
+            if (xhr.responseJSON) {
+                if (xhr.responseJSON.mensaje) {
+                    mensajeError = xhr.responseJSON.mensaje;
+                } else if (xhr.responseJSON.errors) {
+                    // Manejar errores de validación de ASP.NET
+                    const errores = [];
+                    for (let campo in xhr.responseJSON.errors) {
+                        errores.push(`${campo}: ${xhr.responseJSON.errors[campo].join(', ')}`);
+                    }
+                    mensajeError = errores.join('\n');
+                }
+            }
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensajeError
+            });
+        }
+    });
+}
+
+// Función para guardar la receta
+function guardarReceta(productoId) {
+    // Recolectar ingredientes de la tabla
+    const ingredientes = [];
+    
+    $('#recetasTableBody tr').each(function() {
+        const $row = $(this);
+        
+        // Saltar filas vacías o de mensaje
+        if ($row.find('td[colspan="7"]').length > 0) {
+            return;
+        }
+        
+        const itemId = $row.attr('data-item-id');
+        const itemContenedorId = $row.find('.contenedor-select').val();
+        const cantidad = parseFloat($row.find('.cantidad-input').val()) || 0;
+        const costoUnitario = parseFloat($row.find('.costo-input').val()) || 0;
+        
+        if (itemId && itemContenedorId && cantidad > 0) {
+            ingredientes.push({
+                itemId: parseInt(itemId),
+                itemContenedorId: parseInt(itemContenedorId),
+                cantidad: cantidad,
+                costoUnitario: costoUnitario
+            });
+        }
+    });
+    
+    // Obtener notas y margen
+    const notasReceta = $('#notasReceta').val();
+    const margenGanancia = parseFloat($('#margenSlider').val()) || 0;
+    
+    // Crear objeto de receta
+    const receta = {
+        productoId: productoId,
+        notasReceta: notasReceta,
+        margenGanancia: margenGanancia,
+        ingredientes: ingredientes
+    };
+    
+    // Guardar receta
+    $.ajax({
+        url: `/api/productos/${productoId}/receta`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(receta),
+        success: function(response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Guardado exitoso',
+                text: 'El producto y su receta han sido guardados correctamente',
+                showConfirmButton: true,
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/Productos';
+                }
+            });
+        },
+        error: function(xhr) {
+            // Si falla la receta pero el producto se guardó, mostrar advertencia
+            Swal.fire({
+                icon: 'warning',
+                title: 'Producto guardado con advertencias',
+                text: 'El producto se guardó pero hubo un error al guardar la receta: ' + (xhr.responseJSON?.mensaje || 'Error desconocido'),
+                showConfirmButton: true,
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/Productos';
+                }
+            });
+        }
+    });
+}
 window.abrirOffcanvasCategoria = abrirOffcanvasCategoria;
+window.actualizarPrecioEnRecetas = actualizarPrecioEnRecetas;
+
+// Función para cargar receta existente
+function cargarRecetaExistente(productoId) {
+    $.ajax({
+        url: `/api/productos/${productoId}/receta`,
+        type: 'GET',
+        success: function(response) {
+            if (response && response.ingredientes && response.ingredientes.length > 0) {
+                // Limpiar tabla
+                $('#recetasTableBody').empty();
+                
+                // Cargar notas y margen
+                if (response.notasReceta) {
+                    $('#notasReceta').val(response.notasReceta);
+                }
+                
+                if (response.margenGanancia) {
+                    $('#margenSlider').val(response.margenGanancia).trigger('input');
+                }
+                
+                // Cargar cada ingrediente
+                response.ingredientes.forEach(function(ingrediente) {
+                    const newRow = document.createElement('tr');
+                    newRow.setAttribute('data-item-id', ingrediente.itemId);
+                    
+                    newRow.innerHTML = `
+                        <td data-id="${ingrediente.itemId}">${ingrediente.nombreItem || ''}</td>
+                        <td>${ingrediente.marcaNombre || '-'}</td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm cantidad-input" 
+                                   value="${ingrediente.cantidad}" min="0" step="0.01">
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm contenedor-select unidad-select" 
+                                    onchange="actualizarCostoContenedor(this)" data-selected="${ingrediente.itemContenedorId}">
+                                <option value="">Cargando...</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm costo-input" 
+                                   value="${ingrediente.costoUnitario.toFixed(2)}" min="0" step="0.01" readonly>
+                        </td>
+                        <td class="subtotal-cell">$${(ingrediente.cantidad * ingrediente.costoUnitario).toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-remove" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    $('#recetasTableBody').append(newRow);
+                    
+                    // Cargar contenedores para este item
+                    cargarContenedoresParaItem(ingrediente.itemId, newRow, ingrediente.itemContenedorId);
+                });
+                
+                // Actualizar totales
+                calcularTotales();
+            }
+        },
+        error: function(xhr) {
+            console.error('Error al cargar receta:', xhr);
+        }
+    });
+}
+
+// Función para cargar contenedores de un item específico
+function cargarContenedoresParaItem(itemId, row, selectedContenedorId) {
+    $.ajax({
+        url: `/api/item/${itemId}`,
+        type: 'GET',
+        success: function(response) {
+            if (response.success && response.item && response.item.contenedores) {
+                const $select = $(row).find('.contenedor-select');
+                $select.empty();
+                $select.append('<option value="">Seleccione unidad...</option>');
+                
+                response.item.contenedores.forEach(function(contenedor) {
+                    const option = new Option(
+                        contenedor.unidadMedida?.nombre || contenedor.nombre,
+                        contenedor.id,
+                        false,
+                        contenedor.id == selectedContenedorId
+                    );
+                    $(option).attr('data-costo', contenedor.costoUnitario || 0);
+                    $select.append(option);
+                });
+                
+                // Si hay un valor seleccionado, actualizar el costo
+                if (selectedContenedorId) {
+                    $select.val(selectedContenedorId);
+                }
+            }
+        },
+        error: function(xhr) {
+            console.error('Error al cargar contenedores:', xhr);
+            const $select = $(row).find('.contenedor-select');
+            $select.html('<option value="">Error al cargar</option>');
+        }
+    });
+}
+
+// Función para cargar datos del producto existente (modo edición)
+function cargarDatosProductoExistente(productoId) {
+    $.ajax({
+        url: `/api/productos/${productoId}`,
+        type: 'GET',
+        success: function(response) {
+            if (response) {
+                console.log('Cargando datos del producto:', response);
+                
+                // Llenar campos básicos
+                $('#nombre').val(response.nombre || '');
+                $('#nombreCortoTPV').val(response.nombreCortoTPV || '');
+                $('#descripcionEditor').val(response.descripcion || '');
+                $('#plu').val(response.plu || '');
+                $('#colorBotonTPV_value').val(response.colorBotonTPV || '#d62828');
+                $('#costo').val(response.costo || 0);
+                $('#ordenClasificacion').val(response.ordenClasificacion || 0);
+                
+                // Actualizar el color picker si existe
+                if (window.pickrInstance) {
+                    window.pickrInstance.setColor(response.colorBotonTPV || '#d62828');
+                }
+                
+                // Llenar checkboxes
+                $('#esActivo').prop('checked', response.esActivo);
+                $('#permiteModificadores').prop('checked', response.permiteModificadores);
+                $('#requierePuntoCoccion').prop('checked', response.requierePuntoCoccion);
+                $('#disponibleParaVenta').prop('checked', response.disponibleParaVenta);
+                $('#requierePreparacion').prop('checked', response.requierePreparacion);
+                
+                // Tiempo de preparación
+                if (response.tiempoPreparacion) {
+                    $('#tiempoPreparacion').val(response.tiempoPreparacion);
+                    $('#divTiempoPreparacion').show();
+                }
+                
+                // Cargar categoría
+                if (response.categoria) {
+                    const categoriaOption = new Option(response.categoria.nombre, response.categoria.id, true, true);
+                    $('#categoriaId').append(categoriaOption).trigger('change');
+                }
+                
+                // Cargar ruta de impresora
+                if (response.rutaImpresoraId) {
+                    $('#rutaImpresoraId').val(response.rutaImpresoraId).trigger('change');
+                }
+                
+                // Cargar precio en la primera fila de precios
+                if (response.precioVenta > 0) {
+                    $('.precio-base').first().val(response.precioVenta).trigger('input');
+                }
+                
+                // Cargar cuentas contables
+                cargarCuentaContable('#cuentaVentasId', response.cuentaVentasId);
+                cargarCuentaContable('#cuentaComprasInventariosId', response.cuentaComprasInventariosId);
+                cargarCuentaContable('#cuentaCostoVentasGastosId', response.cuentaCostoVentasGastosId);
+                cargarCuentaContable('#cuentaDescuentosId', response.cuentaDescuentosId);
+                cargarCuentaContable('#cuentaDevolucionesId', response.cuentaDevolucionesId);
+                cargarCuentaContable('#cuentaAjustesId', response.cuentaAjustesId);
+                cargarCuentaContable('#cuentaCostoMateriaPrimaId', response.cuentaCostoMateriaPrimaId);
+                
+                // Cargar imagen si existe
+                if (response.imagenUrl) {
+                    $('#imagenUrl').val(response.imagenUrl);
+                    $('#imagenPreview').attr('src', response.imagenUrl).show();
+                    $('#uploadPlaceholder').hide();
+                    $('#removeImageBtn').show();
+                }
+                
+                // Actualizar TinyMCE si existe
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.get('descripcionEditor')?.setContent(response.descripcion || '');
+                }
+            }
+        },
+        error: function(xhr) {
+            console.error('Error al cargar datos del producto:', xhr);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los datos del producto'
+            });
+        }
+    });
+}
+
+// Función auxiliar para cargar una cuenta contable específica
+function cargarCuentaContable(selector, cuentaId) {
+    if (!cuentaId) return;
+    
+    $.ajax({
+        url: `/Productos/BuscarCuentasContables?term=${cuentaId}&exactId=true`,
+        type: 'GET',
+        success: function(data) {
+            if (data.results && data.results.length > 0) {
+                const cuenta = data.results[0];
+                const option = new Option(cuenta.text, cuenta.id, true, true);
+                $(selector).append(option).trigger('change');
+            }
+        },
+        error: function(xhr) {
+            console.error(`Error al cargar cuenta contable ${selector}:`, xhr);
+        }
+    });
+}

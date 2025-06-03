@@ -46,7 +46,7 @@ namespace SistemaContable.ViewModels.Productos
         public int? TiempoPreparacion { get; set; }
         
         // Relaciones
-        public int ItemId { get; set; }
+        public int? ItemId { get; set; }
         
         public int? ItemContenedorId { get; set; }
         

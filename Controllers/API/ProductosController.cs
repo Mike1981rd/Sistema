@@ -202,6 +202,14 @@ namespace SistemaContable.Controllers.API
                     RutaImpresoraId = producto.RutaImpresoraId,
                     FechaCreacion = producto.FechaCreacion,
                     FechaModificacion = producto.FechaModificacion,
+                    // Cuentas contables
+                    CuentaVentasId = producto.CuentaVentasId,
+                    CuentaComprasInventariosId = producto.CuentaComprasInventariosId,
+                    CuentaCostoVentasGastosId = producto.CuentaCostoVentasGastosId,
+                    CuentaDescuentosId = producto.CuentaDescuentosId,
+                    CuentaDevolucionesId = producto.CuentaDevolucionesId,
+                    CuentaAjustesId = producto.CuentaAjustesId,
+                    CuentaCostoMateriaPrimaId = producto.CuentaCostoMateriaPrimaId,
                     
                     // Mapear relaciones
                     Categoria = new CategoriaSimpleDto
@@ -293,10 +301,13 @@ namespace SistemaContable.Controllers.API
                     return BadRequest(new { mensaje = "La categoría especificada no existe" });
                 }
 
-                var itemExiste = await _context.Items.AnyAsync(i => i.Id == productoDto.ItemId);
-                if (!itemExiste)
+                if (productoDto.ItemId.HasValue)
                 {
-                    return BadRequest(new { mensaje = "El item especificado no existe" });
+                    var itemExiste = await _context.Items.AnyAsync(i => i.Id == productoDto.ItemId.Value);
+                    if (!itemExiste)
+                    {
+                        return BadRequest(new { mensaje = "El item especificado no existe" });
+                    }
                 }
 
                 if (productoDto.ImpuestoId.HasValue)
@@ -352,7 +363,15 @@ namespace SistemaContable.Controllers.API
                     DisponibleParaVenta = productoDto.DisponibleParaVenta,
                     RequierePreparacion = productoDto.RequierePreparacion,
                     TiempoPreparacion = productoDto.TiempoPreparacion,
-                    EmpresaId = productoDto.EmpresaId
+                    EmpresaId = productoDto.EmpresaId,
+                    // Cuentas contables
+                    CuentaVentasId = productoDto.CuentaVentasId,
+                    CuentaComprasInventariosId = productoDto.CuentaComprasInventariosId,
+                    CuentaCostoVentasGastosId = productoDto.CuentaCostoVentasGastosId,
+                    CuentaDescuentosId = productoDto.CuentaDescuentosId,
+                    CuentaDevolucionesId = productoDto.CuentaDevolucionesId,
+                    CuentaAjustesId = productoDto.CuentaAjustesId,
+                    CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId
                 };
 
                 _context.ProductosVenta.Add(producto);
@@ -447,6 +466,14 @@ namespace SistemaContable.Controllers.API
                 producto.DisponibleParaVenta = productoDto.DisponibleParaVenta;
                 producto.RequierePreparacion = productoDto.RequierePreparacion;
                 producto.TiempoPreparacion = productoDto.TiempoPreparacion;
+                // Cuentas contables
+                producto.CuentaVentasId = productoDto.CuentaVentasId;
+                producto.CuentaComprasInventariosId = productoDto.CuentaComprasInventariosId;
+                producto.CuentaCostoVentasGastosId = productoDto.CuentaCostoVentasGastosId;
+                producto.CuentaDescuentosId = productoDto.CuentaDescuentosId;
+                producto.CuentaDevolucionesId = productoDto.CuentaDevolucionesId;
+                producto.CuentaAjustesId = productoDto.CuentaAjustesId;
+                producto.CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId;
 
                 try
                 {
@@ -464,7 +491,7 @@ namespace SistemaContable.Controllers.API
                     }
                 }
 
-                return NoContent();
+                return Ok(new { id = producto.Id, mensaje = "Producto actualizado correctamente" });
             }
             catch (Exception ex)
             {
@@ -516,6 +543,175 @@ namespace SistemaContable.Controllers.API
         private async Task<bool> ProductoExiste(int id)
         {
             return await _context.ProductosVenta.AnyAsync(p => p.Id == id);
+        }
+
+        /// <summary>
+        /// Obtiene la receta de un producto
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        /// <returns>Receta del producto con ingredientes</returns>
+        [HttpGet("{productoId}/receta")]
+        public async Task<ActionResult<RecetaProductoDto>> ObtenerReceta(int productoId)
+        {
+            try
+            {
+                var producto = await _context.ProductosVenta
+                    .Include(p => p.IngredientesDeEsteProducto)
+                        .ThenInclude(ri => ri.Item)
+                            .ThenInclude(i => i.Marca)
+                    .Include(p => p.IngredientesDeEsteProducto)
+                        .ThenInclude(ri => ri.ItemContenedor)
+                            .ThenInclude(ic => ic.UnidadMedida)
+                    .FirstOrDefaultAsync(p => p.Id == productoId);
+
+                if (producto == null)
+                {
+                    return NotFound(new { mensaje = "Producto no encontrado" });
+                }
+
+                var recetaDto = new RecetaProductoDto
+                {
+                    ProductoId = productoId,
+                    NotasReceta = producto.NotasReceta,
+                    MargenGanancia = producto.MargenGananciaReceta,
+                    Ingredientes = producto.IngredientesDeEsteProducto?.Select(ri => new RecetaIngredienteDto
+                    {
+                        Id = ri.Id,
+                        ItemId = ri.ItemId,
+                        ItemContenedorId = ri.ItemContenedorId,
+                        Cantidad = ri.Cantidad,
+                        CostoUnitario = ri.CostoUnitario,
+                        NombreItem = ri.Item?.Nombre,
+                        MarcaNombre = ri.Item?.Marca?.Nombre,
+                        UnidadMedidaNombre = ri.ItemContenedor?.UnidadMedida?.Nombre
+                    }).ToList() ?? new List<RecetaIngredienteDto>()
+                };
+
+                return Ok(recetaDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al obtener la receta", detalle = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Guarda o actualiza la receta de un producto
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        /// <param name="recetaDto">Datos de la receta</param>
+        /// <returns>Receta guardada</returns>
+        [HttpPost("{productoId}/receta")]
+        public async Task<ActionResult<RecetaProductoDto>> GuardarReceta(int productoId, [FromBody] RecetaProductoDto recetaDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var producto = await _context.ProductosVenta
+                    .Include(p => p.IngredientesDeEsteProducto)
+                    .FirstOrDefaultAsync(p => p.Id == productoId);
+
+                if (producto == null)
+                {
+                    return NotFound(new { mensaje = "Producto no encontrado" });
+                }
+
+                // Obtener EmpresaId del producto
+                var empresaId = producto.EmpresaId;
+
+                // Actualizar información general de la receta
+                producto.NotasReceta = recetaDto.NotasReceta;
+                producto.MargenGananciaReceta = recetaDto.MargenGanancia;
+
+                // Eliminar ingredientes existentes
+                if (producto.IngredientesDeEsteProducto != null && producto.IngredientesDeEsteProducto.Any())
+                {
+                    _context.RecetasIngredientes.RemoveRange(producto.IngredientesDeEsteProducto);
+                }
+
+                // Agregar nuevos ingredientes
+                var nuevosIngredientes = new List<RecetaIngrediente>();
+                decimal costoTotalReceta = 0;
+
+                foreach (var ingredienteDto in recetaDto.Ingredientes)
+                {
+                    var nuevoIngrediente = new RecetaIngrediente
+                    {
+                        ProductoCompuestoId = productoId,
+                        ItemId = ingredienteDto.ItemId,
+                        ItemContenedorId = ingredienteDto.ItemContenedorId,
+                        Cantidad = ingredienteDto.Cantidad,
+                        CostoUnitario = ingredienteDto.CostoUnitario,
+                        CostoTotal = ingredienteDto.Cantidad * ingredienteDto.CostoUnitario,
+                        EmpresaId = empresaId,
+                        FechaCreacion = DateTime.UtcNow,
+                        UsuarioCreacionId = null // TODO: Obtener del usuario actual cuando se implemente autenticación
+                    };
+
+                    costoTotalReceta += nuevoIngrediente.CostoTotal;
+                    nuevosIngredientes.Add(nuevoIngrediente);
+                }
+
+                // Actualizar costo total de la receta
+                producto.CostoTotalReceta = costoTotalReceta;
+
+                // Agregar nuevos ingredientes
+                await _context.RecetasIngredientes.AddRangeAsync(nuevosIngredientes);
+
+                // Guardar cambios
+                await _context.SaveChangesAsync();
+
+                // Recargar y devolver la receta actualizada
+                return await ObtenerReceta(productoId);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al guardar la receta", detalle = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Elimina todos los ingredientes de la receta de un producto
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        /// <returns>Resultado de la operación</returns>
+        [HttpDelete("{productoId}/receta")]
+        public async Task<IActionResult> EliminarReceta(int productoId)
+        {
+            try
+            {
+                var producto = await _context.ProductosVenta
+                    .Include(p => p.IngredientesDeEsteProducto)
+                    .FirstOrDefaultAsync(p => p.Id == productoId);
+
+                if (producto == null)
+                {
+                    return NotFound(new { mensaje = "Producto no encontrado" });
+                }
+
+                // Eliminar ingredientes
+                if (producto.IngredientesDeEsteProducto != null && producto.IngredientesDeEsteProducto.Any())
+                {
+                    _context.RecetasIngredientes.RemoveRange(producto.IngredientesDeEsteProducto);
+                }
+
+                // Limpiar campos de receta
+                producto.NotasReceta = null;
+                producto.MargenGananciaReceta = null;
+                producto.CostoTotalReceta = null;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { mensaje = "Receta eliminada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al eliminar la receta", detalle = ex.Message });
+            }
         }
     }
 }

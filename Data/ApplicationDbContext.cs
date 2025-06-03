@@ -960,15 +960,22 @@ namespace SistemaContable.Data
                 
                 // Configuración de precisión para decimales
                 entity.Property(e => e.Cantidad).HasPrecision(18, 4);
+                entity.Property(e => e.CostoUnitario).HasPrecision(18, 4);
+                entity.Property(e => e.CostoTotal).HasPrecision(18, 4);
                 
                 entity.HasOne(ri => ri.ProductoCompuesto)
                       .WithMany(p => p.IngredientesDeEsteProducto)
                       .HasForeignKey(ri => ri.ProductoCompuestoId)
                       .OnDelete(DeleteBehavior.Restrict);
                       
-                entity.HasOne(ri => ri.IngredienteProducto)
-                      .WithMany(p => p.ApareceComoIngredienteEn)
-                      .HasForeignKey(ri => ri.IngredienteProductoId)
+                entity.HasOne(ri => ri.Item)
+                      .WithMany()
+                      .HasForeignKey(ri => ri.ItemId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(ri => ri.ItemContenedor)
+                      .WithMany()
+                      .HasForeignKey(ri => ri.ItemContenedorId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
             

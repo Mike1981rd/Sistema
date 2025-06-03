@@ -21,11 +21,9 @@ namespace SistemaContable.ViewModels.Productos
         [StringLength(50, ErrorMessage = "El PLU no puede exceder los 50 caracteres")]
         public string? PLU { get; set; }
         
-        [Required(ErrorMessage = "El precio de venta es requerido")]
         [Range(0, double.MaxValue, ErrorMessage = "El precio de venta debe ser mayor o igual a 0")]
         public decimal PrecioVenta { get; set; }
         
-        [Required(ErrorMessage = "El costo es requerido")]
         [Range(0, double.MaxValue, ErrorMessage = "El costo debe ser mayor o igual a 0")]
         public decimal Costo { get; set; }
         
@@ -44,8 +42,7 @@ namespace SistemaContable.ViewModels.Productos
         public bool RequierePuntoCoccion { get; set; } = false;
         
         // Relaciones
-        [Required(ErrorMessage = "El ID del item es requerido")]
-        public int ItemId { get; set; }
+        public int? ItemId { get; set; }
         
         public int? ItemContenedorId { get; set; }
         
@@ -65,7 +62,6 @@ namespace SistemaContable.ViewModels.Productos
         
         public int? TiempoPreparacion { get; set; }
         
-        [Required(ErrorMessage = "El ID de empresa es requerido")]
         public int EmpresaId { get; set; }
         
         // Propiedades de Contabilidad
