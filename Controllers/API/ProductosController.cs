@@ -481,6 +481,9 @@ namespace SistemaContable.Controllers.API
                     await _context.SaveChangesAsync();
                 }
 
+                // 3. Manejo de múltiples precios (nuevo)
+                await ProcesarPreciosProducto(producto.Id, productoDto.Precios, productoDto.PrecioVenta, productoDto.EmpresaId);
+
                 // Retornar el producto creado
                 return CreatedAtAction(
                     nameof(ObtenerProductoPorId), 
@@ -522,8 +525,36 @@ namespace SistemaContable.Controllers.API
                 return BadRequest(ModelState);
             }
 
+            // DEBUG: Log datos recibidos
+            Console.WriteLine($"[DEBUG] ActualizarProducto - ID: {id}");
+            Console.WriteLine($"[DEBUG] Nombre: {productoDto.Nombre}");
+            Console.WriteLine($"[DEBUG] PrecioVenta: {productoDto.PrecioVenta}");
+            Console.WriteLine($"[DEBUG] Precios recibidos: {productoDto.Precios?.Count ?? 0}");
+            if (productoDto.Precios != null)
+            {
+                for (int i = 0; i < productoDto.Precios.Count; i++)
+                {
+                    var precio = productoDto.Precios[i];
+                    Console.WriteLine($"[DEBUG] Precio[{i}]:");
+                    Console.WriteLine($"  - Id: {precio.Id}");
+                    Console.WriteLine($"  - NombreNivel: '{precio.NombreNivel}'");
+                    Console.WriteLine($"  - PrecioBase: {precio.PrecioBase}");
+                    Console.WriteLine($"  - PrecioTotal: {precio.PrecioTotal}");
+                    Console.WriteLine($"  - ImpuestoIds: [{string.Join(",", precio.ImpuestoIds)}]");
+                    Console.WriteLine($"  - Orden: {precio.Orden}");
+                    Console.WriteLine($"  - EsPrincipal: {precio.EsPrincipal}");
+                    Console.WriteLine($"  - Activo: {precio.Activo}");
+                }
+            }
+
             try
             {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
                 var producto = await _context.ProductosVenta.FindAsync(id);
                 if (producto == null)
                 {
@@ -565,15 +596,15 @@ namespace SistemaContable.Controllers.API
                 }
                 else if (productoDto.PLU != producto.PLU)
                 {
-                    // Si se cambió el PLU, verificar unicidad
+                    // Si se cambió el PLU, verificar que no exista
                     var pluExiste = await _context.ProductosVenta.AnyAsync(p => p.PLU == productoDto.PLU && p.Id != id);
                     if (pluExiste)
                     {
-                        return BadRequest(new { mensaje = "Ya existe otro producto con ese PLU" });
+                        return BadRequest(new { mensaje = $"Ya existe un producto con el PLU {productoDto.PLU}" });
                     }
                 }
 
-                // Actualizar campos
+                // Actualizar propiedades del producto
                 producto.Nombre = productoDto.Nombre;
                 producto.NombreCortoTPV = productoDto.NombreCortoTPV;
                 producto.Descripcion = productoDto.Descripcion;
@@ -592,11 +623,11 @@ namespace SistemaContable.Controllers.API
                 producto.ImpuestoId = productoDto.ImpuestoId;
                 producto.RutaImpresoraId = productoDto.RutaImpresoraId;
                 producto.Cantidad = productoDto.Cantidad;
-                producto.CostoTotal = productoDto.Costo * productoDto.Cantidad;
                 producto.DisponibleParaVenta = productoDto.DisponibleParaVenta;
                 producto.RequierePreparacion = productoDto.RequierePreparacion;
                 producto.TiempoPreparacion = productoDto.TiempoPreparacion;
-                // Cuentas contables
+                
+                // Propiedades de Contabilidad
                 producto.CuentaVentasId = productoDto.CuentaVentasId;
                 producto.CuentaComprasInventariosId = productoDto.CuentaComprasInventariosId;
                 producto.CuentaCostoVentasGastosId = productoDto.CuentaCostoVentasGastosId;
@@ -604,69 +635,47 @@ namespace SistemaContable.Controllers.API
                 producto.CuentaDevolucionesId = productoDto.CuentaDevolucionesId;
                 producto.CuentaAjustesId = productoDto.CuentaAjustesId;
                 producto.CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId;
-                // Auditoría
-                producto.UsuarioModificacionId = _userService.GetUserId();
 
+                // Actualizar producto en el contexto
+                _context.Entry(producto).State = EntityState.Modified;
+
+                // Limpiar impuestos del sistema viejo (se manejará por precios múltiples)
+                var impuestosExistentes = await _context.ProductoVentaImpuestos
+                    .Where(pi => pi.ProductoVentaId == producto.Id)
+                    .ToListAsync();
+                _context.ProductoVentaImpuestos.RemoveRange(impuestosExistentes);
+
+                // 2. Manejo de múltiples precios (nuevo)
+                Console.WriteLine($"[DEBUG] Llamando ProcesarPreciosProducto con empresaId: {empresaId}");
+                Console.WriteLine($"[DEBUG] productoDto.Precios?.Count: {productoDto.Precios?.Count ?? 0}");
+                
                 try
                 {
-                    await _context.SaveChangesAsync();
-                    
-                    // Obtener empresaId para los impuestos
-                    var empresaId = await _empresaService.ObtenerEmpresaActualId();
-                    
-                    // Actualizar impuestos múltiples
-                    // Primero eliminar los impuestos existentes
-                    var impuestosExistentes = await _context.ProductoVentaImpuestos
-                        .Where(pvi => pvi.ProductoVentaId == producto.Id)
-                        .ToListAsync();
-                    _context.ProductoVentaImpuestos.RemoveRange(impuestosExistentes);
-                    
-                    // Luego agregar los nuevos
-                    if (productoDto.ImpuestoIds != null && productoDto.ImpuestoIds.Any())
-                    {
-                        int orden = 0;
-                        foreach (var impuestoId in productoDto.ImpuestoIds.Distinct())
-                        {
-                            var productoImpuesto = new ProductoVentaImpuesto
-                            {
-                                ProductoVentaId = producto.Id,
-                                ImpuestoId = impuestoId,
-                                Orden = orden++,
-                                EmpresaId = empresaId,
-                                UsuarioCreacionId = _userService.GetUserId()
-                            };
-                            _context.ProductoVentaImpuestos.Add(productoImpuesto);
-                        }
-                    }
-                    // Si no se enviaron ImpuestoIds pero sí ImpuestoId (compatibilidad)
-                    else if (productoDto.ImpuestoId.HasValue)
-                    {
-                        var productoImpuesto = new ProductoVentaImpuesto
-                        {
-                            ProductoVentaId = producto.Id,
-                            ImpuestoId = productoDto.ImpuestoId.Value,
-                            Orden = 0,
-                            EmpresaId = empresaId,
-                            UsuarioCreacionId = _userService.GetUserId()
-                        };
-                        _context.ProductoVentaImpuestos.Add(productoImpuesto);
-                    }
-                    
-                    await _context.SaveChangesAsync();
+                    await ProcesarPreciosProducto(producto.Id, productoDto.Precios, productoDto.PrecioVenta, empresaId);
+                    Console.WriteLine($"[DEBUG] ProcesarPreciosProducto completado");
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (!await ProductoExiste(id))
-                    {
-                        return NotFound(new { mensaje = "El producto fue eliminado mientras se actualizaba" });
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    Console.WriteLine($"[ERROR] Error en ProcesarPreciosProducto: {ex.Message}");
+                    Console.WriteLine($"[ERROR] StackTrace: {ex.StackTrace}");
+                    throw; // Re-lanzar para que se maneje en el catch principal
                 }
+                
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"[DEBUG] SaveChangesAsync completado");
 
                 return Ok(new { id = producto.Id, mensaje = "Producto actualizado correctamente" });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ProductoExiste(id))
+                {
+                    return NotFound(new { mensaje = "El producto fue eliminado mientras se actualizaba" });
+                }
+                else
+                {
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -910,6 +919,282 @@ namespace SistemaContable.Controllers.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { mensaje = "Error al eliminar la receta", detalle = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los precios de un producto específico
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        /// <returns>Lista de precios del producto</returns>
+        [HttpGet("{productoId}/precios")]
+        public async Task<ActionResult<List<ProductoPrecioDetalleDto>>> ObtenerPreciosProducto(int productoId)
+        {
+            try
+            {
+                var empresaId = await _empresaService.ObtenerEmpresaActualId();
+                if (empresaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "No se ha seleccionado una empresa válida" });
+                }
+
+                var precios = await _context.ProductoVentaPrecios
+                    .Include(p => p.ImpuestosEspecificos)
+                        .ThenInclude(pi => pi.Impuesto)
+                    .Include(p => p.ListaPrecio)
+                    .Where(p => p.ProductoVentaId == productoId && p.Activo)
+                    .OrderBy(p => p.Orden)
+                    .ToListAsync();
+
+                var preciosDto = precios.Select(p => new ProductoPrecioDetalleDto
+                {
+                    Id = p.Id,
+                    NombreNivel = p.NombreNivel,
+                    PrecioBase = p.PrecioBase,
+                    PrecioTotal = p.PrecioTotal,
+                    Orden = p.Orden,
+                    EsPrincipal = p.EsPrincipal,
+                    ListaPrecioId = p.ListaPrecioId,
+                    Descripcion = p.Descripcion,
+                    Activo = p.Activo,
+                    ImpuestoIds = p.ImpuestosEspecificos?.OrderBy(pi => pi.Orden).Select(pi => pi.ImpuestoId).ToList() ?? new List<int>(),
+                    ImpuestosAplicados = p.ImpuestosEspecificos?.OrderBy(pi => pi.Orden).Select(pi => new ImpuestoAplicadoDto
+                    {
+                        Id = pi.ImpuestoId,
+                        Nombre = pi.Impuesto?.Nombre ?? "",
+                        Porcentaje = pi.Impuesto?.Porcentaje ?? 0,
+                        PorcentajeOverride = pi.PorcentajeOverride,
+                        PorcentajeEfectivo = pi.ObtenerPorcentajeEfectivo(),
+                        Orden = pi.Orden
+                    }).ToList() ?? new List<ImpuestoAplicadoDto>(),
+                    PorcentajeTotalImpuestos = p.ImpuestosEspecificos?.Sum(pi => pi.ObtenerPorcentajeEfectivo()) ?? 0
+                }).ToList();
+
+                return Ok(preciosDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al obtener precios del producto", detalle = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Procesa los precios de un producto (crear/actualizar/eliminar)
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        /// <param name="preciosDto">Lista de precios del DTO</param>
+        /// <param name="precioVentaFallback">Precio de venta para compatibilidad</param>
+        /// <param name="empresaId">ID de la empresa</param>
+        private async Task ProcesarPreciosProducto(int productoId, List<ProductoPrecioDto> preciosDto, decimal precioVentaFallback, int empresaId)
+        {
+            try
+            {
+                // DEBUG: Log de los precios recibidos
+                if (preciosDto != null && preciosDto.Any())
+                {
+                    Console.WriteLine($"[DEBUG] ProcesarPreciosProducto - ProductoId: {productoId}, Precios recibidos: {preciosDto.Count}");
+                    foreach (var precio in preciosDto)
+                    {
+                        Console.WriteLine($"[DEBUG] Precio: Id={precio.Id}, Nombre={precio.NombreNivel}, Base={precio.PrecioBase}, Total={precio.PrecioTotal}, Impuestos={string.Join(",", precio.ImpuestoIds)}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] ProcesarPreciosProducto - ProductoId: {productoId}, No se recibieron precios o lista vacía");
+                }
+
+                // 1. Si no se enviaron precios, crear uno por defecto usando PrecioVenta
+                if (preciosDto == null || !preciosDto.Any())
+                {
+                    // Solo crear precio por defecto si no existe ninguno
+                    var tienePrecios = await _context.ProductoVentaPrecios
+                        .AnyAsync(p => p.ProductoVentaId == productoId);
+                        
+                    if (!tienePrecios && precioVentaFallback > 0)
+                    {
+                        Console.WriteLine($"[DEBUG] Creando precio por defecto: {precioVentaFallback}");
+                        var precioDefault = new ProductoVentaPrecio
+                        {
+                            ProductoVentaId = productoId,
+                            NombreNivel = "Precio Base",
+                            PrecioBase = precioVentaFallback,
+                            PrecioTotal = precioVentaFallback,
+                            Orden = 0,
+                            EsPrincipal = true,
+                            Activo = true,
+                            EmpresaId = empresaId,
+                            FechaCreacion = DateTime.UtcNow,
+                            UsuarioCreacionId = _userService.GetUserId()
+                        };
+                        _context.ProductoVentaPrecios.Add(precioDefault);
+                        await _context.SaveChangesAsync();
+                    }
+                    return;
+                }
+
+                // 2. Obtener precios existentes
+                var preciosExistentes = await _context.ProductoVentaPrecios
+                    .Include(p => p.ImpuestosEspecificos)
+                    .Where(p => p.ProductoVentaId == productoId)
+                    .ToListAsync();
+
+                // 3. Procesar cada precio del DTO
+                foreach (var precioDto in preciosDto)
+                {
+                    Console.WriteLine($"[DEBUG] Procesando precio: {precioDto.NombreNivel}, Base: {precioDto.PrecioBase}, Total: {precioDto.PrecioTotal}");
+                    Console.WriteLine($"[DEBUG] Impuestos recibidos para {precioDto.NombreNivel}: [{string.Join(",", precioDto.ImpuestoIds ?? new List<int>())}] (Total: {precioDto.ImpuestoIds?.Count ?? 0})");
+                    
+                    if (precioDto.Id.HasValue && precioDto.Id.Value > 0)
+                    {
+                        // Actualizar precio existente
+                        var precioExistente = preciosExistentes.FirstOrDefault(p => p.Id == precioDto.Id.Value);
+                        if (precioExistente != null)
+                        {
+                            Console.WriteLine($"[DEBUG] Actualizando precio existente ID: {precioExistente.Id}");
+                            Console.WriteLine($"[DEBUG] Valores antes: Base={precioExistente.PrecioBase}, Total={precioExistente.PrecioTotal}");
+                            
+                            precioExistente.NombreNivel = precioDto.NombreNivel;
+                            precioExistente.PrecioBase = precioDto.PrecioBase;
+                            precioExistente.PrecioTotal = precioDto.PrecioTotal;
+                            precioExistente.Orden = precioDto.Orden;
+                            precioExistente.EsPrincipal = precioDto.EsPrincipal;
+                            precioExistente.ListaPrecioId = precioDto.ListaPrecioId;
+                            precioExistente.Descripcion = precioDto.Descripcion;
+                            precioExistente.Activo = precioDto.Activo;
+                            precioExistente.FechaModificacion = DateTime.UtcNow;
+                            precioExistente.UsuarioModificacionId = _userService.GetUserId();
+
+                            Console.WriteLine($"[DEBUG] Valores después: Base={precioExistente.PrecioBase}, Total={precioExistente.PrecioTotal}");
+
+                            // Actualizar impuestos específicos de este precio
+                            await ActualizarImpuestosPrecio(precioExistente.Id, precioDto.ImpuestoIds, empresaId);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] No se encontró precio existente con ID: {precioDto.Id.Value}");
+                        }
+                    }
+                    else
+                    {
+                        // Crear nuevo precio
+                        Console.WriteLine($"[DEBUG] Creando nuevo precio: {precioDto.NombreNivel}");
+                        var nuevoPrecio = new ProductoVentaPrecio
+                        {
+                            ProductoVentaId = productoId,
+                            NombreNivel = precioDto.NombreNivel,
+                            PrecioBase = precioDto.PrecioBase,
+                            PrecioTotal = precioDto.PrecioTotal,
+                            Orden = precioDto.Orden,
+                            EsPrincipal = precioDto.EsPrincipal,
+                            ListaPrecioId = precioDto.ListaPrecioId,
+                            Descripcion = precioDto.Descripcion,
+                            Activo = precioDto.Activo,
+                            EmpresaId = empresaId,
+                            FechaCreacion = DateTime.UtcNow,
+                            UsuarioCreacionId = _userService.GetUserId()
+                        };
+                        
+                        Console.WriteLine($"[DEBUG] Nuevo precio creado con Base={nuevoPrecio.PrecioBase}, Total={nuevoPrecio.PrecioTotal}");
+                        _context.ProductoVentaPrecios.Add(nuevoPrecio);
+                        await _context.SaveChangesAsync(); // Necesario para obtener el ID
+                        
+                        Console.WriteLine($"[DEBUG] Nuevo precio guardado con ID: {nuevoPrecio.Id}");
+                        
+                        // Agregar impuestos específicos del nuevo precio
+                        await ActualizarImpuestosPrecio(nuevoPrecio.Id, precioDto.ImpuestoIds, empresaId);
+                    }
+                }
+
+                // 4. Eliminar precios que no están en el DTO (soft delete)
+                var idsEnDto = preciosDto.Where(p => p.Id.HasValue).Select(p => p.Id.Value).ToList();
+                var preciosAEliminar = preciosExistentes.Where(p => !idsEnDto.Contains(p.Id)).ToList();
+                
+                foreach (var precioAEliminar in preciosAEliminar)
+                {
+                    precioAEliminar.Activo = false;
+                    precioAEliminar.FechaModificacion = DateTime.UtcNow;
+                    precioAEliminar.UsuarioModificacionId = _userService.GetUserId();
+                }
+
+                // 5. Asegurar que hay al menos un precio principal activo
+                await AsegurarPrecioPrincipal(productoId);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al procesar precios del producto: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Actualiza los impuestos específicos de un precio
+        /// </summary>
+        /// <param name="precioId">ID del precio</param>
+        /// <param name="impuestoIds">Lista de IDs de impuestos</param>
+        /// <param name="empresaId">ID de la empresa</param>
+        private async Task ActualizarImpuestosPrecio(int precioId, List<int> impuestoIds, int empresaId)
+        {
+            Console.WriteLine($"[DEBUG] ActualizarImpuestosPrecio - precioId: {precioId}, impuestoIds: [{string.Join(",", impuestoIds ?? new List<int>())}]");
+            
+            // Eliminar impuestos existentes
+            var impuestosExistentes = await _context.ProductoVentaPrecioImpuestos
+                .Where(pi => pi.ProductoVentaPrecioId == precioId)
+                .ToListAsync();
+            Console.WriteLine($"[DEBUG] Eliminando {impuestosExistentes.Count} impuestos existentes para precio {precioId}");
+            _context.ProductoVentaPrecioImpuestos.RemoveRange(impuestosExistentes);
+
+            // Agregar nuevos impuestos si se proporcionaron
+            if (impuestoIds?.Any() == true)
+            {
+                Console.WriteLine($"[DEBUG] Agregando {impuestoIds.Count} impuestos nuevos para precio {precioId}");
+                int orden = 0;
+                foreach (var impuestoId in impuestoIds)
+                {
+                    var impuestoPrecio = new ProductoVentaPrecioImpuesto
+                    {
+                        ProductoVentaPrecioId = precioId,
+                        ImpuestoId = impuestoId,
+                        Orden = orden++,
+                        Activo = true,
+                        EmpresaId = empresaId,
+                        FechaCreacion = DateTime.UtcNow,
+                        UsuarioCreacionId = _userService.GetUserId()
+                    };
+                    Console.WriteLine($"[DEBUG] Agregando impuesto {impuestoId} con orden {orden - 1} para precio {precioId}");
+                    _context.ProductoVentaPrecioImpuestos.Add(impuestoPrecio);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] No hay impuestos para agregar al precio {precioId}");
+            }
+            
+            // Guardar cambios de impuestos inmediatamente
+            await _context.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] Cambios de impuestos guardados para precio {precioId}");
+        }
+
+        /// <summary>
+        /// Asegura que el producto tenga al menos un precio principal activo
+        /// </summary>
+        /// <param name="productoId">ID del producto</param>
+        private async Task AsegurarPrecioPrincipal(int productoId)
+        {
+            var preciosActivos = await _context.ProductoVentaPrecios
+                .Where(p => p.ProductoVentaId == productoId && p.Activo)
+                .OrderBy(p => p.Orden)
+                .ToListAsync();
+
+            if (preciosActivos.Any())
+            {
+                var tienePrincipal = preciosActivos.Any(p => p.EsPrincipal);
+                
+                if (!tienePrincipal)
+                {
+                    // Marcar el primer precio como principal
+                    preciosActivos.First().EsPrincipal = true;
+                }
             }
         }
     }

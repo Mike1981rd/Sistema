@@ -78,6 +78,9 @@ namespace SistemaContable.Models
         public virtual ICollection<RecetaIngrediente>? ApareceComoIngredienteEn { get; set; }
         public virtual ICollection<PaqueteComponente>? ComponentesDeEstePaquete { get; set; }
         public virtual ICollection<PaqueteComponente>? ApareceComoComponenteEn { get; set; }
+        
+        // Nueva relaci�n para m�ltiples niveles de precio
+        public virtual ICollection<ProductoVentaPrecio>? NivelesPrecios { get; set; }
 
         // Campos adicionales para compatibilidad
         [Column(TypeName = "decimal(18,4)")]
@@ -141,5 +144,46 @@ namespace SistemaContable.Models
         
         [Column(TypeName = "decimal(18,4)")]
         public decimal? CostoTotalReceta { get; set; }
+        
+        // Métodos helper para trabajar con múltiples precios
+        
+        /// <summary>
+        /// Obtiene el precio principal del producto
+        /// </summary>
+        public ProductoVentaPrecio? ObtenerPrecioPrincipal()
+        {
+            return NivelesPrecios?
+                .Where(p => p.Activo && p.EsPrincipal)
+                .OrderBy(p => p.Orden)
+                .FirstOrDefault();
+        }
+        
+        /// <summary>
+        /// Obtiene todos los precios activos ordenados por orden
+        /// </summary>
+        public IEnumerable<ProductoVentaPrecio> ObtenerPreciosActivos()
+        {
+            return NivelesPrecios?
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Orden)
+                .ThenBy(p => p.Id) ?? Enumerable.Empty<ProductoVentaPrecio>();
+        }
+        
+        /// <summary>
+        /// Obtiene el precio efectivo para mostrar (precio principal o PrecioVenta para compatibilidad)
+        /// </summary>
+        public decimal ObtenerPrecioEfectivo()
+        {
+            var precioPrincipal = ObtenerPrecioPrincipal();
+            return precioPrincipal?.PrecioTotal ?? PrecioVenta;
+        }
+        
+        /// <summary>
+        /// Verifica si el producto tiene múltiples niveles de precio configurados
+        /// </summary>
+        public bool TieneMultiplesPrecios()
+        {
+            return NivelesPrecios?.Count(p => p.Activo) > 1;
+        }
     }
 }

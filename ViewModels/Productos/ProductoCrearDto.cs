@@ -25,6 +25,12 @@ namespace SistemaContable.ViewModels.Productos
         [Range(0, double.MaxValue, ErrorMessage = "El precio de venta debe ser mayor o igual a 0")]
         public decimal PrecioVenta { get; set; }
         
+        /// <summary>
+        /// Lista de niveles de precio del producto
+        /// Si está vacía, se crea un precio base usando PrecioVenta
+        /// </summary>
+        public List<ProductoPrecioDto> Precios { get; set; } = new List<ProductoPrecioDto>();
+        
         [Range(0, double.MaxValue, ErrorMessage = "El costo debe ser mayor o igual a 0")]
         public decimal Costo { get; set; }
         

@@ -100,6 +100,10 @@ namespace SistemaContable.Data
         public DbSet<PaqueteComponente> PaquetesComponentes { get; set; }
         public DbSet<ProductoVentaImpuesto> ProductoVentaImpuestos { get; set; }
         
+        // Nuevas entidades para múltiples niveles de precio
+        public DbSet<ProductoVentaPrecio> ProductoVentaPrecios { get; set; }
+        public DbSet<ProductoVentaPrecioImpuesto> ProductoVentaPrecioImpuestos { get; set; }
+        
         // Roles y permisos
         public DbSet<Rol> Roles { get; set; }
         
@@ -1097,6 +1101,75 @@ namespace SistemaContable.Data
                     .WithMany(r => r.Usuarios)
                     .HasForeignKey(u => u.RolId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // Configuración para ProductoVentaPrecio
+            builder.Entity<ProductoVentaPrecio>(entity =>
+            {
+                entity.ToTable("ProductoVentaPrecios");
+                entity.HasKey(e => e.Id);
+                
+                // Propiedades requeridas
+                entity.Property(e => e.ProductoVentaId).IsRequired();
+                entity.Property(e => e.NombreNivel).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PrecioBase).IsRequired().HasPrecision(18, 4);
+                entity.Property(e => e.PrecioTotal).IsRequired().HasPrecision(18, 4);
+                entity.Property(e => e.EmpresaId).IsRequired();
+                entity.Property(e => e.FechaCreacion).IsRequired();
+                
+                // Propiedades opcionales
+                entity.Property(e => e.Descripcion).HasMaxLength(255);
+                entity.Property(e => e.Orden).HasDefaultValue(0);
+                entity.Property(e => e.EsPrincipal).HasDefaultValue(false);
+                entity.Property(e => e.Activo).HasDefaultValue(true);
+                
+                // Relaciones
+                entity.HasOne(p => p.ProductoVenta)
+                    .WithMany(pv => pv.NivelesPrecios)
+                    .HasForeignKey(p => p.ProductoVentaId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(p => p.ListaPrecio)
+                    .WithMany()
+                    .HasForeignKey(p => p.ListaPrecioId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                // Índices
+                entity.HasIndex(e => new { e.ProductoVentaId, e.Orden });
+                entity.HasIndex(e => new { e.ProductoVentaId, e.EsPrincipal });
+            });
+            
+            // Configuración para ProductoVentaPrecioImpuesto
+            builder.Entity<ProductoVentaPrecioImpuesto>(entity =>
+            {
+                entity.ToTable("ProductoVentaPrecioImpuestos");
+                entity.HasKey(e => e.Id);
+                
+                // Propiedades requeridas
+                entity.Property(e => e.ProductoVentaPrecioId).IsRequired();
+                entity.Property(e => e.ImpuestoId).IsRequired();
+                entity.Property(e => e.EmpresaId).IsRequired();
+                entity.Property(e => e.FechaCreacion).IsRequired();
+                
+                // Propiedades opcionales
+                entity.Property(e => e.PorcentajeOverride).HasPrecision(5, 4);
+                entity.Property(e => e.Notas).HasMaxLength(255);
+                entity.Property(e => e.Orden).HasDefaultValue(0);
+                entity.Property(e => e.Activo).HasDefaultValue(true);
+                
+                // Relaciones
+                entity.HasOne(pi => pi.ProductoVentaPrecio)
+                    .WithMany(p => p.ImpuestosEspecificos)
+                    .HasForeignKey(pi => pi.ProductoVentaPrecioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(pi => pi.Impuesto)
+                    .WithMany()
+                    .HasForeignKey(pi => pi.ImpuestoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                // Índice único para evitar duplicados
+                entity.HasIndex(e => new { e.ProductoVentaPrecioId, e.ImpuestoId }).IsUnique();
             });
         }
 

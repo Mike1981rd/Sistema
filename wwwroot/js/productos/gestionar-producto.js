@@ -296,10 +296,11 @@ function initCategoriaInheritance() {
                                     
                                     // Cargar todos los impuestos disponibles y luego seleccionar los requeridos
                                     $.ajax({
-                                        url: '/api/impuestos',
+                                        url: '/api/impuestos/Buscar',
                                         type: 'GET',
-                                        data: { search: '', page: 1 },
-                                        success: function(impuestosDisponibles) {
+                                        data: { term: '' },
+                                        success: function(response) {
+                                            const impuestosDisponibles = response.results || response;
                                             console.log('Impuestos disponibles:', impuestosDisponibles);
                                             
                                             // Procesar cada impuesto para seleccionar
@@ -960,30 +961,55 @@ function initColorPicker() {
 }
 
 // Sistema de precios dinámicos
+// Variables globales para el sistema de precios
+let priceRowsContainer;
+let btnAddPriceRow;
+let priceRowIndex = 0;
+let impuestosDataGlobal = {};
+
 function initPricingSystem() {
-    const priceRowsContainer = document.getElementById('priceRowsContainer');
-    const btnAddPriceRow = document.getElementById('btnAddPriceRow');
-    let priceRowIndex = 0;
+    priceRowsContainer = document.getElementById('priceRowsContainer');
+    btnAddPriceRow = document.getElementById('btnAddPriceRow');
+    priceRowIndex = 0;
     
     // Hacer el store de impuestos realmente global
     if (!window.impuestosDataGlobal) {
         window.impuestosDataGlobal = {};
     }
-    let impuestosDataGlobal = window.impuestosDataGlobal;
+    impuestosDataGlobal = window.impuestosDataGlobal;
 
     console.log('Iniciando sistema de precios...');
+    
+    // Asegurar que la primera fila tenga los datos correctos
+    function initializeFirstRow() {
+        const firstRow = priceRowsContainer.querySelector('.price-row');
+        if (firstRow) {
+            console.log('[DEBUG] Inicializando primera fila de precios');
+            initializePriceRow(firstRow, 0);
+        }
+    }
 
     function initializePriceRow(rowElement, index) {
+        const nombreNivelInput = rowElement.querySelector('.nombre-nivel');
         const precioBaseInput = rowElement.querySelector('.precio-base');
         const impuestoSelect = rowElement.querySelector('.select2-impuestos');
         const precioTotalInput = rowElement.querySelector('.precio-total');
 
         console.log(`Inicializando fila ${index}...`);
 
+        // Sincronizar el nombre del nivel con el atributo data
+        if (nombreNivelInput) {
+            nombreNivelInput.addEventListener('input', function() {
+                rowElement.setAttribute('data-nombre-nivel', this.value);
+            });
+        }
+
         // Destruir instancia previa si existe (importante para elementos clonados)
         if ($(impuestoSelect).data('select2')) {
             $(impuestoSelect).select2('destroy');
         }
+
+        console.log(`[DEBUG] Inicializando Select2 para fila ${index}, elemento:`, impuestoSelect);
 
         // Inicializar Select2 para impuestos
         $(impuestoSelect).select2({
@@ -993,16 +1019,18 @@ function initPricingSystem() {
             allowClear: true,
             width: '100%',
             ajax: {
-                url: '/api/impuestos',
+                url: '/api/impuestos/Buscar',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
+                    console.log(`[DEBUG] Select2 fila ${index} - buscando impuestos:`, params.term);
                     return {
-                        search: params.term,
-                        page: params.page || 1
+                        term: params.term || ''
                     };
                 },
-                processResults: function (data) {
+                processResults: function (response) {
+                    const data = response.results || response;
+                    console.log(`[DEBUG] Select2 fila ${index} - resultados recibidos:`, data?.length || 0);
                     if (data && data.length) {
                         // Almacenar los porcentajes en el store global
                         data.forEach(item => {
@@ -1012,7 +1040,7 @@ function initPricingSystem() {
                         return {
                             results: data.map(item => ({
                                 id: item.id,
-                                text: `${item.nombre} (${item.porcentaje}%)`,
+                                text: item.text, // Ya viene formateado desde el servidor
                                 percentage: parseFloat(item.porcentaje)
                             }))
                         };
@@ -1022,6 +1050,15 @@ function initPricingSystem() {
                 cache: true
             }
         });
+
+        // Verificar que Select2 se inicializó correctamente
+        setTimeout(() => {
+            const isInitialized = $(impuestoSelect).data('select2') !== undefined;
+            console.log(`[DEBUG] Select2 fila ${index} inicializado:`, isInitialized);
+            if (!isInitialized) {
+                console.error(`[ERROR] Select2 fila ${index} NO se inicializó correctamente`);
+            }
+        }, 100);
 
         // Actualizar cálculos cuando cambian los impuestos seleccionados
         $(impuestoSelect).on('select2:select select2:unselect', function(e) {
@@ -1035,12 +1072,17 @@ function initPricingSystem() {
             
             // Obtener los impuestos seleccionados
             const selectedValues = $(impuestoSelect).val() || [];
+            console.log(`[DEBUG] Calculando precio total para fila ${index}, impuestos seleccionados:`, selectedValues);
+            
             selectedValues.forEach(value => {
-                const percentage = impuestosDataGlobal[value] || 0;
+                const percentage = (window.impuestosDataGlobal && window.impuestosDataGlobal[value]) || 0;
+                console.log(`[DEBUG] Impuesto ${value}: ${percentage}%`);
                 totalImpuestosPorcentaje += percentage / 100;
             });
             
+            console.log(`[DEBUG] Porcentaje total de impuestos: ${totalImpuestosPorcentaje * 100}%`);
             const total = base * (1 + totalImpuestosPorcentaje);
+            console.log(`[DEBUG] Precio calculado: ${base} * (1 + ${totalImpuestosPorcentaje}) = ${total}`);
             precioTotalInput.value = total.toFixed(2);
         }
 
@@ -1050,8 +1092,11 @@ function initPricingSystem() {
             
             // Obtener los impuestos seleccionados
             const selectedValues = $(impuestoSelect).val() || [];
+            console.log(`[DEBUG] Calculando precio base para fila ${index}, impuestos seleccionados:`, selectedValues);
+            
             selectedValues.forEach(value => {
-                const percentage = impuestosDataGlobal[value] || 0;
+                const percentage = (window.impuestosDataGlobal && window.impuestosDataGlobal[value]) || 0;
+                console.log(`[DEBUG] Impuesto ${value}: ${percentage}%`);
                 totalImpuestosPorcentaje += percentage / 100;
             });
             
@@ -1060,7 +1105,9 @@ function initPricingSystem() {
                 return;
             }
             
+            console.log(`[DEBUG] Porcentaje total de impuestos: ${totalImpuestosPorcentaje * 100}%`);
             const base = total / (1 + totalImpuestosPorcentaje);
+            console.log(`[DEBUG] Precio base calculado: ${total} / (1 + ${totalImpuestosPorcentaje}) = ${base}`);
             precioBaseInput.value = base.toFixed(2);
         }
 
@@ -1120,19 +1167,31 @@ function initPricingSystem() {
         priceRowsContainer.querySelectorAll('.price-row').forEach((row, index) => {
             row.querySelectorAll('[data-original-name]').forEach(input => {
                 const originalName = input.getAttribute('data-original-name');
-                input.name = `Precios[${index}].${originalName}`;
+                const newName = `Precios[${index}].${originalName}`;
+                input.name = newName;
+                
+                // Para Select2, también actualizar el atributo name
+                if (input.classList.contains('select2-impuestos')) {
+                    console.log(`[DEBUG] Actualizando name del select de impuestos fila ${index}: ${newName}`);
+                }
             });
-            
-            // Los select2 ya tienen el nombre correcto, no necesitan actualización adicional
         });
     }
 
     function addPriceRow() {
         // Crear nueva fila a partir de un template limpio
         const template = document.createElement('div');
+        const nombreNivel = `Precio Nivel ${priceRowIndex + 1}`;
+        console.log(`[DEBUG] Creando nueva fila con nombre: ${nombreNivel}, índice: ${priceRowIndex + 1}`);
         template.innerHTML = `
-            <div class="row price-row gx-3 mb-3 align-items-center" data-index="${priceRowIndex + 1}">
-                <div class="col-md-3">
+            <div class="row price-row gx-3 mb-3 align-items-center" data-index="${priceRowIndex + 1}" data-nombre-nivel="${nombreNivel}">
+                <div class="col-md-2">
+                    <label class="form-label">Nombre del nivel *</label>
+                    <input type="text" class="form-control nombre-nivel" placeholder="Ej: Precio VIP" required 
+                           name="Precios[${priceRowIndex + 1}].NombreNivel" data-original-name="NombreNivel" value="${nombreNivel}">
+                    <span class="text-danger validation-message"></span>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">Precio base *</label>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
@@ -1144,7 +1203,7 @@ function initPricingSystem() {
                 <div class="col-auto d-flex align-items-end pb-1">
                     <span class="h4 mx-1">+</span>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Impuestos</label>
                     <select class="form-select select2-impuestos" multiple="multiple" style="width: 100%;" 
                             name="Precios[${priceRowIndex + 1}].ImpuestoIds" data-original-name="ImpuestoIds">
@@ -1155,7 +1214,7 @@ function initPricingSystem() {
                 <div class="col-auto d-flex align-items-end pb-1">
                     <span class="h4 mx-1">=</span>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Precio Total *</label>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
@@ -1193,11 +1252,15 @@ function initPricingSystem() {
         });
     }
 
-    // Inicializar primera fila
-    const firstRow = priceRowsContainer.querySelector('.price-row');
-    if (firstRow) {
-        initializePriceRow(firstRow, 0);
-        // Actualizar precio en recetas con el valor inicial
+    // Inicializar TODAS las filas existentes (incluida la primera del HTML)
+    const existingRows = priceRowsContainer.querySelectorAll('.price-row');
+    existingRows.forEach((row, index) => {
+        console.log(`[DEBUG] Inicializando fila existente ${index}`);
+        initializePriceRow(row, index);
+    });
+    
+    // Actualizar precio en recetas con el valor inicial
+    if (existingRows.length > 0) {
         setTimeout(actualizarPrecioEnRecetas, 100);
     }
 
@@ -1229,6 +1292,14 @@ function initPricingSystem() {
         });
         return preciosData;
     };
+
+    // Hacer funciones accesibles globalmente
+    window.updateDeleteButtons = updateDeleteButtons;
+    window.addPriceRow = addPriceRow;
+    window.initializePriceRow = initializePriceRow;
+    
+    // Inicializar la primera fila inmediatamente
+    initializeFirstRow();
 }
 
 // Función para inicializar selectores de cuentas contables
@@ -1498,36 +1569,41 @@ function guardarProductoSinImagen(productoId, esNuevo) {
         producto.ImagenUrl = imagenUrl;
     }
     
-    // Extraer ImpuestoIds de la pestaña de precios
-    const filaImpuestos = document.querySelector('#priceRowsContainer .price-row');
-    console.log('Fila de impuestos encontrada:', filaImpuestos);
-    
-    if (filaImpuestos) {
-        const $selectImpuestos = $(filaImpuestos).find('.select2-impuestos');
-        console.log('Select de impuestos encontrado:', $selectImpuestos.length > 0);
-        
+    // Extraer impuestos de la primera fila solo para compatibilidad
+    const primeraFila = document.querySelector('#priceRowsContainer .price-row:first-child');
+    if (primeraFila) {
+        const $selectImpuestos = $(primeraFila).find('.select2-impuestos');
         const impuestosSeleccionados = $selectImpuestos.val();
-        console.log('Valor del select2 de impuestos:', impuestosSeleccionados);
-        console.log('Tipo de impuestosSeleccionados:', typeof impuestosSeleccionados);
-        console.log('Es array:', Array.isArray(impuestosSeleccionados));
         
         if (impuestosSeleccionados && impuestosSeleccionados.length > 0) {
-            // Enviar array de impuestos
+            // Solo para compatibilidad con sistema viejo
             producto.ImpuestoIds = impuestosSeleccionados.map(id => parseInt(id));
-            // Mantener compatibilidad con campo único
             producto.ImpuestoId = parseInt(impuestosSeleccionados[0]) || null;
-            console.log('ImpuestoIds extraídos:', producto.ImpuestoIds);
-            console.log('ImpuestoId (compatibilidad):', producto.ImpuestoId);
         } else {
             producto.ImpuestoIds = [];
             producto.ImpuestoId = null;
-            console.log('No hay impuestos seleccionados en la pestaña de precios');
         }
     } else {
-        console.log('No se encontró la fila de impuestos');
         producto.ImpuestoIds = [];
         producto.ImpuestoId = null;
     }
+    
+    // Extraer múltiples precios (nuevo sistema)
+    const preciosRecopilados = recopilarDatosPrecios();
+    console.log('Precios recopilados:', preciosRecopilados);
+    
+    // Log detallado de cada precio
+    preciosRecopilados.forEach((precio, index) => {
+        console.log(`[DEBUG] Precio ${index + 1}:`, {
+            NombreNivel: precio.NombreNivel,
+            PrecioBase: precio.PrecioBase,
+            PrecioTotal: precio.PrecioTotal,
+            ImpuestoIds: precio.ImpuestoIds,
+            EsPrincipal: precio.EsPrincipal
+        });
+    });
+    
+    producto.Precios = preciosRecopilados;
     
     // Mostrar loading
     Swal.fire({
@@ -1548,12 +1624,17 @@ function guardarProductoSinImagen(productoId, esNuevo) {
     console.log('URL:', url);
     console.log('Método:', method);
     
+    // Log específico del JSON que se envía
+    const jsonToSend = JSON.stringify(producto);
+    console.log('JSON a enviar:', jsonToSend);
+    console.log('Tamaño del JSON:', jsonToSend.length, 'caracteres');
+    
     // Guardar producto principal
     $.ajax({
         url: url,
         type: method,
         contentType: 'application/json',
-        data: JSON.stringify(producto),
+        data: jsonToSend,
         success: function(response) {
             console.log('Respuesta del servidor:', response);
             
@@ -1915,10 +1996,10 @@ function cargarDatosProductoExistente(productoId) {
                     $('#rutaImpresoraId').val(productData.RutaImpresoraId).trigger('change');
                 }
                 
-                // Cargar precio en la primera fila de precios
-                if (productData.PrecioVenta > 0) {
-                    $('.precio-base').first().val(productData.PrecioVenta).trigger('input');
-                }
+                // Cargar múltiples precios (nuevo sistema)
+                setTimeout(function() {
+                    cargarPreciosProducto(productoId);
+                }, 600);
                 
                 // Cargar impuestos en el select2 de la primera fila
                 const $firstImpuestoSelect = $('.select2-impuestos').first();
@@ -1967,7 +2048,7 @@ function cargarDatosProductoExistente(productoId) {
                                 } else {
                                     // Si solo tenemos el ID, buscar los detalles
                                     $.ajax({
-                                        url: `/Impuestos/Buscar?term=${impuesto.id}&exactId=true`,
+                                        url: `/api/impuestos/Buscar?term=${impuesto.id}`,
                                         type: 'GET',
                                         success: function(data) {
                                             console.log(`Respuesta de búsqueda de impuesto ${impuesto.id}:`, data);
@@ -2157,4 +2238,353 @@ function cargarCuentaContable(selector, cuentaId) {
             console.error(`Error al cargar cuenta contable ${selector}:`, xhr);
         }
     });
+}
+
+// ========== FUNCIONES PARA MÚLTIPLES PRECIOS ==========
+
+/**
+ * Carga los precios existentes de un producto en edición
+ */
+function cargarPreciosProducto(productoId) {
+    console.log('Cargando precios del producto:', productoId);
+    
+    if (!productoId || productoId === '0') {
+        console.log('No hay producto ID válido, saltando carga de precios');
+        return;
+    }
+    
+    $.ajax({
+        url: `/api/productos/${productoId}/precios`,
+        type: 'GET',
+        success: function(precios) {
+            console.log('[DEBUG] Precios cargados desde API:', precios);
+            console.log('[DEBUG] Tipo de precios:', typeof precios);
+            console.log('[DEBUG] Es array?:', Array.isArray(precios));
+            if (precios && precios.length > 0) {
+                console.log('[DEBUG] Primer precio estructura:', JSON.stringify(precios[0], null, 2));
+            }
+            
+            if (precios && precios.length > 0) {
+                console.log(`[DEBUG] Se encontraron ${precios.length} precios para cargar`);
+                
+                // Limpiar filas existentes excepto la primera
+                const $container = $('#priceRowsContainer');
+                const $firstRow = $container.find('.price-row').first();
+                $container.find('.price-row:not(:first)').remove();
+                
+                // Cargar cada precio
+                precios.forEach((precio, index) => {
+                    console.log(`[DEBUG] Procesando precio ${index}:`, precio);
+                    console.log(`[DEBUG] Precio ${index} - NombreNivel: ${precio.NombreNivel || precio.nombreNivel}`);
+                    console.log(`[DEBUG] Precio ${index} - ImpuestoIds: [${(precio.ImpuestoIds || precio.impuestoIds || []).join(',')}]`);
+                    console.log(`[DEBUG] Precio ${index} - PrecioBase: ${precio.PrecioBase || precio.precioBase}`);
+                    console.log(`[DEBUG] Precio ${index} - PrecioTotal: ${precio.PrecioTotal || precio.precioTotal}`);
+                    
+                    if (index === 0) {
+                        // Cargar en la primera fila existente
+                        console.log('[DEBUG] Cargando en primera fila existente');
+                        cargarPrecioEnFila($firstRow, precio);
+                    } else {
+                        // Agregar nueva fila para precios adicionales
+                        console.log('[DEBUG] Creando nueva fila para precio adicional');
+                        const $newRow = agregarFilaPrecio();
+                        if ($newRow && $newRow.length) {
+                            cargarPrecioEnFila($newRow, precio);
+                        } else {
+                            console.error('[ERROR] No se pudo crear nueva fila para precio');
+                        }
+                    }
+                });
+                
+                // Actualizar botones de eliminar
+                if (typeof window.updateDeleteButtons === 'function') {
+                    window.updateDeleteButtons();
+                } else {
+                    console.warn('window.updateDeleteButtons no está disponible');
+                }
+            } else {
+                console.log('No se encontraron precios para el producto');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar precios del producto:', error);
+        }
+    });
+}
+
+/**
+ * Carga un precio específico en una fila de precio
+ */
+function cargarPrecioEnFila($row, precio) {
+    // Datos básicos del precio - soportar tanto PascalCase (API) como camelCase (JavaScript)
+    const nombreNivel = precio.NombreNivel || precio.nombreNivel || 'Precio Base';
+    const precioBase = precio.PrecioBase || precio.precioBase || 0;
+    const precioTotal = precio.PrecioTotal || precio.precioTotal || 0;
+    const id = precio.Id || precio.id || '';
+    const esPrincipal = precio.EsPrincipal || precio.esPrincipal || false;
+    const orden = precio.Orden || precio.orden || 0;
+    const impuestoIds = precio.ImpuestoIds || precio.impuestoIds || [];
+    
+    console.log(`[DEBUG] Cargando precio en fila: ${nombreNivel}, Base: ${precioBase}, Total: ${precioTotal}`);
+    
+    $row.find('.nombre-nivel').val(nombreNivel);
+    $row.find('.precio-base').val(precioBase);
+    $row.find('.precio-total').val(precioTotal);
+    
+    // Guardar ID del precio para edición
+    $row.attr('data-precio-id', id);
+    $row.attr('data-nombre-nivel', nombreNivel);
+    $row.attr('data-es-principal', esPrincipal);
+    $row.attr('data-orden', orden);
+    
+    // Asegurar que el Select2 esté inicializado antes de cargar impuestos
+    const $impuestoSelect = $row.find('.select2-impuestos');
+    if ($impuestoSelect.length && !$impuestoSelect.data('select2')) {
+        console.log('[DEBUG] Inicializando Select2 antes de cargar impuestos');
+        // Obtener índice de la fila
+        const index = $row.closest('.price-row').index();
+        if (typeof window.initializePriceRow === 'function') {
+            window.initializePriceRow($row[0], index);
+        }
+    }
+    
+    // Cargar impuestos específicos de este precio
+    if (impuestoIds && impuestoIds.length > 0) {
+        console.log('[DEBUG] Cargando impuestos específicos:', impuestoIds);
+        cargarImpuestosEnFila($row, impuestoIds);
+    } else {
+        console.log('[DEBUG] No hay impuestos específicos para este precio');
+        // Si no tiene impuestos específicos, heredar del producto
+        cargarImpuestosDelProductoEnFila($row);
+    }
+}
+
+/**
+ * Carga impuestos específicos en una fila de precio
+ */
+function cargarImpuestosEnFila($row, impuestoIds) {
+    const $impuestoSelect = $row.find('.select2-impuestos');
+    const rowIndex = $row.closest('.price-row').index();
+    
+    console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}, ImpuestoIds recibidos:`, impuestoIds);
+    console.log(`[DEBUG] cargarImpuestosEnFila - Tipo de impuestoIds:`, typeof impuestoIds, 'Es array:', Array.isArray(impuestoIds));
+    
+    if (!$impuestoSelect.length || !impuestoIds || !impuestoIds.length) {
+        console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: No hay impuestos para cargar o select no encontrado`);
+        return;
+    }
+    
+    // Usar el mecanismo existente de carga de impuestos
+    console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: Iniciando carga de ${impuestoIds.length} impuestos`);
+    const promesasImpuestos = impuestoIds.map((impuestoId, index) => {
+        console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: Cargando impuesto ${index + 1}/${impuestoIds.length} - ID: ${impuestoId}`);
+        return $.ajax({
+            url: '/api/impuestos/Buscar',
+            data: { term: impuestoId.toString() },
+            type: 'GET'
+        }).then(function(response) {
+            const data = response.results || response;
+            console.log(`[DEBUG] Respuesta de /api/impuestos/Buscar para ID ${impuestoId}:`, data);
+            if (data && data.length > 0) {
+                const impuesto = data[0];
+                console.log(`[DEBUG] Cargando impuesto ${impuesto.id}: ${impuesto.text} (${impuesto.porcentaje}%)`);
+                
+                // Guardar el porcentaje en el store global - CRÍTICO
+                if (!window.impuestosDataGlobal) {
+                    window.impuestosDataGlobal = {};
+                }
+                window.impuestosDataGlobal[impuesto.id] = parseFloat(impuesto.porcentaje);
+                console.log(`[DEBUG] Guardado en window.impuestosDataGlobal[${impuesto.id}] = ${impuesto.porcentaje}`);
+                
+                // Agregar opción si no existe
+                if ($impuestoSelect.find(`option[value="${impuesto.id}"]`).length === 0) {
+                    const option = new Option(impuesto.text, impuesto.id, false, false);
+                    $impuestoSelect.append(option);
+                }
+            } else {
+                console.warn(`[DEBUG] No se encontró impuesto con ID ${impuestoId}`);
+            }
+        });
+    });
+    
+    // Esperar a que todos los impuestos se carguen y luego seleccionarlos
+    Promise.all(promesasImpuestos).then(() => {
+        const idsParaSeleccionar = impuestoIds.map(id => id.toString());
+        console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: Seleccionando impuestos:`, idsParaSeleccionar);
+        console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: Opciones disponibles en select:`, $impuestoSelect.find('option').map((i, opt) => $(opt).val()).get());
+        
+        $impuestoSelect.val(idsParaSeleccionar).trigger('change');
+        console.log(`[DEBUG] cargarImpuestosEnFila - Fila ${rowIndex}: Impuestos seleccionados finalmente:`, $impuestoSelect.val());
+        
+        // Forzar recálculo después de un pequeño delay para asegurar que los datos estén disponibles
+        setTimeout(() => {
+            console.log('[DEBUG] Forzando recálculo después de cargar impuestos');
+            console.log('[DEBUG] window.impuestosDataGlobal disponible:', window.impuestosDataGlobal);
+            
+            // Obtener el índice de la fila para identificar el nivel
+            const index = $row.closest('.price-row').index();
+            
+            // Disparar recálculo basado en el precio base (más confiable)
+            const $precioBase = $row.find('.precio-base');
+            if ($precioBase.length && $precioBase.val()) {
+                console.log(`[DEBUG] Disparando recálculo en fila ${index} basado en precio base: ${$precioBase.val()}`);
+                $precioBase.trigger('input');
+            }
+        }, 500); // Dar tiempo para que los porcentajes se carguen en window.impuestosDataGlobal
+    });
+}
+
+/**
+ * Carga impuestos del producto (herencia) en una fila
+ */
+function cargarImpuestosDelProductoEnFila($row) {
+    const productoId = $('#productoId').val();
+    if (!productoId) return;
+    
+    // Obtener impuestos del producto desde el endpoint existente
+    $.ajax({
+        url: `/api/productos/${productoId}`,
+        type: 'GET',
+        success: function(response) {
+            const productData = response.value || response.Value || response.result || response;
+            if (productData && productData.Impuestos) {
+                const impuestoIds = productData.Impuestos.map(imp => imp.Id || imp.id);
+                cargarImpuestosEnFila($row, impuestoIds);
+            }
+        },
+        error: function(error) {
+            console.error('Error al cargar impuestos del producto:', error);
+        }
+    });
+}
+
+/**
+ * Agrega una nueva fila de precio
+ */
+function agregarFilaPrecio() {
+    console.log('[DEBUG] agregarFilaPrecio llamada');
+    
+    // SIEMPRE usar la función global addPriceRow (forzar)
+    if (typeof window.addPriceRow === 'function') {
+        console.log('[DEBUG] Usando window.addPriceRow');
+        window.addPriceRow();
+        
+        // Retornar la fila recién creada
+        const $container = $('#priceRowsContainer');
+        const $newRow = $container.find('.price-row').last();
+        return $newRow;
+    }
+    
+    console.log('[DEBUG] window.addPriceRow no disponible, usando fallback');
+    
+    // Fallback: crear fila manualmente
+    const $container = $('#priceRowsContainer');
+    const filaIndex = $container.find('.price-row').length;
+    const nombreNivel = `Precio Nivel ${filaIndex + 1}`;
+    
+    const template = `
+        <div class="row price-row gx-3 mb-3 align-items-center" data-index="${filaIndex}" data-nombre-nivel="${nombreNivel}">
+            <div class="col-md-2">
+                <label class="form-label">Nombre del nivel *</label>
+                <input type="text" class="form-control nombre-nivel" placeholder="Ej: Precio VIP" required 
+                       name="Precios[${filaIndex}].NombreNivel" data-original-name="NombreNivel" value="${nombreNivel}">
+                <span class="text-danger validation-message"></span>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Precio base *</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control precio-base" step="0.01" placeholder="0.00" required 
+                           name="Precios[${filaIndex}].PrecioBase" data-original-name="PrecioBase" value="0.00">
+                </div>
+                <span class="text-danger validation-message"></span>
+            </div>
+            <div class="col-auto d-flex align-items-end pb-1">
+                <span class="h4 mx-1">+</span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Impuestos</label>
+                <select class="form-select select2-impuestos" multiple="multiple" style="width: 100%;" 
+                        name="Precios[${filaIndex}].ImpuestoIds" data-original-name="ImpuestoIds">
+                    <!-- Las opciones se cargarán por AJAX -->
+                </select>
+                <span class="text-danger validation-message"></span>
+            </div>
+            <div class="col-auto d-flex align-items-end pb-1">
+                <span class="h4 mx-1">=</span>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Precio Total *</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control precio-total" step="0.01" placeholder="0.00" required
+                           name="Precios[${filaIndex}].PrecioTotal" data-original-name="PrecioTotal" value="0.00">
+                </div>
+                <span class="text-danger validation-message"></span>
+            </div>
+            <div class="col-auto d-flex align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-precio" title="Eliminar este nivel de precio">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    const $newRow = $(template);
+    $container.append($newRow);
+    
+    // Inicializar la fila si la función está disponible
+    if (typeof window.initializePriceRow === 'function') {
+        console.log('[DEBUG] Inicializando fila con window.initializePriceRow');
+        window.initializePriceRow($newRow[0], filaIndex);
+    }
+    
+    // Actualizar botones de eliminar
+    if (typeof window.updateDeleteButtons === 'function') {
+        console.log('[DEBUG] Actualizando botones con window.updateDeleteButtons');
+        window.updateDeleteButtons();
+    }
+    
+    return $newRow;
+}
+
+/**
+ * Recopila los datos de precios para enviar al servidor
+ */
+function recopilarDatosPrecios() {
+    const precios = [];
+    
+    console.log('[DEBUG] Iniciando recopilarDatosPrecios...');
+    
+    $('#priceRowsContainer .price-row').each(function(index) {
+        const $row = $(this);
+        const nombreNivel = $row.find('.nombre-nivel').val() || $row.attr('data-nombre-nivel') || (index === 0 ? 'Precio Base' : `Precio ${index + 1}`);
+        const precioBase = parseFloat($row.find('.precio-base').val()) || 0;
+        const precioTotal = parseFloat($row.find('.precio-total').val()) || 0;
+        const impuestoIds = $row.find('.select2-impuestos').val() || [];
+        
+        console.log(`[DEBUG] Fila ${index}: nombre=${nombreNivel}, base=${precioBase}, total=${precioTotal}, impuestos=${JSON.stringify(impuestoIds)}`);
+        console.log(`[DEBUG] Tipo de impuestoIds:`, typeof impuestoIds, 'Es array:', Array.isArray(impuestoIds));
+        
+        // Incluir el precio aunque sea 0, pero validar que tenga al menos nombre
+        if (nombreNivel.trim() !== '') {
+            const impuestosProcessed = impuestoIds.map(id => parseInt(id));
+            const precio = {
+                Id: $row.attr('data-precio-id') ? parseInt($row.attr('data-precio-id')) : null,
+                NombreNivel: nombreNivel.trim(),
+                PrecioBase: precioBase,
+                PrecioTotal: precioTotal,
+                ImpuestoIds: impuestosProcessed,
+                Orden: index,
+                EsPrincipal: index === 0, // El primer precio siempre es principal
+                Activo: true
+            };
+            
+            console.log(`[DEBUG] Precio agregado con ${impuestosProcessed.length} impuestos:`, precio);
+            precios.push(precio);
+        }
+    });
+    
+    console.log(`[DEBUG] Total precios recopilados: ${precios.length}`);
+    return precios;
 }

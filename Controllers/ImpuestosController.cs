@@ -422,12 +422,13 @@ namespace SistemaContable.Controllers
 
         // GET: Impuestos/Buscar
         [HttpGet]
-        public async Task<JsonResult> Buscar(string term, bool exactId = false)
+        public async Task<JsonResult> Buscar(string term, string exactId = "false")
         {
             try
             {
                 var empresaId = await _empresaService.ObtenerEmpresaActualId();
-                Console.WriteLine($"[ImpuestosController] Buscar - EmpresaId: {empresaId}, term: '{term}', exactId: {exactId}");
+                bool isExactId = exactId?.ToLower() == "true";
+                Console.WriteLine($"[ImpuestosController] Buscar - EmpresaId: {empresaId}, term: '{term}', exactId: '{exactId}' (parsed: {isExactId})");
                 
                 if (empresaId <= 0)
                 {
@@ -435,11 +436,12 @@ namespace SistemaContable.Controllers
                     return Json(new { results = new List<object>() });
                 }
 
+
                 IQueryable<Impuesto> query = _context.Impuestos
                     .Where(i => i.EmpresaId == empresaId && i.Estado);
 
                 // Si exactId es true, buscar por ID exacto
-                if (exactId && !string.IsNullOrEmpty(term) && int.TryParse(term, out int impuestoId))
+                if (isExactId && !string.IsNullOrEmpty(term) && int.TryParse(term, out int impuestoId))
                 {
                     Console.WriteLine($"[ImpuestosController] Buscando por ID exacto: {impuestoId}");
                     query = query.Where(i => i.Id == impuestoId);
@@ -448,6 +450,11 @@ namespace SistemaContable.Controllers
                 {
                     Console.WriteLine($"[ImpuestosController] Buscando por término: {term}");
                     query = query.Where(i => i.Nombre.Contains(term));
+                }
+                // Si no hay term y exactId=false, devolver todos los impuestos (para Select2)
+                else
+                {
+                    Console.WriteLine($"[ImpuestosController] Devolviendo todos los impuestos activos");
                 }
 
                 var impuestos = await query
@@ -473,6 +480,7 @@ namespace SistemaContable.Controllers
                 return Json(new { results = new List<object>() });
             }
         }
+
 
         // POST: Impuestos/ToggleEstado
         [HttpPost]

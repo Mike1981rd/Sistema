@@ -21,6 +21,11 @@ namespace SistemaContable.ViewModels.Productos
         
         public decimal PrecioVenta { get; set; }
         
+        /// <summary>
+        /// Lista de niveles de precio del producto
+        /// </summary>
+        public List<ProductoPrecioDetalleDto> Precios { get; set; } = new List<ProductoPrecioDetalleDto>();
+        
         public decimal Costo { get; set; }
         
         public string? ImagenUrl { get; set; }

@@ -231,18 +231,25 @@
                                 <div class="container-fluid px-0 mt-3">
                                     <div id="priceRowsContainer">
                                         <!-- Primera fila de precio (plantilla) -->
-                                        <div class="row price-row gx-3 mb-3 align-items-center">
-                                            <div class="col-md-3">
-                                                <label class="form-label">Precio base</label>
+                                        <div class="row price-row gx-3 mb-3 align-items-center" data-nombre-nivel="Precio Base">
+                                            <div class="col-md-2">
+                                                <label class="form-label">Nombre del nivel *</label>
+                                                <input type="text" class="form-control nombre-nivel" placeholder="Ej: Precio Regular" required 
+                                                       name="Precios[0].NombreNivel" data-original-name="NombreNivel" value="Precio Base">
+                                                <span class="text-danger validation-message"></span>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Precio base *</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">$</span>
-                                                    <input type="number" class="form-control precio-base" data-original-name="PrecioBase" step="0.01" placeholder="0.00" value="0">
+                                                    <input type="number" class="form-control precio-base" data-original-name="PrecioBase" step="0.01" placeholder="0.00" value="0" required>
                                                 </div>
+                                                <span class="text-danger validation-message"></span>
                                             </div>
                                             <div class="col-auto d-flex align-items-end pb-1">
-                                                <span class="h4 mx-2 text-muted">+</span>
+                                                <span class="h4 mx-1">+</span>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label">Impuestos</label>
                                                 <select class="form-select select2-impuestos" multiple="multiple" style="width: 100%;" 
                                                         name="Precios[0].ImpuestoIds" data-original-name="ImpuestoIds">
@@ -251,14 +258,15 @@
                                                 <span class="text-danger validation-message"></span>
                                             </div>
                                             <div class="col-auto d-flex align-items-end pb-1">
-                                                <span class="h4 mx-2 text-muted">=</span>
+                                                <span class="h4 mx-1">=</span>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Precio Total</label>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Precio Total *</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">$</span>
-                                                    <input type="number" class="form-control precio-total" data-original-name="PrecioTotal" step="0.01" placeholder="0.00" value="0">
+                                                    <input type="number" class="form-control precio-total" data-original-name="PrecioTotal" step="0.01" placeholder="0.00" value="0" required>
                                                 </div>
+                                                <span class="text-danger validation-message"></span>
                                             </div>
                                             <div class="col-auto d-flex align-items-center">
                                                 <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-precio" title="Eliminar este nivel de precio">
