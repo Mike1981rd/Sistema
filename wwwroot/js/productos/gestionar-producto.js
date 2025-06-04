@@ -263,7 +263,10 @@ function initCategoriaInheritance() {
                         // Agregar impuesto regular si existe
                         if (response.impuestoId) {
                             console.log(`Heredando impuesto ID: ${response.impuestoId} a la pestaña de precios`);
-                            impuestosParaSeleccionar.push(response.impuestoId);
+                            impuestosParaSeleccionar.push({
+                                id: response.impuestoId,
+                                tipo: 'Regular'
+                            });
                         } else {
                             console.log('No hay impuesto regular para heredar');
                         }
@@ -273,7 +276,10 @@ function initCategoriaInheritance() {
                             console.log(`Heredando impuesto de propina ID: ${response.propinaImpuestoId} a la pestaña de precios`);
                             console.log(`Tipo de propinaImpuestoId: ${typeof response.propinaImpuestoId}`);
                             console.log(`Valor de propinaImpuestoId: ${response.propinaImpuestoId}`);
-                            impuestosParaSeleccionar.push(response.propinaImpuestoId);
+                            impuestosParaSeleccionar.push({
+                                id: response.propinaImpuestoId,
+                                tipo: 'Propina'
+                            });
                         } else {
                             console.log('No hay impuesto de propina para heredar');
                             console.log('Valor de response.propinaImpuestoId:', response.propinaImpuestoId);
@@ -297,13 +303,13 @@ function initCategoriaInheritance() {
                                             console.log('Impuestos disponibles:', impuestosDisponibles);
                                             
                                             // Procesar cada impuesto para seleccionar
-                                            impuestosParaSeleccionar.forEach(impuestoId => {
-                                                const impuestoEncontrado = impuestosDisponibles.find(imp => imp.id == impuestoId);
+                                            impuestosParaSeleccionar.forEach(impuestoObj => {
+                                                const impuestoEncontrado = impuestosDisponibles.find(imp => imp.id == impuestoObj.id);
                                                 
                                                 if (impuestoEncontrado) {
-                                                    console.log(`✅ Impuesto ${impuestoId} encontrado:`, impuestoEncontrado);
+                                                    console.log(`✅ Impuesto ${impuestoObj.tipo} ${impuestoObj.id} encontrado:`, impuestoEncontrado);
                                                     
-                                                    const textoImpuesto = `${impuestoEncontrado.nombre} (${impuestoEncontrado.porcentaje}%)`;
+                                                    const textoImpuesto = `${impuestoEncontrado.nombre} (${impuestoEncontrado.porcentaje}%) - ${impuestoObj.tipo}`;
                                                     
                                                     // Crear la opción si no existe
                                                     if (!$firstImpuestoSelect.find(`option[value="${impuestoEncontrado.id}"]`).length) {
@@ -314,21 +320,21 @@ function initCategoriaInheritance() {
                                                     // Guardar el porcentaje del impuesto
                                                     window.impuestosDataGlobal = window.impuestosDataGlobal || {};
                                                     window.impuestosDataGlobal[impuestoEncontrado.id] = parseFloat(impuestoEncontrado.porcentaje);
-                                                    console.log(`Guardando porcentaje del impuesto ${impuestoEncontrado.id}: ${impuestoEncontrado.porcentaje}%`);
+                                                    console.log(`Guardando porcentaje del impuesto ${impuestoObj.tipo} ${impuestoEncontrado.id}: ${impuestoEncontrado.porcentaje}%`);
                                                 } else {
-                                                    console.warn(`❌ Impuesto ${impuestoId} NO ENCONTRADO en impuestos disponibles.`);
+                                                    console.warn(`❌ Impuesto ${impuestoObj.tipo} ${impuestoObj.id} NO ENCONTRADO en impuestos disponibles.`);
                                                     
                                                     // Si no se encuentra, crear una opción temporal para que no falle
-                                                    const textoTemporal = `Impuesto ${impuestoId} (No disponible)`;
-                                                    if (!$firstImpuestoSelect.find(`option[value="${impuestoId}"]`).length) {
-                                                        const newOption = new Option(textoTemporal, impuestoId, false, false);
+                                                    const textoTemporal = `Impuesto ${impuestoObj.id} (${impuestoObj.tipo} - No disponible)`;
+                                                    if (!$firstImpuestoSelect.find(`option[value="${impuestoObj.id}"]`).length) {
+                                                        const newOption = new Option(textoTemporal, impuestoObj.id, false, false);
                                                         $firstImpuestoSelect.append(newOption);
                                                     }
                                                 }
                                             });
                                             
                                             // Seleccionar todos los impuestos
-                                            const selectedValues = impuestosParaSeleccionar.map(id => id.toString());
+                                            const selectedValues = impuestosParaSeleccionar.map(obj => obj.id.toString());
                                             $firstImpuestoSelect.val(selectedValues).trigger('change');
                                             
                                             if (response.impuestoId) camposActualizados.push('Impuesto');
@@ -1692,46 +1698,50 @@ window.actualizarPrecioEnRecetas = actualizarPrecioEnRecetas;
 
 // Función para cargar receta existente
 function cargarRecetaExistente(productoId) {
+    console.log('Cargando receta para producto:', productoId);
     $.ajax({
         url: `/api/productos/${productoId}/receta`,
         type: 'GET',
         success: function(response) {
-            if (response && response.ingredientes && response.ingredientes.length > 0) {
+            console.log('Respuesta del servidor:', response);
+            console.log('¿Tiene ingredientes?', response.Ingredientes);
+            console.log('Longitud de ingredientes:', response.Ingredientes ? response.Ingredientes.length : 'undefined');
+            if (response && response.Ingredientes && response.Ingredientes.length > 0) {
                 // Limpiar tabla
                 $('#recetasTableBody').empty();
                 
                 // Cargar notas y margen
-                if (response.notasReceta) {
-                    $('#notasReceta').val(response.notasReceta);
+                if (response.NotasReceta) {
+                    $('#notasReceta').val(response.NotasReceta);
                 }
                 
-                if (response.margenGanancia) {
-                    $('#margenSlider').val(response.margenGanancia).trigger('input');
+                if (response.MargenGanancia) {
+                    $('#margenSlider').val(response.MargenGanancia).trigger('input');
                 }
                 
                 // Cargar cada ingrediente
-                response.ingredientes.forEach(function(ingrediente) {
+                response.Ingredientes.forEach(function(ingrediente) {
                     const newRow = document.createElement('tr');
-                    newRow.setAttribute('data-item-id', ingrediente.itemId);
+                    newRow.setAttribute('data-item-id', ingrediente.ItemId);
                     
                     newRow.innerHTML = `
-                        <td data-id="${ingrediente.itemId}">${ingrediente.nombreItem || ''}</td>
-                        <td>${ingrediente.marcaNombre || '-'}</td>
+                        <td data-id="${ingrediente.ItemId}">${ingrediente.NombreItem || ''}</td>
+                        <td>${ingrediente.MarcaNombre || '-'}</td>
                         <td>
                             <input type="number" class="form-control form-control-sm cantidad-input" 
-                                   value="${ingrediente.cantidad}" min="0" step="0.01">
+                                   value="${ingrediente.Cantidad}" min="0" step="0.01">
                         </td>
                         <td>
                             <select class="form-select form-select-sm contenedor-select unidad-select" 
-                                    onchange="actualizarCostoContenedor(this)" data-selected="${ingrediente.itemContenedorId}">
+                                    onchange="actualizarCostoContenedor(this)" data-selected="${ingrediente.ItemContenedorId}">
                                 <option value="">Cargando...</option>
                             </select>
                         </td>
                         <td>
                             <input type="number" class="form-control form-control-sm costo-input" 
-                                   value="${ingrediente.costoUnitario.toFixed(2)}" min="0" step="0.01" readonly>
+                                   value="${ingrediente.CostoUnitario.toFixed(2)}" min="0" step="0.01" readonly>
                         </td>
-                        <td class="subtotal-cell">$${(ingrediente.cantidad * ingrediente.costoUnitario).toFixed(2)}</td>
+                        <td class="subtotal-cell">$${(ingrediente.Cantidad * ingrediente.CostoUnitario).toFixed(2)}</td>
                         <td>
                             <button type="button" class="btn btn-remove" title="Eliminar">
                                 <i class="fas fa-trash"></i>
@@ -1742,11 +1752,13 @@ function cargarRecetaExistente(productoId) {
                     $('#recetasTableBody').append(newRow);
                     
                     // Cargar contenedores para este item
-                    cargarContenedoresParaItem(ingrediente.itemId, newRow, ingrediente.itemContenedorId);
+                    cargarContenedoresParaItem(ingrediente.ItemId, newRow, ingrediente.ItemContenedorId);
                 });
                 
                 // Actualizar totales
                 calcularTotales();
+            } else {
+                console.log('No hay ingredientes en la receta o respuesta vacía');
             }
         },
         error: function(xhr) {
@@ -1758,22 +1770,22 @@ function cargarRecetaExistente(productoId) {
 // Función para cargar contenedores de un item específico
 function cargarContenedoresParaItem(itemId, row, selectedContenedorId) {
     $.ajax({
-        url: `/api/item/${itemId}`,
+        url: `/api/item/${itemId}/Contenedores`,
         type: 'GET',
-        success: function(response) {
-            if (response.success && response.item && response.item.contenedores) {
+        success: function(contenedores) {
+            if (contenedores && contenedores.length > 0) {
                 const $select = $(row).find('.contenedor-select');
                 $select.empty();
                 $select.append('<option value="">Seleccione unidad...</option>');
                 
-                response.item.contenedores.forEach(function(contenedor) {
+                contenedores.forEach(function(contenedor) {
                     const option = new Option(
-                        contenedor.unidadMedida?.nombre || contenedor.nombre,
+                        contenedor.unidadMedidaNombre || contenedor.nombre,
                         contenedor.id,
                         false,
                         contenedor.id == selectedContenedorId
                     );
-                    $(option).attr('data-costo', contenedor.costoUnitario || 0);
+                    $(option).attr('data-costo', contenedor.costo || 0);
                     $select.append(option);
                 });
                 
@@ -1997,14 +2009,29 @@ function cargarDatosProductoExistente(productoId) {
                     }
                 }
                 
-                // Cargar cuentas contables
-                cargarCuentaContable('#cuentaVentasId', productData.CuentaVentasId);
-                cargarCuentaContable('#cuentaComprasInventariosId', productData.CuentaComprasInventariosId);
-                cargarCuentaContable('#cuentaCostoVentasGastosId', productData.CuentaCostoVentasGastosId);
-                cargarCuentaContable('#cuentaDescuentosId', productData.CuentaDescuentosId);
-                cargarCuentaContable('#cuentaDevolucionesId', productData.CuentaDevolucionesId);
-                cargarCuentaContable('#cuentaAjustesId', productData.CuentaAjustesId);
-                cargarCuentaContable('#cuentaCostoMateriaPrimaId', productData.CuentaCostoMateriaPrimaId);
+                // DEBUG: Ver qué propiedades tiene productData
+                console.log('ProductData recibido:', productData);
+                console.log('CuentaVentasId:', productData.CuentaVentasId);
+                
+                // Deshabilitar herencia temporalmente
+                $('#categoriaId').off('change.inheritance');
+                
+                // Asegurar que Select2 esté inicializado antes de cargar cuentas
+                setTimeout(function() {
+                    // Cargar cuentas contables específicas del producto
+                    cargarCuentaContable('#cuentaVentasId', productData.CuentaVentasId);
+                    cargarCuentaContable('#cuentaComprasInventariosId', productData.CuentaComprasInventariosId);
+                    cargarCuentaContable('#cuentaCostoVentasGastosId', productData.CuentaCostoVentasGastosId);
+                    cargarCuentaContable('#cuentaDescuentosId', productData.CuentaDescuentosId);
+                    cargarCuentaContable('#cuentaDevolucionesId', productData.CuentaDevolucionesId);
+                    cargarCuentaContable('#cuentaAjustesId', productData.CuentaAjustesId);
+                    cargarCuentaContable('#cuentaCostoMateriaPrimaId', productData.CuentaCostoMateriaPrimaId);
+                    
+                    // Reactivar herencia después de 1 segundo
+                    setTimeout(function() {
+                        initCategoriaInheritance();
+                    }, 1000);
+                }, 500);
                 
                 // Cargar imagen si existe
                 if (productData.ImagenUrl) {
@@ -2075,16 +2102,42 @@ function cargarDatosProductoExistente(productoId) {
 
 // Función auxiliar para cargar una cuenta contable específica
 function cargarCuentaContable(selector, cuentaId) {
-    if (!cuentaId) return;
+    console.log(`Intentando cargar cuenta ${selector} con ID:`, cuentaId);
+    if (!cuentaId) {
+        console.log(`No hay ID para ${selector}, saltando`);
+        return;
+    }
     
     $.ajax({
         url: `/Productos/BuscarCuentasContables?term=${cuentaId}&exactId=true`,
         type: 'GET',
         success: function(data) {
-            if (data.results && data.results.length > 0) {
-                const cuenta = data.results[0];
+            console.log(`Respuesta para ${selector}:`, data);
+            if (data && data.length > 0) {
+                const cuenta = data[0];
+                const $select = $(selector);
+                
+                console.log(`Select ${selector} encontrado:`, $select.length > 0);
+                console.log(`Tiene Select2:`, $select.hasClass('select2-hidden-accessible'));
+                
+                // Limpiar opciones existentes excepto placeholder
+                $select.find('option[value!=""]').remove();
+                
+                // Agregar nueva opción
                 const option = new Option(cuenta.text, cuenta.id, true, true);
-                $(selector).append(option).trigger('change');
+                $select.append(option);
+                
+                // Forzar actualización de Select2
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.val(cuenta.id).trigger('change');
+                } else {
+                    console.log(`Select ${selector} NO tiene Select2 inicializado`);
+                    $select.val(cuenta.id);
+                }
+                
+                console.log(`Cuenta ${selector} cargada exitosamente, valor: ${$select.val()}`);
+            } else {
+                console.log(`No se encontraron resultados para ${selector}`);
             }
         },
         error: function(xhr) {

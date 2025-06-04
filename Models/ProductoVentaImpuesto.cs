@@ -23,7 +23,9 @@ namespace SistemaContable.Models
         [ForeignKey("ImpuestoId")]
         public virtual Impuesto Impuesto { get; set; }
 
-        // Campo adicional para indicar el orden o prioridad del impuesto
+        /// <summary>
+        /// Orden de aplicación del impuesto
+        /// </summary>
         public int Orden { get; set; } = 0;
 
         // Campos de auditoría

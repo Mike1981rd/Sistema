@@ -17,11 +17,13 @@ namespace SistemaContable.Controllers.API
     {
         private readonly ApplicationDbContext _context;
         private readonly IEmpresaService _empresaService;
+        private readonly IUserService _userService;
 
-        public ProductosController(ApplicationDbContext context, IEmpresaService empresaService)
+        public ProductosController(ApplicationDbContext context, IEmpresaService empresaService, IUserService userService)
         {
             _context = context;
             _empresaService = empresaService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -364,9 +366,26 @@ namespace SistemaContable.Controllers.API
                     }
                 }
 
-                // Verificar unicidad del PLU si se proporciona
-                if (!string.IsNullOrWhiteSpace(productoDto.PLU))
+                // Generar PLU automáticamente si no se proporciona
+                if (string.IsNullOrWhiteSpace(productoDto.PLU))
                 {
+                    // Generar PLU único basado en timestamp y ID aleatorio
+                    var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                    var random = new Random().Next(100, 999);
+                    var pluCandidato = $"PLU{timestamp}{random}";
+                    
+                    // Verificar que no exista (muy improbable pero por seguridad)
+                    while (await _context.ProductosVenta.AnyAsync(p => p.PLU == pluCandidato))
+                    {
+                        random = new Random().Next(100, 999);
+                        pluCandidato = $"PLU{timestamp}{random}";
+                    }
+                    
+                    productoDto.PLU = pluCandidato;
+                }
+                else
+                {
+                    // Si se proporciona PLU, verificar unicidad
                     var pluExiste = await _context.ProductosVenta.AnyAsync(p => p.PLU == productoDto.PLU);
                     if (pluExiste)
                     {
@@ -409,7 +428,7 @@ namespace SistemaContable.Controllers.API
                     CuentaAjustesId = productoDto.CuentaAjustesId,
                     CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId,
                     // Auditoría
-                    UsuarioCreacionId = 1 // TODO: Obtener del usuario actual cuando se implemente autenticación
+                    UsuarioCreacionId = _userService.GetUserId()
                 };
 
                 _context.ProductosVenta.Add(producto);
@@ -418,15 +437,23 @@ namespace SistemaContable.Controllers.API
                 // Guardar impuestos múltiples
                 if (productoDto.ImpuestoIds != null && productoDto.ImpuestoIds.Any())
                 {
+                    int orden = 0;
                     foreach (var impuestoId in productoDto.ImpuestoIds.Distinct())
                     {
+                        // Verificar que el impuesto existe
+                        var impuestoExiste = await _context.Impuestos.AnyAsync(i => i.Id == impuestoId);
+                        if (!impuestoExiste)
+                        {
+                            return BadRequest(new { mensaje = $"El impuesto con ID {impuestoId} no existe" });
+                        }
+                        
                         var productoImpuesto = new ProductoVentaImpuesto
                         {
                             ProductoVentaId = producto.Id,
                             ImpuestoId = impuestoId,
-                            Orden = productoDto.ImpuestoIds.IndexOf(impuestoId),
+                            Orden = orden++,
                             EmpresaId = productoDto.EmpresaId,
-                            UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                            UsuarioCreacionId = _userService.GetUserId()
                         };
                         _context.ProductoVentaImpuestos.Add(productoImpuesto);
                     }
@@ -435,6 +462,13 @@ namespace SistemaContable.Controllers.API
                 // Si no se enviaron ImpuestoIds pero sí ImpuestoId (compatibilidad)
                 else if (productoDto.ImpuestoId.HasValue)
                 {
+                    // Verificar que el impuesto existe
+                    var impuestoExiste = await _context.Impuestos.AnyAsync(i => i.Id == productoDto.ImpuestoId.Value);
+                    if (!impuestoExiste)
+                    {
+                        return BadRequest(new { mensaje = $"El impuesto con ID {productoDto.ImpuestoId.Value} no existe" });
+                    }
+                    
                     var productoImpuesto = new ProductoVentaImpuesto
                     {
                         ProductoVentaId = producto.Id,
@@ -456,7 +490,16 @@ namespace SistemaContable.Controllers.API
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al crear el producto", detalle = ex.Message });
+                // Log más detallado del error
+                var innerException = ex.InnerException != null ? ex.InnerException.Message : "";
+                var stackTrace = ex.StackTrace;
+                
+                return StatusCode(500, new { 
+                    mensaje = "Error al crear el producto", 
+                    detalle = ex.Message,
+                    innerException = innerException,
+                    stackTrace = stackTrace
+                });
             }
         }
 
@@ -503,9 +546,26 @@ namespace SistemaContable.Controllers.API
                     }
                 }
 
-                // Verificar unicidad del PLU si cambió
-                if (!string.IsNullOrWhiteSpace(productoDto.PLU) && productoDto.PLU != producto.PLU)
+                // Manejar PLU en edición
+                if (string.IsNullOrWhiteSpace(productoDto.PLU))
                 {
+                    // Si el PLU está vacío, generar uno nuevo automáticamente
+                    var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                    var random = new Random().Next(100, 999);
+                    var pluCandidato = $"PLU{timestamp}{random}";
+                    
+                    // Verificar que no exista
+                    while (await _context.ProductosVenta.AnyAsync(p => p.PLU == pluCandidato && p.Id != id))
+                    {
+                        random = new Random().Next(100, 999);
+                        pluCandidato = $"PLU{timestamp}{random}";
+                    }
+                    
+                    productoDto.PLU = pluCandidato;
+                }
+                else if (productoDto.PLU != producto.PLU)
+                {
+                    // Si se cambió el PLU, verificar unicidad
                     var pluExiste = await _context.ProductosVenta.AnyAsync(p => p.PLU == productoDto.PLU && p.Id != id);
                     if (pluExiste)
                     {
@@ -545,7 +605,7 @@ namespace SistemaContable.Controllers.API
                 producto.CuentaAjustesId = productoDto.CuentaAjustesId;
                 producto.CuentaCostoMateriaPrimaId = productoDto.CuentaCostoMateriaPrimaId;
                 // Auditoría
-                producto.UsuarioModificacionId = 1; // TODO: Obtener del usuario actual cuando se implemente autenticación
+                producto.UsuarioModificacionId = _userService.GetUserId();
 
                 try
                 {
@@ -564,15 +624,16 @@ namespace SistemaContable.Controllers.API
                     // Luego agregar los nuevos
                     if (productoDto.ImpuestoIds != null && productoDto.ImpuestoIds.Any())
                     {
+                        int orden = 0;
                         foreach (var impuestoId in productoDto.ImpuestoIds.Distinct())
                         {
                             var productoImpuesto = new ProductoVentaImpuesto
                             {
                                 ProductoVentaId = producto.Id,
                                 ImpuestoId = impuestoId,
-                                Orden = productoDto.ImpuestoIds.IndexOf(impuestoId),
+                                Orden = orden++,
                                 EmpresaId = empresaId,
-                                UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                                UsuarioCreacionId = _userService.GetUserId()
                             };
                             _context.ProductoVentaImpuestos.Add(productoImpuesto);
                         }
@@ -586,7 +647,7 @@ namespace SistemaContable.Controllers.API
                             ImpuestoId = productoDto.ImpuestoId.Value,
                             Orden = 0,
                             EmpresaId = empresaId,
-                            UsuarioCreacionId = 1 // TODO: Obtener del usuario actual
+                            UsuarioCreacionId = _userService.GetUserId()
                         };
                         _context.ProductoVentaImpuestos.Add(productoImpuesto);
                     }
@@ -762,6 +823,12 @@ namespace SistemaContable.Controllers.API
                 var nuevosIngredientes = new List<RecetaIngrediente>();
                 decimal costoTotalReceta = 0;
 
+                // DEBUG: Verificar que tenemos el productoId correcto
+                if (productoId <= 0)
+                {
+                    return BadRequest(new { mensaje = $"ProductoId inválido: {productoId}" });
+                }
+
                 foreach (var ingredienteDto in recetaDto.Ingredientes)
                 {
                     var nuevoIngrediente = new RecetaIngrediente
@@ -774,7 +841,7 @@ namespace SistemaContable.Controllers.API
                         CostoTotal = ingredienteDto.Cantidad * ingredienteDto.CostoUnitario,
                         EmpresaId = empresaId,
                         FechaCreacion = DateTime.UtcNow,
-                        UsuarioCreacionId = null // TODO: Obtener del usuario actual cuando se implemente autenticación
+                        UsuarioCreacionId = _userService.GetUserId()
                     };
 
                     costoTotalReceta += nuevoIngrediente.CostoTotal;
