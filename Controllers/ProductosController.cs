@@ -306,6 +306,7 @@ namespace SistemaContable.Controllers
                         .Where(c => c.Id == cuentaId && c.EmpresaId == empresaId)
                         .Select(c => new {
                             id = c.Id,
+                            text = $"{c.Codigo} - {c.Nombre}", // Agregar text para compatibilidad con Select2
                             codigo = c.Codigo,
                             nombre = c.Nombre
                         })

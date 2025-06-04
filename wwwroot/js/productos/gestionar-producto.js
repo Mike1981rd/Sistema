@@ -2018,6 +2018,16 @@ function cargarDatosProductoExistente(productoId) {
                 
                 // Asegurar que Select2 esté inicializado antes de cargar cuentas
                 setTimeout(function() {
+                    console.log('Iniciando carga de cuentas contables del producto');
+                    console.log('CuentaVentasId:', productData.CuentaVentasId);
+                    console.log('CuentaComprasInventariosId:', productData.CuentaComprasInventariosId);
+                    
+                    // Verificar que los Select2 estén inicializados
+                    $('.select2-cuenta-contable').each(function() {
+                        const isInitialized = $(this).hasClass('select2-hidden-accessible');
+                        console.log(`Select ${this.id} inicializado:`, isInitialized);
+                    });
+                    
                     // Cargar cuentas contables específicas del producto
                     cargarCuentaContable('#cuentaVentasId', productData.CuentaVentasId);
                     cargarCuentaContable('#cuentaComprasInventariosId', productData.CuentaComprasInventariosId);
@@ -2031,7 +2041,7 @@ function cargarDatosProductoExistente(productoId) {
                     setTimeout(function() {
                         initCategoriaInheritance();
                     }, 1000);
-                }, 500);
+                }, 1000); // Aumentar el tiempo de espera a 1 segundo
                 
                 // Cargar imagen si existe
                 if (productData.ImagenUrl) {
@@ -2123,8 +2133,11 @@ function cargarCuentaContable(selector, cuentaId) {
                 // Limpiar opciones existentes excepto placeholder
                 $select.find('option[value!=""]').remove();
                 
+                // Construir el texto a mostrar
+                const textoOpcion = cuenta.text || (cuenta.codigo && cuenta.nombre ? `${cuenta.codigo} - ${cuenta.nombre}` : 'Cuenta ' + cuenta.id);
+                
                 // Agregar nueva opción
-                const option = new Option(cuenta.text, cuenta.id, true, true);
+                const option = new Option(textoOpcion, cuenta.id, true, true);
                 $select.append(option);
                 
                 // Forzar actualización de Select2
