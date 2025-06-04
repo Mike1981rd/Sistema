@@ -393,17 +393,22 @@
                                                     <span id="precioVentaProducto">$0.00</span>
                                                 </div>
                                                 
-                                                <div class="cost-info-row">
+                                                <div class="cost-info-row" style="display: none;">
                                                     <span>Costo Unitario:</span>
                                                     <span id="costoUnitarioProducto">$0.00</span>
                                                 </div>
                                                 
                                                 <div class="cost-info-row">
+                                                    <span>Costo %:</span>
+                                                    <span id="costoPorcentajeProducto">0.00%</span>
+                                                </div>
+                                                
+                                                <div class="cost-info-row" style="display: none;">
                                                     <span>Cantidad Base:</span>
                                                     <span id="cantidadBaseProducto">1.00</span>
                                                 </div>
                                                 
-                                                <div class="cost-info-row">
+                                                <div class="cost-info-row" style="display: none;">
                                                     <span>Costo Total Producto:</span>
                                                     <span id="costoTotalProducto">$0.00</span>
                                                 </div>
@@ -415,16 +420,16 @@
                                                 
                                             </div>
                                             
-                                            <!-- Slider de margen -->
+                                            <!-- Slider de porcentaje de costo -->
                                             <div class="margin-slider-container mt-4 p-3">
-                                                <label class="form-label mb-3">Margen de Ganancia</label>
+                                                <label class="form-label mb-3">Porcentaje de Costo Deseado</label>
                                                 <div class="slider-wrapper">
                                                     <div class="slider-labels d-flex justify-content-between mb-2">
-                                                        <span class="text-muted">0%</span>
-                                                        <span class="text-muted">100%</span>
+                                                        <span class="text-muted">Bajo Costo</span>
+                                                        <span class="text-muted">Alto Costo</span>
                                                     </div>
                                                     <input type="range" class="form-range custom-range" id="margenSlider" 
-                                                           min="0" max="100" value="50" step="1">
+                                                           min="1" max="99" value="50" step="1">
                                                     <div class="text-center mt-3">
                                                         <span class="badge bg-primary fs-6" id="margenValue">50%</span>
                                                     </div>
@@ -1083,6 +1088,18 @@
                 $(costoInput).trigger('change');
             }
             
+            // Recalcular el Costo % cuando cambie el total de ingredientes
+            const primeraFila = document.querySelector('#priceRowsContainer .price-row');
+            if (primeraFila) {
+                const precioBaseInput = primeraFila.querySelector('.precio-base');
+                if (precioBaseInput) {
+                    const precioBase = parseFloat(precioBaseInput.value) || 0;
+                    if (typeof calcularCostoPorcentaje === 'function') {
+                        calcularCostoPorcentaje(precioBase);
+                    }
+                }
+            }
+            
             calcularCostos();
             calcularMargenGanancia();
         }
@@ -1090,16 +1107,19 @@
         // Función para calcular costos y precio sugerido
         function calcularCostos() {
             const costoTotalIngredientes = parseFloat(document.getElementById('totalReceta').textContent.replace('$', '')) || 0;
-            const margen = parseFloat(document.getElementById('margenSlider').value) || 0;
-            const precioVenta = parseFloat(document.getElementById('precioVentaProducto').textContent.replace('$', '')) || 0;
-            const costoUnitarioProducto = parseFloat(document.getElementById('costoUnitarioProducto').textContent.replace('$', '')) || 0;
+            const porcentajeCostoDeseado = parseFloat(document.getElementById('margenSlider').value) || 50;
             
-            // Usar el mayor entre el costo de ingredientes y el costo unitario del producto
-            const costoBase = Math.max(costoTotalIngredientes, costoUnitarioProducto);
+            // Calcular precio sugerido basado en el porcentaje de costo deseado
+            // Fórmula: Precio Sugerido = Costo Total Ingredientes / (Porcentaje Slider / 100)
+            let precioSugerido = 0;
+            if (porcentajeCostoDeseado > 0) {
+                precioSugerido = costoTotalIngredientes / (porcentajeCostoDeseado / 100);
+            }
             
-            // Calcular precio sugerido basado en el costo base y margen
-            const precioSugerido = costoBase * (1 + margen / 100);
             document.getElementById('precioVentaSugerido').textContent = '$' + precioSugerido.toFixed(2);
+            
+            // Log para debugging
+            console.log(`[DEBUG] Cálculo Precio Sugerido: ${costoTotalIngredientes} / (${porcentajeCostoDeseado}/100) = $${precioSugerido.toFixed(2)}`);
         }
 
         // Función para eliminar ingrediente

@@ -1378,19 +1378,19 @@ function formatCuentaSelection(cuenta) {
 
 // Función para actualizar el precio del producto en la pestaña de recetas
 function actualizarPrecioEnRecetas() {
-    // Obtener el precio total de la primera fila de precios
+    // Obtener el precio BASE de la primera fila de precios
     const primeraFila = document.querySelector('#priceRowsContainer .price-row');
     if (!primeraFila) return;
     
-    const precioTotalInput = primeraFila.querySelector('.precio-total');
-    if (!precioTotalInput) return;
+    const precioBaseInput = primeraFila.querySelector('.precio-base');
+    if (!precioBaseInput) return;
     
-    const precioTotal = parseFloat(precioTotalInput.value) || 0;
+    const precioBase = parseFloat(precioBaseInput.value) || 0;
     
     // Actualizar el elemento en la pestaña de recetas
     const precioVentaProductoElement = document.getElementById('precioVentaProducto');
     if (precioVentaProductoElement) {
-        precioVentaProductoElement.textContent = '$' + precioTotal.toFixed(2);
+        precioVentaProductoElement.textContent = '$' + precioBase.toFixed(2);
     }
     
     // Actualizar el costo unitario desde el campo de costo
@@ -1411,10 +1411,37 @@ function actualizarPrecioEnRecetas() {
         }
     }
     
+    // Calcular y actualizar el Costo % 
+    // Fórmula: (costo total ingredientes / Precio Base Nivel 1) x 100
+    calcularCostoPorcentaje(precioBase);
+    
     // También actualizar los cálculos de costos
     if (typeof calcularCostos === 'function') {
         calcularCostos();
     }
+}
+
+// Función para calcular el Costo % 
+// Fórmula: (costo total ingredientes / Precio Base Nivel 1) x 100
+function calcularCostoPorcentaje(precioBase) {
+    // Obtener el costo total de ingredientes desde la pestaña de recetas
+    const totalRecetaElement = document.getElementById('totalReceta');
+    const costoTotalIngredientes = totalRecetaElement ? 
+        parseFloat(totalRecetaElement.textContent.replace('$', '')) || 0 : 0;
+    
+    // Calcular el porcentaje
+    let costoPorcentaje = 0;
+    if (precioBase > 0) {
+        costoPorcentaje = (costoTotalIngredientes / precioBase) * 100;
+    }
+    
+    // Actualizar el elemento en la interfaz
+    const costoPorcentajeElement = document.getElementById('costoPorcentajeProducto');
+    if (costoPorcentajeElement) {
+        costoPorcentajeElement.textContent = costoPorcentaje.toFixed(2) + '%';
+    }
+    
+    console.log(`[DEBUG] Cálculo Costo %: ${costoTotalIngredientes} / ${precioBase} = ${costoPorcentaje.toFixed(2)}%`);
 }
 
 // IMPORTANTE: Exponer las funciones globalmente para que funcionen los eventos onclick
