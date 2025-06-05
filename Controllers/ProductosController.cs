@@ -31,6 +31,7 @@ namespace SistemaContable.Controllers
             var productos = await _context.ProductosVenta
                 .Include(p => p.Categoria)
                 .Include(p => p.Impuesto)
+                .Include(p => p.NivelesPrecios)
                 .Where(p => p.EmpresaId == empresaId)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();

@@ -23,7 +23,8 @@
       "Bash(dotnet restore)",
       "Bash(chmod:*)",
       "Bash(true)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(/home/plaska/.npm-global/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -A 50 -B 5 \"function initPricingSystem|initPricingSystem.*function\" \"/mnt/c/Users/hp/Documents/Visual Studio 2022/Projects/AuroraContabilidad/SistemaContable/wwwroot/js/productos/gestionar-producto.js\")"
     ],
     "deny": []
   },

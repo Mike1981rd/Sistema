@@ -484,11 +484,58 @@ namespace SistemaContable.Controllers.API
                 // 3. Manejo de múltiples precios (nuevo)
                 await ProcesarPreciosProducto(producto.Id, productoDto.Precios, productoDto.PrecioVenta, productoDto.EmpresaId);
 
-                // Retornar el producto creado
+                // Recargar el producto con todas sus relaciones para devolver
+                var productoCreado = await _context.ProductosVenta
+                    .Include(p => p.Categoria)
+                    .Include(p => p.Impuesto)
+                    .Include(p => p.ProductoVentaImpuestos)
+                        .ThenInclude(pvi => pvi.Impuesto)
+                    .Include(p => p.RutaImpresora)
+                    .FirstOrDefaultAsync(p => p.Id == producto.Id);
+
+                // Mapear a DTO simple para la respuesta
+                var responseDto = new ProductoDetalleDto
+                {
+                    Id = productoCreado.Id,
+                    Nombre = productoCreado.Nombre,
+                    NombreCortoTPV = productoCreado.NombreCortoTPV,
+                    Descripcion = productoCreado.Descripcion,
+                    PLU = productoCreado.PLU,
+                    PrecioVenta = productoCreado.PrecioVenta,
+                    Costo = productoCreado.Costo,
+                    ImagenUrl = productoCreado.ImagenUrl,
+                    ColorBotonTPV = productoCreado.ColorBotonTPV,
+                    OrdenClasificacion = productoCreado.OrdenClasificacion,
+                    EsActivo = productoCreado.EsActivo,
+                    PermiteModificadores = productoCreado.PermiteModificadores,
+                    RequierePuntoCoccion = productoCreado.RequierePuntoCoccion,
+                    Cantidad = productoCreado.Cantidad,
+                    CostoTotal = productoCreado.CostoTotal,
+                    DisponibleParaVenta = productoCreado.DisponibleParaVenta,
+                    RequierePreparacion = productoCreado.RequierePreparacion,
+                    TiempoPreparacion = productoCreado.TiempoPreparacion,
+                    ItemId = productoCreado.ItemId,
+                    ItemContenedorId = productoCreado.ItemContenedorId,
+                    CategoriaId = productoCreado.CategoriaId,
+                    ImpuestoId = productoCreado.ImpuestoId,
+                    RutaImpresoraId = productoCreado.RutaImpresoraId,
+                    FechaCreacion = productoCreado.FechaCreacion,
+                    FechaModificacion = productoCreado.FechaModificacion,
+                    // Cuentas contables
+                    CuentaVentasId = productoCreado.CuentaVentasId,
+                    CuentaComprasInventariosId = productoCreado.CuentaComprasInventariosId,
+                    CuentaCostoVentasGastosId = productoCreado.CuentaCostoVentasGastosId,
+                    CuentaDescuentosId = productoCreado.CuentaDescuentosId,
+                    CuentaDevolucionesId = productoCreado.CuentaDevolucionesId,
+                    CuentaAjustesId = productoCreado.CuentaAjustesId,
+                    CuentaCostoMateriaPrimaId = productoCreado.CuentaCostoMateriaPrimaId
+                };
+
+                // Retornar el producto creado con 201 Created
                 return CreatedAtAction(
                     nameof(ObtenerProductoPorId), 
                     new { id = producto.Id }, 
-                    await ObtenerProductoPorId(producto.Id)
+                    responseDto
                 );
             }
             catch (Exception ex)

@@ -46,9 +46,16 @@ $(document).ready(function() {
     $('#inventario-tab').on('click', function() {
         recetaTabOpened = true;
         const productoId = $('#productoId').val();
-        if (productoId && productoId !== '0' && !recetaDataLoaded) {
+        
+        if (productoId && productoId !== '0' && productoId !== '' && !recetaDataLoaded) {
+            // Modo Edit: cargar receta existente
+            console.log('[DEBUG] Modo Edit: Cargando receta existente para producto', productoId);
             cargarRecetaExistente(productoId);
             recetaDataLoaded = true;
+        } else {
+            // Modo Create: marcar como inicializado para permitir agregar ingredientes
+            console.log('[DEBUG] Modo Create: Pestaña de recetas activada, listo para agregar ingredientes');
+            recetaDataLoaded = true; // Marcar como "cargado" para que funcione el sistema
         }
     });
     
@@ -71,6 +78,12 @@ $(document).ready(function() {
         }, 1000); // Aumentar el timeout a 1 segundo
     } else {
         console.log('No se encontró productoId válido, modo creación');
+        // COPIAR EXACTAMENTE lo que hace Edit pero sin AJAX
+        allowInheritancePopup = false;
+        setTimeout(() => {
+            console.log('Ejecutando cargarDatosProductoParaCreate');
+            cargarDatosProductoParaCreate();
+        }, 1000);
     }
 });
 
@@ -310,12 +323,26 @@ function initCategoriaInheritance() {
                                                 if (impuestoEncontrado) {
                                                     console.log(`✅ Impuesto ${impuestoObj.tipo} ${impuestoObj.id} encontrado:`, impuestoEncontrado);
                                                     
-                                                    const textoImpuesto = `${impuestoEncontrado.nombre} (${impuestoEncontrado.porcentaje}%) - ${impuestoObj.tipo}`;
+                                                    const nombreImpuesto = impuestoEncontrado.nombre || impuestoEncontrado.text;
+                                                    const textoImpuesto = `${nombreImpuesto} (${impuestoEncontrado.porcentaje}%)`;
                                                     
                                                     // Crear la opción si no existe
                                                     if (!$firstImpuestoSelect.find(`option[value="${impuestoEncontrado.id}"]`).length) {
                                                         const newOption = new Option(textoImpuesto, impuestoEncontrado.id, false, false);
+                                                        
+                                                        // CRITICAL: Set data BEFORE appending to select
+                                                        newOption.dataset.nombre = nombreImpuesto;
+                                                        newOption.dataset.percentage = impuestoEncontrado.porcentaje;
+                                                        
                                                         $firstImpuestoSelect.append(newOption);
+                                                        
+                                                        // Also set jQuery data as backup
+                                                        $(newOption).data('data', {
+                                                            id: impuestoEncontrado.id,
+                                                            text: textoImpuesto,
+                                                            nombre: nombreImpuesto,
+                                                            percentage: parseFloat(impuestoEncontrado.porcentaje)
+                                                        });
                                                     }
                                                     
                                                     // Guardar el porcentaje del impuesto
@@ -341,10 +368,50 @@ function initCategoriaInheritance() {
                                             if (response.impuestoId) camposActualizados.push('Impuesto');
                                             if (response.propinaImpuestoId) camposActualizados.push('Impuesto de Propina');
                                             
-                                            // Disparar el cálculo del precio total
+                                            // CRITICAL: Force Select2 refresh to show correct text
                                             setTimeout(() => {
+                                                // Destroy and recreate the Select2 to ensure proper rendering
+                                                if ($firstImpuestoSelect.data('select2')) {
+                                                    const currentValues = $firstImpuestoSelect.val();
+                                                    $firstImpuestoSelect.select2('destroy');
+                                                    
+                                                    // Re-initialize Select2 (will use existing options)
+                                                    $firstImpuestoSelect.select2({
+                                                        theme: "bootstrap-5",
+                                                        dropdownParent: document.body,
+                                                        placeholder: 'Seleccione impuestos',
+                                                        allowClear: true,
+                                                        width: '100%',
+                                                        templateResult: function(data) {
+                                                            if (!data.id) return data.text;
+                                                            if (data.element && data.element.dataset) {
+                                                                const nombre = data.element.dataset.nombre;
+                                                                const porcentaje = data.element.dataset.percentage;
+                                                                if (nombre && porcentaje) {
+                                                                    return $(`<span>${nombre} (${porcentaje}%)</span>`);
+                                                                }
+                                                            }
+                                                            return data.text;
+                                                        },
+                                                        templateSelection: function(data) {
+                                                            if (!data.id) return data.text;
+                                                            if (data.element && data.element.dataset) {
+                                                                const nombre = data.element.dataset.nombre;
+                                                                const porcentaje = data.element.dataset.percentage;
+                                                                if (nombre && porcentaje) {
+                                                                    return `${nombre} (${porcentaje}%)`;
+                                                                }
+                                                            }
+                                                            return data.text;
+                                                        }
+                                                    });
+                                                    
+                                                    // Restore selection
+                                                    $firstImpuestoSelect.val(currentValues).trigger('change');
+                                                }
+                                                
                                                 $firstImpuestoSelect.trigger('select2:select');
-                                            }, 100);
+                                            }, 200);
                                             
                                             resolve(true);
                                         },
@@ -1040,7 +1107,8 @@ function initPricingSystem() {
                         return {
                             results: data.map(item => ({
                                 id: item.id,
-                                text: item.text, // Ya viene formateado desde el servidor
+                                text: item.text || `${item.nombre} (${item.porcentaje}%)`, // Asegurar que siempre hay texto
+                                nombre: item.nombre,
                                 percentage: parseFloat(item.porcentaje)
                             }))
                         };
@@ -1048,6 +1116,58 @@ function initPricingSystem() {
                     return { results: [] };
                 },
                 cache: true
+            },
+            templateResult: function(data) {
+                if (!data.id) return data.text;
+                
+                // Prioridad 1: Si tiene element.dataset (opciones creadas dinámicamente)
+                if (data.element && data.element.dataset && data.element.dataset.nombre && data.element.dataset.percentage) {
+                    return $(`<span>${data.element.dataset.nombre} (${data.element.dataset.percentage}%)</span>`);
+                }
+                
+                // Prioridad 2: Si tiene propiedades directas nombre y percentage
+                if (data.nombre && data.percentage !== undefined) {
+                    return $(`<span>${data.nombre} (${data.percentage}%)</span>`);
+                }
+                
+                // Prioridad 3: Si tiene texto pero no datos estructurados, intentar extraer información
+                if (data.text && typeof data.text === 'string') {
+                    // Buscar si el texto ya está formateado como "Nombre (X%)"
+                    const match = data.text.match(/^(.+?)\s*\((\d+(?:\.\d+)?)\%\)$/);
+                    if (match) {
+                        const nombre = match[1].trim();
+                        const porcentaje = match[2];
+                        return $(`<span>${nombre} (${porcentaje}%)</span>`);
+                    }
+                }
+                
+                // Fallback: usar el texto tal cual
+                return data.text || 'Impuesto sin nombre';
+            },
+            templateSelection: function(data) {
+                if (!data.id) return data.text;
+                
+                // Prioridad 1: Si tiene element.dataset (opciones creadas dinámicamente)
+                if (data.element && data.element.dataset && data.element.dataset.nombre && data.element.dataset.percentage) {
+                    return `${data.element.dataset.nombre} (${data.element.dataset.percentage}%)`;
+                }
+                
+                // Prioridad 2: Si tiene propiedades directas nombre y percentage
+                if (data.nombre && data.percentage !== undefined) {
+                    return `${data.nombre} (${data.percentage}%)`;
+                }
+                
+                // Prioridad 3: Si tiene texto pero no datos estructurados, intentar extraer información
+                if (data.text && typeof data.text === 'string') {
+                    // Buscar si el texto ya está formateado como "Nombre (X%)"
+                    const match = data.text.match(/^(.+?)\s*\((\d+(?:\.\d+)?)\%\)$/);
+                    if (match) {
+                        return data.text; // Ya está bien formateado
+                    }
+                }
+                
+                // Fallback: usar el texto tal cual
+                return data.text || 'Impuesto sin nombre';
             }
         });
 
@@ -1476,7 +1596,8 @@ function guardarProducto() {
         subirImagenYGuardarProducto(imagenArchivo, productoId, esNuevo);
     } else {
         // Si no hay imagen nueva, guardar producto directamente
-        guardarProductoSinImagen(productoId, esNuevo);
+        // Para productos nuevos, pasar null como productoId para evitar confusión
+        guardarProductoSinImagen(esNuevo ? null : productoId, esNuevo);
     }
 }
 
@@ -1506,7 +1627,8 @@ function subirImagenYGuardarProducto(archivo, productoId, esNuevo) {
             if (response.success && response.url) {
                 // Imagen subida exitosamente, guardar producto con la URL
                 $('#imagenUrl').val(response.url);
-                guardarProductoSinImagen(productoId, esNuevo);
+                // Para productos nuevos, pasar null como productoId para evitar confusión
+                guardarProductoSinImagen(esNuevo ? null : productoId, esNuevo);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -1661,29 +1783,143 @@ function guardarProductoSinImagen(productoId, esNuevo) {
         url: url,
         type: method,
         contentType: 'application/json',
+        dataType: 'json', // Asegurar que la respuesta se parsee como JSON
         data: jsonToSend,
         success: function(response) {
             console.log('Respuesta del servidor:', response);
+            console.log('Tipo de response:', typeof response);
+            console.log('Propiedades de response:', Object.keys(response || {}));
             
             // Para POST (crear) la respuesta contiene el objeto completo
             // Para PUT (actualizar) la respuesta puede ser vacía o contener el objeto
             let nuevoProductoId;
             
             if (esNuevo) {
-                // Al crear, la respuesta debe contener el objeto con id
-                nuevoProductoId = response?.id || response?.value?.id;
+                // CreatedAtAction puede devolver diferentes estructuras dependiendo del context:
+                // Caso 1: { value: { id: X, ... }, status: 201, ... } (wrapped ActionResult)
+                // Caso 2: { id: X, nombre: Y, ... } (direct ProductoDetalleDto)
+                // Caso 3: { value: { value: { id: X, ... } } } (double wrapped)
+                // Caso 4: { Result: { id: X, ... }, Value: null } (wrapped with Result)
+                
+                nuevoProductoId = response?.id || response?.Id || 
+                                 response?.value?.id || response?.value?.Id ||
+                                 response?.value?.value?.id || response?.value?.value?.Id ||
+                                 response?.Result?.id || response?.Result?.Id ||
+                                 response?.Result?.value?.id || response?.Result?.value?.Id;
+                
+                console.log('Respuesta completa:', JSON.stringify(response, null, 2));
+                console.log('Búsqueda de ID en todas las ubicaciones posibles:', {
+                    'response.id (directo)': response?.id,
+                    'response.Id (directo)': response?.Id,
+                    'response.value?.id': response?.value?.id,
+                    'response.value?.Id': response?.value?.Id,
+                    'response.value?.value?.id': response?.value?.value?.id,
+                    'response.value?.value?.Id': response?.value?.value?.Id,
+                    'response.Result?.id': response?.Result?.id,
+                    'response.Result?.Id': response?.Result?.Id,
+                    'response.Result?.value?.id': response?.Result?.value?.id,
+                    'response.Result?.value?.Id': response?.Result?.value?.Id,
+                    'ID extraído final': nuevoProductoId
+                });
+                
+                // Análisis detallado de la estructura
+                if (response && typeof response === 'object') {
+                    console.log('Propiedades del response principal:', Object.keys(response));
+                    if (response.value && typeof response.value === 'object') {
+                        console.log('Propiedades de response.value:', Object.keys(response.value));
+                        if (response.value.value && typeof response.value.value === 'object') {
+                            console.log('Propiedades de response.value.value:', Object.keys(response.value.value));
+                        }
+                    }
+                    if (response.Result && typeof response.Result === 'object') {
+                        console.log('Propiedades de response.Result:', Object.keys(response.Result));
+                        if (response.Result.value && typeof response.Result.value === 'object') {
+                            console.log('Propiedades de response.Result.value:', Object.keys(response.Result.value));
+                        }
+                    }
+                }
             } else {
                 // Al actualizar, usar el ID existente
                 nuevoProductoId = productoId;
             }
             
-            console.log('ID del producto:', nuevoProductoId);
+            console.log('ID del producto final:', nuevoProductoId);
             
-            // Solo guardar receta si la pestaña fue abierta (y hay cambios en la receta)
-            if (recetaTabOpened && $('#recetasTableBody tr').length > 0 && !$('#recetasTableBody').find('td[colspan="7"]').length) {
-                guardarReceta(nuevoProductoId);
+            // Verificar si hay datos de receta para guardar (independientemente de si se abrió la pestaña)
+            const filasTabla = $('#recetasTableBody tr');
+            const filasMensajeVacio = $('#recetasTableBody').find('td[colspan="7"]');
+            const filasConIngredientes = filasTabla.filter(function() {
+                return $(this).find('td[colspan="7"]').length === 0 && $(this).attr('data-item-id');
+            });
+            const tieneIngredientes = filasConIngredientes.length > 0;
+            
+            console.log(`[DEBUG] Verificando recetas - Total filas en tabla: ${filasTabla.length}`);
+            console.log(`[DEBUG] Filas con mensaje vacío (colspan=7): ${filasMensajeVacio.length}`);
+            console.log(`[DEBUG] Filas con ingredientes reales (data-item-id): ${filasConIngredientes.length}`);
+            console.log(`[DEBUG] tieneIngredientes: ${tieneIngredientes}`);
+            
+            // DEBUG ADICIONAL: Examinar cada fila
+            filasTabla.each(function(index) {
+                const $fila = $(this);
+                const dataItemId = $fila.attr('data-item-id');
+                const hasColspan = $fila.find('td[colspan="7"]').length > 0;
+                console.log(`[DEBUG] Fila ${index}: data-item-id="${dataItemId}", hasColspan=${hasColspan}, HTML=${$fila.html().substring(0, 100)}...`);
+            });
+            
+            if (tieneIngredientes) {
+                console.log('[DEBUG] Guardando receta con ingredientes encontrados...');
+                console.log('[DEBUG] nuevoProductoId antes de llamar guardarReceta:', nuevoProductoId);
+                console.log('[DEBUG] tipo de nuevoProductoId:', typeof nuevoProductoId);
+                
+                // Verificar una vez más que tenemos un ID válido
+                if (!nuevoProductoId || nuevoProductoId === undefined) {
+                    console.error('[ERROR] nuevoProductoId es undefined justo antes de guardarReceta');
+                    console.log('[DEBUG] Intentando extraer ID nuevamente de la respuesta:', response);
+                    console.log('[DEBUG] esNuevo:', esNuevo);
+                    console.log('[DEBUG] productoId original:', productoId);
+                    
+                    // Explorar la estructura Result
+                    if (response?.Result) {
+                        console.log('[DEBUG] response.Result:', response.Result);
+                        console.log('[DEBUG] Tipo de Result:', typeof response.Result);
+                        if (typeof response.Result === 'object') {
+                            console.log('[DEBUG] Propiedades de Result:', Object.keys(response.Result));
+                        }
+                    }
+                    
+                    // Último intento de obtener el ID - incluir Result
+                    nuevoProductoId = response?.id || response?.Id || 
+                                     response?.value?.id || response?.value?.Id ||
+                                     response?.data?.id || response?.data?.Id ||
+                                     response?.Result?.id || response?.Result?.Id ||
+                                     response?.Result?.value?.id || response?.Result?.value?.Id;
+                                     
+                    console.log('[DEBUG] ID después del reintento:', nuevoProductoId);
+                }
+                
+                // Asegurar que el ID sea un número válido
+                const idFinal = parseInt(nuevoProductoId) || 0;
+                console.log('[DEBUG] ID final parseado antes de guardarReceta:', idFinal);
+                
+                if (idFinal > 0) {
+                    guardarReceta(idFinal);
+                } else {
+                    console.error('[ERROR] No se pudo obtener un ID válido para guardar la receta');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Producto guardado con advertencias',
+                        text: 'El producto se guardó pero no se pudo guardar la receta debido a un error interno.',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/Productos';
+                        }
+                    });
+                }
             } else {
-                // No hay cambios en la receta o la pestaña no fue abierta, mostrar éxito
+                // No hay ingredientes en la receta, mostrar éxito
+                console.log('[DEBUG] No hay ingredientes en la receta, finalizando guardado');
                 Swal.fire({
                     icon: 'success',
                     title: 'Guardado exitoso',
@@ -1728,8 +1964,28 @@ function guardarProductoSinImagen(productoId, esNuevo) {
 
 // Función para guardar la receta
 function guardarReceta(productoId) {
+    console.log(`[DEBUG] guardarReceta() ejecutándose para productoId: ${productoId}`);
+    
+    // Validar que el productoId sea válido
+    if (!productoId || productoId === 'undefined' || productoId === undefined) {
+        console.error('[ERROR] productoId es inválido:', productoId);
+        Swal.fire({
+            icon: 'error', 
+            title: 'Error interno',
+            text: 'No se pudo obtener el ID del producto para guardar la receta. Por favor intente nuevamente.',
+            showConfirmButton: true,
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/Productos';
+            }
+        });
+        return;
+    }
+    
     // Recolectar ingredientes de la tabla
     const ingredientes = [];
+    console.log(`[DEBUG] Número de filas en #recetasTableBody: ${$('#recetasTableBody tr').length}`);
     
     $('#recetasTableBody tr').each(function() {
         const $row = $(this);
@@ -1745,12 +2001,15 @@ function guardarReceta(productoId) {
         const costoUnitario = parseFloat($row.find('.costo-input').val()) || 0;
         
         if (itemId && itemContenedorId && cantidad > 0) {
+            console.log(`[DEBUG] Ingrediente válido encontrado: itemId=${itemId}, contenedorId=${itemContenedorId}, cantidad=${cantidad}`);
             ingredientes.push({
                 itemId: parseInt(itemId),
                 itemContenedorId: parseInt(itemContenedorId),
                 cantidad: cantidad,
                 costoUnitario: costoUnitario
             });
+        } else {
+            console.log(`[DEBUG] Ingrediente inválido saltado: itemId=${itemId}, contenedorId=${itemContenedorId}, cantidad=${cantidad}`);
         }
     });
     
@@ -1765,6 +2024,9 @@ function guardarReceta(productoId) {
         margenGanancia: margenGanancia,
         ingredientes: ingredientes
     };
+    
+    console.log(`[DEBUG] Objeto receta a enviar:`, receta);
+    console.log(`[DEBUG] Número de ingredientes: ${ingredientes.length}`);
     
     // Guardar receta
     $.ajax({
@@ -1978,205 +2240,12 @@ function cargarDatosProductoExistente(productoId) {
             console.log('¿Tiene Nombre válido?', tieneNombreValido);
             
             if (tieneIdValido || tieneNombreValido) {
-                console.log('Cargando datos del producto:', productData);
+                console.log('Producto válido encontrado, usando procesamiento unificado');
                 console.log('ID del producto:', productData.Id || productData.id);
                 console.log('Nombre del producto:', productData.Nombre || productData.nombre);
                 
-                // Llenar campos básicos (usando PascalCase del API)
-                $('#nombre').val(productData.Nombre || '');
-                $('#nombreCortoTPV').val(productData.NombreCortoTPV || '');
-                $('#descripcionEditor').val(productData.Descripcion || '');
-                $('#plu').val(productData.PLU || '');
-                $('#colorBotonTPV_value').val(productData.ColorBotonTPV || '#d62828');
-                $('#costo').val(productData.Costo || 0);
-                $('#ordenClasificacion').val(productData.OrdenClasificacion || 0);
-                
-                // Actualizar el color picker si existe
-                if (window.pickrInstance) {
-                    window.pickrInstance.setColor(productData.ColorBotonTPV || '#d62828');
-                }
-                
-                // Llenar checkboxes (usando PascalCase del API)
-                $('#esActivo').prop('checked', productData.EsActivo);
-                $('#permiteModificadores').prop('checked', productData.PermiteModificadores);
-                $('#requierePuntoCoccion').prop('checked', productData.RequierePuntoCoccion);
-                $('#disponibleParaVenta').prop('checked', productData.DisponibleParaVenta);
-                $('#requierePreparacion').prop('checked', productData.RequierePreparacion);
-                
-                // Tiempo de preparación
-                if (productData.TiempoPreparacion) {
-                    $('#tiempoPreparacion').val(productData.TiempoPreparacion);
-                    $('#divTiempoPreparacion').show();
-                }
-                
-                // Cargar categoría (sin activar herencia)
-                if (productData.Categoria) {
-                    console.log('Cargando categoría:', productData.Categoria);
-                    const categoriaOption = new Option(productData.Categoria.Nombre, productData.Categoria.Id, true, true);
-                    $('#categoriaId').append(categoriaOption);
-                    // No usar trigger('change') para evitar activar la herencia durante la carga inicial
-                    $('#categoriaId').val(productData.Categoria.Id);
-                }
-                
-                // Cargar ruta de impresora
-                if (productData.RutaImpresoraId) {
-                    $('#rutaImpresoraId').val(productData.RutaImpresoraId).trigger('change');
-                }
-                
-                // Cargar múltiples precios (nuevo sistema)
-                setTimeout(function() {
-                    cargarPreciosProducto(productoId);
-                }, 600);
-                
-                // Cargar impuestos en el select2 de la primera fila
-                const $firstImpuestoSelect = $('.select2-impuestos').first();
-                if ($firstImpuestoSelect.length > 0) {
-                    let impuestosParaCargar = [];
-                    
-                    // Primero, verificar si hay múltiples impuestos (nueva estructura)
-                    if (productData.Impuestos && productData.Impuestos.length > 0) {
-                        console.log('Cargando múltiples impuestos:', productData.Impuestos);
-                        impuestosParaCargar = productData.Impuestos.map(imp => ({
-                            id: imp.Id || imp.id,
-                            nombre: imp.Nombre || imp.nombre,
-                            porcentaje: imp.Porcentaje || imp.porcentaje
-                        }));
-                    }
-                    // Si no hay múltiples impuestos, verificar el campo único (compatibilidad)
-                    else if (productData.ImpuestoId) {
-                        console.log('Cargando impuesto único (compatibilidad):', productData.ImpuestoId);
-                        if (productData.Impuesto) {
-                            impuestosParaCargar = [{
-                                id: productData.ImpuestoId,
-                                nombre: productData.Impuesto.Nombre || productData.Impuesto.nombre,
-                                porcentaje: productData.Impuesto.Porcentaje || productData.Impuesto.porcentaje
-                            }];
-                        } else {
-                            // Si no viene el objeto Impuesto, solo tenemos el ID
-                            impuestosParaCargar = [{ id: productData.ImpuestoId }];
-                        }
-                    }
-                    
-                    if (impuestosParaCargar.length > 0) {
-                        // Array para guardar las promesas de carga
-                        let promesasImpuestos = impuestosParaCargar.map(impuesto => {
-                            return new Promise((resolve) => {
-                                // Si ya tenemos el nombre y porcentaje, no necesitamos buscar
-                                if (impuesto.nombre && impuesto.porcentaje !== undefined) {
-                                    const text = `${impuesto.nombre} (${impuesto.porcentaje}%)`;
-                                    if (!$firstImpuestoSelect.find(`option[value="${impuesto.id}"]`).length) {
-                                        const newOption = new Option(text, impuesto.id, false, false);
-                                        $firstImpuestoSelect.append(newOption);
-                                    }
-                                    // Guardar el porcentaje en el store global
-                                    window.impuestosDataGlobal = window.impuestosDataGlobal || {};
-                                    window.impuestosDataGlobal[impuesto.id] = impuesto.porcentaje;
-                                    resolve();
-                                } else {
-                                    // Si solo tenemos el ID, buscar los detalles
-                                    $.ajax({
-                                        url: `/api/impuestos/Buscar?term=${impuesto.id}`,
-                                        type: 'GET',
-                                        success: function(data) {
-                                            console.log(`Respuesta de búsqueda de impuesto ${impuesto.id}:`, data);
-                                            if (data.results && data.results.length > 0) {
-                                                const impuestoData = data.results[0];
-                                                // Crear la opción si no existe
-                                                if (!$firstImpuestoSelect.find(`option[value="${impuestoData.id}"]`).length) {
-                                                    const newOption = new Option(impuestoData.text, impuestoData.id, false, false);
-                                                    $firstImpuestoSelect.append(newOption);
-                                                }
-                                                // Guardar el porcentaje en el store global
-                                                if (impuestoData.porcentaje !== undefined) {
-                                                    window.impuestosDataGlobal = window.impuestosDataGlobal || {};
-                                                    window.impuestosDataGlobal[impuestoData.id] = parseFloat(impuestoData.porcentaje);
-                                                }
-                                            }
-                                            resolve();
-                                        },
-                                        error: function(xhr) {
-                                            console.error(`Error al cargar impuesto ${impuesto.id}:`, xhr);
-                                            resolve();
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                        
-                        // Esperar a que todos los impuestos se carguen y luego seleccionarlos
-                        Promise.all(promesasImpuestos).then(() => {
-                            const idsParaSeleccionar = impuestosParaCargar.map(imp => imp.id.toString());
-                            $firstImpuestoSelect.val(idsParaSeleccionar).trigger('change');
-                            console.log('Impuestos cargados y seleccionados:', idsParaSeleccionar);
-                            
-                            // Disparar el cálculo del precio total
-                            setTimeout(() => {
-                                $firstImpuestoSelect.trigger('select2:select');
-                            }, 100);
-                        });
-                    }
-                }
-                
-                // DEBUG: Ver qué propiedades tiene productData
-                console.log('ProductData recibido:', productData);
-                console.log('CuentaVentasId:', productData.CuentaVentasId);
-                
-                // Deshabilitar herencia temporalmente
-                $('#categoriaId').off('change.inheritance');
-                
-                // Asegurar que Select2 esté inicializado antes de cargar cuentas
-                setTimeout(function() {
-                    console.log('Iniciando carga de cuentas contables del producto');
-                    console.log('CuentaVentasId:', productData.CuentaVentasId);
-                    console.log('CuentaComprasInventariosId:', productData.CuentaComprasInventariosId);
-                    
-                    // Verificar que los Select2 estén inicializados
-                    $('.select2-cuenta-contable').each(function() {
-                        const isInitialized = $(this).hasClass('select2-hidden-accessible');
-                        console.log(`Select ${this.id} inicializado:`, isInitialized);
-                    });
-                    
-                    // Cargar cuentas contables específicas del producto
-                    cargarCuentaContable('#cuentaVentasId', productData.CuentaVentasId);
-                    cargarCuentaContable('#cuentaComprasInventariosId', productData.CuentaComprasInventariosId);
-                    cargarCuentaContable('#cuentaCostoVentasGastosId', productData.CuentaCostoVentasGastosId);
-                    cargarCuentaContable('#cuentaDescuentosId', productData.CuentaDescuentosId);
-                    cargarCuentaContable('#cuentaDevolucionesId', productData.CuentaDevolucionesId);
-                    cargarCuentaContable('#cuentaAjustesId', productData.CuentaAjustesId);
-                    cargarCuentaContable('#cuentaCostoMateriaPrimaId', productData.CuentaCostoMateriaPrimaId);
-                    
-                    // Reactivar herencia después de 1 segundo
-                    setTimeout(function() {
-                        initCategoriaInheritance();
-                    }, 1000);
-                }, 1000); // Aumentar el tiempo de espera a 1 segundo
-                
-                // Cargar imagen si existe
-                if (productData.ImagenUrl) {
-                    $('#imagenUrl').val(productData.ImagenUrl);
-                    $('#imagenPreview').attr('src', productData.ImagenUrl).show();
-                    $('#uploadPlaceholder').hide();
-                    $('#removeImageBtn').show();
-                }
-                
-                // Actualizar TinyMCE si existe
-                if (typeof tinymce !== 'undefined' && tinymce.get('descripcionEditor')) {
-                    try {
-                        tinymce.get('descripcionEditor').setContent(productData.Descripcion || '');
-                    } catch (e) {
-                        console.log('TinyMCE no está listo aún, estableciendo valor directo en textarea');
-                        $('#descripcionEditor').val(productData.Descripcion || '');
-                    }
-                } else {
-                    // Si TinyMCE no está disponible, establecer el valor directamente
-                    $('#descripcionEditor').val(productData.Descripcion || '');
-                }
-                
-                // Después de cargar todos los datos, permitir la herencia nuevamente
-                setTimeout(() => {
-                    allowInheritancePopup = true;
-                    console.log('Herencia de categoría activada después de cargar datos del producto');
-                }, 1000);
+                // Usar la función unificada para procesar los datos (modo edición = true)
+                procesarDatosProducto(productData, true);
             } else {
                 console.error('Datos del producto no válidos:');
                 console.error('Response completo:', response);
@@ -2216,6 +2285,467 @@ function cargarDatosProductoExistente(productoId) {
             });
         }
     });
+}
+
+// COPIAR EXACTAMENTE la lógica de Edit para Create (sin AJAX)
+function cargarDatosProductoParaCreate() {
+    console.log('=== INICIO cargarDatosProductoParaCreate (COPIADO DE EDIT) ===');
+    
+    // Verificar que los campos existan en el DOM (COPIADO DE EDIT)
+    console.log('Verificando campos del formulario:');
+    console.log('- Campo nombre existe:', $('#nombre').length > 0);
+    console.log('- Campo nombreCortoTPV existe:', $('#nombreCortoTPV').length > 0);
+    console.log('- Campo plu existe:', $('#plu').length > 0);
+    console.log('- Campo categoriaId existe:', $('#categoriaId').length > 0);
+    
+    // SIMULAR la respuesta del AJAX con datos vacíos (COPIADO DE EDIT)
+    const response = {
+        Id: null,
+        Nombre: '',
+        NombreCortoTPV: '',
+        Descripcion: '',
+        PLU: '',
+        ColorBotonTPV: '#d62828',
+        Costo: 0,
+        OrdenClasificacion: 0,
+        EsActivo: true,
+        PermiteModificadores: true,
+        RequierePuntoCoccion: false,
+        DisponibleParaVenta: true,
+        RequierePreparacion: false,
+        TiempoPreparacion: 0,
+        Categoria: null,
+        CategoriaId: null,
+        ImpuestoId: null,
+        Impuestos: [], // Vacío para permitir herencia
+        RutaImpresoraId: null,
+        ImagenUrl: '',
+        CuentaVentasId: null,
+        CuentaComprasInventariosId: null,
+        CuentaCostoVentasGastosId: null,
+        CuentaDescuentosId: null,
+        CuentaDevolucionesId: null,
+        CuentaAjustesId: null,
+        CuentaCostoMateriaPrimaId: null
+    };
+    
+    // EJECUTAR EXACTAMENTE EL MISMO CÓDIGO QUE EL SUCCESS DE EDIT
+    console.log('=== DEPURACIÓN CARGA DE PRODUCTO (CREATE) ===');
+    console.log('Respuesta simulada:', response);
+    console.log('Tipo de respuesta:', typeof response);
+    console.log('Propiedades de la respuesta:', Object.keys(response || {}));
+    
+    let productData = response;
+    
+    // COPIAR EXACTAMENTE la validación de Edit
+    const tieneIdValido = productData && (productData.Id || productData.id);
+    const tieneNombreValido = productData && (productData.Nombre !== undefined);
+    
+    console.log('¿Tiene ID válido?', tieneIdValido);
+    console.log('¿Tiene Nombre válido?', tieneNombreValido);
+    
+    // COPIAR EXACTAMENTE la lógica de procesamiento de Edit
+    console.log('Producto válido encontrado, usando procesamiento unificado');
+    console.log('ID del producto:', productData.Id || productData.id);
+    console.log('Nombre del producto:', productData.Nombre || productData.nombre);
+    
+    // COPIAR EXACTAMENTE todo el código que está en procesarDatosProducto para Edit
+    try {
+        // 1. Cargar campos básicos
+        $('#nombre').val(productData.Nombre || '');
+        $('#nombreCortoTPV').val(productData.NombreCortoTPV || '');
+        
+        // 2. Actualizar TinyMCE
+        setTimeout(function() {
+            if (tinymce.get('descripcionEditor')) {
+                tinymce.get('descripcionEditor').setContent(productData.Descripcion || '');
+            }
+        }, 100);
+        
+        // 3. Cargar otros campos
+        $('#plu').val(productData.PLU || '');
+        $('#colorBotonTPV_value').val(productData.ColorBotonTPV || '#d62828');
+        $('#costo').val(productData.Costo || 0);
+        
+        // 4. Checkboxes
+        $('#esActivo').prop('checked', productData.EsActivo !== false);
+        $('#permiteModificadores').prop('checked', productData.PermiteModificadores !== false);
+        $('#requierePuntoCoccion').prop('checked', productData.RequierePuntoCoccion === true);
+        $('#disponibleParaVenta').prop('checked', productData.DisponibleParaVenta !== false);
+        $('#requierePreparacion').prop('checked', productData.RequierePreparacion === true);
+        $('#tiempoPreparacion').val(productData.TiempoPreparacion || 0);
+        
+        // 5. Imagen
+        if (productData.ImagenUrl) {
+            mostrarImagenCargada(productData.ImagenUrl);
+        }
+        
+        // 6. Categoría (sin activar herencia en Create)
+        if (productData.Categoria && productData.Categoria.Id) {
+            const categoriaOption = new Option(productData.Categoria.Nombre, productData.Categoria.Id, true, true);
+            $('#categoriaId').append(categoriaOption);
+            $('#categoriaId').val(productData.Categoria.Id);
+            console.log('Categoría cargada:', productData.Categoria);
+        }
+        
+        // 7. Ruta de impresión
+        if (productData.RutaImpresoraId) {
+            $('#rutaImpresoraId').val(productData.RutaImpresoraId).trigger('change');
+            console.log('Ruta de impresión cargada:', productData.RutaImpresoraId);
+        }
+        
+        // 8. NO cargar impuestos en Create (dejar que la herencia funcione)
+        
+        // 9. NO cargar precios en Create (empezar con fila vacía)
+        
+        // 10. NO cargar cuentas contables en Create (dejar que la herencia funcione)
+        
+        // 11. Reactivar herencia después de carga
+        setTimeout(function() {
+            allowInheritancePopup = true;
+            console.log('Create: Reactivando herencia de categorías');
+            initCategoriaInheritance();
+            console.log('Herencia de categorías reactivada');
+        }, 1500);
+        
+        console.log('Producto Create inicializado exitosamente');
+        
+    } catch (error) {
+        console.error('Error al inicializar Create:', error);
+    }
+}
+
+// Función para simular carga de producto vacío usando EXACTAMENTE la misma lógica que Edit
+function simularCargaProductoVacio() {
+    console.log('=== SIMULANDO CARGA DE PRODUCTO VACÍO (CLONANDO EDIT) ===');
+    
+    // Simular la respuesta del API con datos vacíos (igual estructura que Edit recibe)
+    const responseSimulada = {
+        Id: null,
+        Nombre: '',
+        NombreCortoTPV: '',
+        Descripcion: '',
+        PLU: '',
+        ColorBotonTPV: '#d62828',
+        Costo: 0,
+        OrdenClasificacion: 0,
+        EsActivo: true,
+        PermiteModificadores: true,
+        RequierePuntoCoccion: false,
+        DisponibleParaVenta: true,
+        RequierePreparacion: false,
+        TiempoPreparacion: 0,
+        Categoria: null,
+        CategoriaId: null,
+        ImpuestoId: null,
+        Impuestos: [], // Array vacío para que no cargue impuestos inicialmente
+        RutaImpresoraId: null,
+        ImagenUrl: '',
+        CuentaVentasId: null,
+        CuentaComprasInventariosId: null,
+        CuentaCostoVentasGastosId: null,
+        CuentaDescuentosId: null,
+        CuentaDevolucionesId: null,
+        CuentaAjustesId: null,
+        CuentaCostoMateriaPrimaId: null
+    };
+    
+    console.log('Datos simulados del producto vacío:', responseSimulada);
+    
+    // EJECUTAR EXACTAMENTE EL MISMO CÓDIGO QUE cargarDatosProductoExistente
+    // (Copiado desde la función success de cargarDatosProductoExistente)
+    
+    let productData = responseSimulada;
+    
+    // Validación más flexible - verificar si tiene propiedades de producto
+    const tieneIdValido = productData && (productData.Id || productData.id);
+    const tieneNombreValido = productData && (productData.Nombre !== undefined); // En Create será string vacío
+    
+    console.log('¿Tiene ID válido?', tieneIdValido);
+    console.log('¿Tiene Nombre válido?', tieneNombreValido);
+    
+    // Para Create, siempre procesar (incluso con datos vacíos)
+    console.log('Procesando datos del producto vacío usando lógica de Edit');
+    
+    // USAR EXACTAMENTE LA MISMA FUNCIÓN QUE EDIT USA
+    procesarDatosProducto(productData, false); // false = modo creación para permitir herencia
+}
+
+// Función para inicializar modo creación usando la misma estructura que Edit
+function inicializarModoCreacion() {
+    console.log('=== INICIO inicializarModoCreacion ===');
+    console.log('Inicializando modo Create con estructura idéntica a Edit');
+    
+    // Crear producto vacío con la misma estructura que usa Edit
+    const productDataVacio = {
+        Id: null,
+        Nombre: '',
+        NombreCortoTPV: '',
+        Descripcion: '',
+        PLU: '',
+        ColorBotonTPV: '#d62828',
+        Costo: 0,
+        EsActivo: true,
+        PermiteModificadores: true,
+        RequierePuntoCoccion: false,
+        DisponibleParaVenta: true,
+        RequierePreparacion: false,
+        TiempoPreparacion: 0,
+        CategoriaId: null,
+        Categoria: null,
+        ImpuestoId: null,
+        Impuestos: [],
+        RutaImpresoraId: null,
+        ImagenUrl: '',
+        CuentaVentasId: null,
+        CuentaComprasInventariosId: null,
+        CuentaCostoVentasGastosId: null,
+        CuentaDescuentosId: null,
+        CuentaDevolucionesId: null,
+        CuentaAjustesId: null,
+        CuentaCostoMateriaPrimaId: null
+    };
+    
+    console.log('Datos de producto vacío:', productDataVacio);
+    
+    // Usar exactamente la misma lógica que cargarDatosProductoExistente
+    procesarDatosProducto(productDataVacio, false); // false = modo creación
+}
+
+// Función común para procesar datos de producto (tanto Edit como Create)
+function procesarDatosProducto(productData, esModoEdicion = true) {
+    console.log('=== procesarDatosProducto ===');
+    console.log('Modo edición:', esModoEdicion);
+    console.log('Datos del producto:', productData);
+    
+    try {
+        // 1. Cargar campos básicos
+        $('#nombre').val(productData.Nombre || '');
+        $('#nombreCortoTPV').val(productData.NombreCortoTPV || '');
+        
+        // 2. Actualizar TinyMCE
+        setTimeout(function() {
+            if (tinymce.get('descripcionEditor')) {
+                tinymce.get('descripcionEditor').setContent(productData.Descripcion || '');
+            }
+        }, 100);
+        
+        // 3. Cargar otros campos
+        $('#plu').val(productData.PLU || '');
+        $('#colorBotonTPV_value').val(productData.ColorBotonTPV || '#d62828');
+        $('#costo').val(productData.Costo || 0);
+        
+        // 4. Checkboxes
+        $('#esActivo').prop('checked', productData.EsActivo !== false);
+        $('#permiteModificadores').prop('checked', productData.PermiteModificadores !== false);
+        $('#requierePuntoCoccion').prop('checked', productData.RequierePuntoCoccion === true);
+        $('#disponibleParaVenta').prop('checked', productData.DisponibleParaVenta !== false);
+        $('#requierePreparacion').prop('checked', productData.RequierePreparacion === true);
+        $('#tiempoPreparacion').val(productData.TiempoPreparacion || 0);
+        
+        // 5. Imagen
+        if (productData.ImagenUrl) {
+            mostrarImagenCargada(productData.ImagenUrl);
+        }
+        
+        // 6. Categoría (sin activar herencia en modo edición)
+        if (productData.Categoria && productData.Categoria.Id) {
+            const categoriaOption = new Option(productData.Categoria.Nombre, productData.Categoria.Id, true, true);
+            $('#categoriaId').append(categoriaOption);
+            $('#categoriaId').val(productData.Categoria.Id);
+            console.log('Categoría cargada:', productData.Categoria);
+        }
+        
+        // 7. Ruta de impresión
+        if (productData.RutaImpresoraId) {
+            $('#rutaImpresoraId').val(productData.RutaImpresoraId).trigger('change');
+            console.log('Ruta de impresión cargada:', productData.RutaImpresoraId);
+        }
+        
+        // 8. Cargar impuestos usando la misma lógica que Edit
+        cargarImpuestosEnSelect2(productData, esModoEdicion);
+        
+        // 9. Cargar precios (solo en modo edición)
+        if (esModoEdicion && productData.Id) {
+            setTimeout(function() {
+                cargarPreciosProducto(productData.Id);
+            }, 600);
+        }
+        
+        // 10. Cargar cuentas contables (con delay para evitar conflictos con herencia)
+        setTimeout(function() {
+            cargarCuentasContables(productData, esModoEdicion);
+        }, 1000);
+        
+        // 11. Reactivar herencia después de carga
+        setTimeout(function() {
+            allowInheritancePopup = true;
+            if (!esModoEdicion) {
+                // En modo creación, reactivar herencia de categorías para que funcione igual que Edit
+                console.log('Modo Create: Reactivando herencia de categorías');
+                initCategoriaInheritance();
+            } else {
+                // En modo edición, también reactivar para cambios futuros de categoría
+                console.log('Modo Edit: Reactivando herencia de categorías');
+                initCategoriaInheritance();
+            }
+            console.log('Herencia de categorías reactivada');
+        }, 1500);
+        
+        console.log('Producto cargado exitosamente');
+        
+    } catch (error) {
+        console.error('Error al procesar datos del producto:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cargar los datos del producto'
+        });
+    }
+}
+
+// Función auxiliar para cargar impuestos en Select2 (extraída de cargarDatosProductoExistente)
+function cargarImpuestosEnSelect2(productData, esModoEdicion) {
+    console.log('=== cargarImpuestosEnSelect2 ===');
+    console.log('Datos de impuestos del producto:', productData.Impuestos);
+    
+    const $firstImpuestoSelect = $('.select2-impuestos').first();
+    if ($firstImpuestoSelect.length === 0) {
+        console.log('No se encontró select de impuestos');
+        return;
+    }
+    
+    // Solo cargar impuestos si hay datos (modo edición) o si no hay impuestos (modo creación)
+    if (!esModoEdicion || !productData.Impuestos || productData.Impuestos.length === 0) {
+        console.log('Modo creación o sin impuestos - select queda limpio para herencia');
+        return;
+    }
+    
+    console.log('Cargando impuestos del producto...');
+    
+    // Array de impuestos para cargar
+    let impuestosParaCargar = [];
+    
+    if (productData.Impuestos && productData.Impuestos.length > 0) {
+        // Nueva estructura - múltiples impuestos
+        impuestosParaCargar = productData.Impuestos.map(imp => ({
+            id: imp.Id || imp.id,
+            nombre: imp.Nombre || imp.nombre,
+            porcentaje: imp.Porcentaje || imp.porcentaje
+        }));
+    } else if (productData.ImpuestoId) {
+        // Compatibilidad - impuesto único
+        impuestosParaCargar = [{ id: productData.ImpuestoId }];
+    }
+    
+    if (impuestosParaCargar.length === 0) {
+        console.log('No hay impuestos para cargar');
+        return;
+    }
+    
+    console.log('Impuestos para cargar:', impuestosParaCargar);
+    
+    // Crear promesas para cargar cada impuesto
+    const promesasImpuestos = impuestosParaCargar.map(impuesto => {
+        return new Promise((resolve) => {
+            if (impuesto.nombre && impuesto.porcentaje !== undefined) {
+                // Ya tenemos todos los datos
+                const textoImpuesto = `${impuesto.nombre} (${impuesto.porcentaje}%)`;
+                const option = new Option(textoImpuesto, impuesto.id, false, false);
+                $firstImpuestoSelect.append(option);
+                
+                // Guardar porcentaje
+                window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                window.impuestosDataGlobal[impuesto.id] = parseFloat(impuesto.porcentaje);
+                
+                resolve(impuesto.id);
+            } else {
+                // Necesitamos buscar los detalles del impuesto
+                $.ajax({
+                    url: '/api/impuestos/Buscar',
+                    type: 'GET',
+                    data: { term: impuesto.id, exactId: true },
+                    success: function(response) {
+                        const impuestos = response.results || response;
+                        const impuestoEncontrado = impuestos.find(imp => imp.id == impuesto.id);
+                        
+                        if (impuestoEncontrado) {
+                            const textoImpuesto = `${impuestoEncontrado.nombre} (${impuestoEncontrado.porcentaje}%)`;
+                            const option = new Option(textoImpuesto, impuesto.id, false, false);
+                            $firstImpuestoSelect.append(option);
+                            
+                            // Guardar porcentaje
+                            window.impuestosDataGlobal = window.impuestosDataGlobal || {};
+                            window.impuestosDataGlobal[impuesto.id] = parseFloat(impuestoEncontrado.porcentaje);
+                        }
+                        resolve(impuesto.id);
+                    },
+                    error: function() {
+                        console.error('Error al cargar impuesto:', impuesto.id);
+                        resolve(null);
+                    }
+                });
+            }
+        });
+    });
+    
+    // Esperar a que se carguen todos los impuestos y luego seleccionarlos
+    Promise.all(promesasImpuestos).then((idsValidos) => {
+        const idsParaSeleccionar = idsValidos.filter(id => id !== null).map(id => id.toString());
+        console.log('Seleccionando impuestos:', idsParaSeleccionar);
+        $firstImpuestoSelect.val(idsParaSeleccionar).trigger('change');
+    });
+}
+
+// Función auxiliar para cargar cuentas contables (extraída de cargarDatosProductoExistente)  
+function cargarCuentasContables(productData, esModoEdicion) {
+    console.log('=== cargarCuentasContables ===');
+    
+    if (!esModoEdicion) {
+        console.log('Modo creación - cuentas contables se cargarán por herencia');
+        return;
+    }
+    
+    // Deshabilitar herencia temporalmente
+    $('#categoriaId').off('change.inheritance');
+    
+    // Mapeo de campos de cuenta contable
+    const cuentasMap = {
+        CuentaVentasId: '#cuentaVentasId',
+        CuentaComprasInventariosId: '#cuentaComprasInventariosId', 
+        CuentaCostoVentasGastosId: '#cuentaCostoVentasGastosId',
+        CuentaDescuentosId: '#cuentaDescuentosId',
+        CuentaDevolucionesId: '#cuentaDevolucionesId',
+        CuentaAjustesId: '#cuentaAjustesId',
+        CuentaCostoMateriaPrimaId: '#cuentaCostoMateriaPrimaId'
+    };
+    
+    // Cargar cada cuenta contable
+    Object.keys(cuentasMap).forEach(campo => {
+        const selector = cuentasMap[campo];
+        const cuentaId = productData[campo];
+        
+        if (cuentaId) {
+            setTimeout(() => {
+                cargarCuentaContable(selector, cuentaId);
+            }, 200);
+        }
+    });
+    
+    // Reactivar herencia después de un tiempo
+    setTimeout(function() {
+        initCategoriaInheritance();
+        console.log('Herencia de cuentas contables reactivada');
+    }, 1000);
+}
+
+// Función auxiliar para mostrar imagen cargada
+function mostrarImagenCargada(imagenUrl) {
+    console.log('Mostrando imagen cargada:', imagenUrl);
+    $('#imagenUrl').val(imagenUrl);
+    $('#imagenPreview').attr('src', imagenUrl).show();
+    $('#uploadPlaceholder').hide();
+    $('#removeImageBtn').show();
 }
 
 // Función auxiliar para cargar una cuenta contable específica

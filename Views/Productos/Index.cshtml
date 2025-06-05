@@ -257,11 +257,16 @@
                                 </td>
                                 <td>@(item.PLU ?? "-")</td>
                                 <td>@item.Categoria?.Nombre</td>
-                                <td class="text-end">$@item.PrecioVenta.ToString("N2")</td>
+                                <td class="text-end">
+                                    @{
+                                        var precioNivel1 = item.NivelesPrecios?.FirstOrDefault(p => p.Orden == 1 || p.NombreNivel == "Precio Base")?.PrecioTotal ?? item.PrecioVenta;
+                                    }
+                                    $@precioNivel1.ToString("N2")
+                                </td>
                                 <td class="text-end">$@item.Costo.ToString("N2")</td>
                                 <td class="text-end">
                                     @{
-                                        var margen = item.Costo > 0 ? ((item.PrecioVenta - item.Costo) / item.Costo) * 100 : 0;
+                                        var margen = item.Costo > 0 ? ((precioNivel1 - item.Costo) / item.Costo) * 100 : 0;
                                     }
                                     @margen.ToString("N2")%
                                 </td>
@@ -308,7 +313,7 @@
             // Inicializar DataTable
             var tabla = $('#productosTable').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
                 },
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
                      '<"row"<"col-sm-12"tr>>' +

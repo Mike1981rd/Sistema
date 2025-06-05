@@ -635,8 +635,8 @@
     </div>
 </div>
 
-<!-- Popup personalizado para seleccionar item -->
-<div id="popupSeleccionarItem" class="custom-popup" style="display: none;">
+<!-- Popup personalizado para seleccionar item - SOLO DEBE APARECER EN PESTAÑA DE RECETAS -->
+<div id="popupSeleccionarItem" class="custom-popup" style="display: none !important; visibility: hidden !important;">
     <div class="popup-content">
         <div class="popup-header">
             <h5 class="popup-title">Lista de artículos</h5>
@@ -663,19 +663,16 @@
             <!-- Filtros de categorías -->
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label class="form-label small mb-1">Marca</label>
                     <select class="form-select form-select-sm" id="filtroMarca">
                         <option value="">Elegir marca</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small mb-1">Categoría</label>
                     <select class="form-select form-select-sm" id="filtroCategoria">
                         <option value="">Elegir la categoría</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small mb-1">Subcategoría</label>
                     <select class="form-select form-select-sm" id="filtroSubcategoria">
                         <option value="">Elija subcategoría</option>
                     </select>
@@ -702,7 +699,7 @@
                 </table>
             </div>
 
-            <!-- Paginación -->
+            <!-- Paginación y botón cancelar -->
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted">Show</span>
@@ -718,6 +715,9 @@
                     <button class="btn btn-sm btn-secondary" id="btnPrevious">Previous</button>
                     <span class="badge bg-primary">1</span>
                     <button class="btn btn-sm btn-secondary" id="btnNext">Next</button>
+                    <button type="button" class="btn btn-danger btn-sm ms-3" onclick="cerrarPopupItems()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
                 </div>
                 <span class="text-muted" id="showingInfo">Showing 1 to 2 of 2 entries</span>
             </div>
@@ -754,7 +754,15 @@
     <!-- <script src="~/js/productos/debug-simple.js"></script> -->
     
     <script>
+        // Variable global para controlar la inicialización de recetas
+        let recetasInitialized = false;
+        
         document.addEventListener('DOMContentLoaded', function () {
+            // ASEGURAR QUE EL POPUP ESTÉ OCULTO AL INICIO
+            const popup = document.getElementById('popupSeleccionarItem');
+            if (popup) {
+                popup.style.cssText = 'display: none !important; visibility: hidden !important;';
+            }
             // Inicializar TinyMCE para el campo de descripción
             if (document.getElementById('descripcionEditor')) {
                 tinymce.init({
@@ -778,8 +786,14 @@
                 });
             }
 
-            // Funcionalidad de recetas
-            initRecetasFunctionality();
+            // Funcionalidad de recetas - solo cuando se active la pestaña
+            document.getElementById('inventario-tab')?.addEventListener('shown.bs.tab', function() {
+                if (!recetasInitialized) {
+                    initRecetasFunctionality();
+                    recetasInitialized = true;
+                }
+            });
+            
         });
 
         // Función para inicializar la funcionalidad de recetas
@@ -859,20 +873,46 @@
 
         // Función para agregar item
         function agregarItem() {
-            // Primero verificar si ya existe la tabla vacía
+            // VERIFICAR QUE ESTAMOS EN LA PESTAÑA DE RECETAS O ACTIVARLA
+            const inventarioTab = document.getElementById('inventario');
+            if (!inventarioTab || !inventarioTab.classList.contains('active')) {
+                // Si no estamos en la pestaña de recetas, activarla automáticamente
+                console.log('[DEBUG] Activando pestaña de recetas automáticamente');
+                const inventarioTabButton = document.getElementById('inventario-tab');
+                if (inventarioTabButton) {
+                    inventarioTabButton.click();
+                    // Esperar un poco a que se active la pestaña
+                    setTimeout(() => {
+                        proceedWithAgregarItem();
+                    }, 100);
+                    return;
+                }
+            }
+            
+            proceedWithAgregarItem();
+        }
+        
+        function proceedWithAgregarItem() {
+            // Limpiar tabla vacía si existe
             const tbody = document.getElementById('recetasTableBody');
-            if (tbody.querySelector('td[colspan="7"]')) {
+            if (tbody && tbody.querySelector('td[colspan="7"]')) {
                 tbody.innerHTML = '';
             }
 
-            // Mostrar el popup personalizado
-            document.getElementById('popupSeleccionarItem').style.display = 'flex';
-            cargarItemsDisponibles();
+            // Mostrar el popup
+            const popup = document.getElementById('popupSeleccionarItem');
+            if (popup) {
+                popup.style.cssText = 'display: flex !important; visibility: visible !important;';
+                cargarItemsDisponibles();
+            }
         }
         
         // Función para cerrar el popup
         function cerrarPopupItems() {
-            document.getElementById('popupSeleccionarItem').style.display = 'none';
+            const popup = document.getElementById('popupSeleccionarItem');
+            if (popup) {
+                popup.style.cssText = 'display: none !important; visibility: hidden !important;';
+            }
         }
         
         // Función para limpiar filtros
@@ -962,8 +1002,18 @@
             const item = itemsCache.find(i => i.id === itemId);
             if (!item) return;
             
+            console.log(`[DEBUG] seleccionarItem: Agregando item ${itemId} a la receta`);
+            
+            // CRITICAL: Limpiar mensaje de tabla vacía antes de agregar ingrediente real
+            const tbody = document.getElementById('recetasTableBody');
+            if (tbody && tbody.querySelector('td[colspan="7"]')) {
+                console.log(`[DEBUG] seleccionarItem: Limpiando tabla vacía antes de agregar ingrediente`);
+                tbody.innerHTML = '';
+            }
+            
             const newRow = document.createElement('tr');
             newRow.setAttribute('data-item-id', item.id);
+            console.log(`[DEBUG] seleccionarItem: Fila creada con data-item-id="${item.id}"`);
             
             // Crear opciones para contenedores
             let contenedoresOptions = '<option value="">Seleccione unidad...</option>';
@@ -996,6 +1046,7 @@
             `;
             
             document.getElementById('recetasTableBody').appendChild(newRow);
+            console.log(`[DEBUG] seleccionarItem: Fila agregada al DOM. Total filas en tabla: ${document.getElementById('recetasTableBody').children.length}`);
             cerrarPopupItems();
             
             // Si hay solo un contenedor, seleccionarlo automáticamente
@@ -1044,11 +1095,22 @@
         document.getElementById('filtroSubcategoria')?.addEventListener('change', aplicarFiltros);
         
         // Cerrar popup al hacer clic fuera
-        document.getElementById('popupSeleccionarItem').addEventListener('click', function(e) {
+        document.getElementById('popupSeleccionarItem')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 cerrarPopupItems();
             }
         });
+        
+        // MANTENER EL POPUP OCULTO SIEMPRE
+        setInterval(function() {
+            const popup = document.getElementById('popupSeleccionarItem');
+            const inventarioTab = document.getElementById('inventario');
+            
+            // Si el popup está visible pero NO estamos en la pestaña de recetas, ocultarlo
+            if (popup && popup.style.display !== 'none' && (!inventarioTab || !inventarioTab.classList.contains('active'))) {
+                popup.style.cssText = 'display: none !important; visibility: hidden !important;';
+            }
+        }, 100);
 
         // Función para actualizar subtotal
         function actualizarSubtotal(input) {
@@ -1203,6 +1265,9 @@
                 icon: 'success'
             });
         }
+        
+        // Hacer la función cerrarPopupItems global
+        window.cerrarPopupItems = cerrarPopupItems;
         
         // Función para calcular el margen de ganancia
         function calcularMargenGanancia() {
@@ -1494,16 +1559,16 @@
         
         /* Estilos para el popup personalizado de selección de items */
         .custom-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+            z-index: 99999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         
         .popup-content {
@@ -1511,10 +1576,11 @@
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             width: 90%;
-            max-width: 1200px;
-            max-height: 90vh;
+            max-width: 900px;
+            max-height: 80vh;
             overflow: hidden;
             animation: popupFadeIn 0.3s ease-out;
+            margin-left: -150px;
         }
         
         @@keyframes popupFadeIn {
@@ -1560,8 +1626,34 @@
         
         .popup-body {
             padding: 20px;
-            max-height: calc(90vh - 80px);
+            max-height: calc(80vh - 80px);
             overflow-y: auto;
+        }
+        
+        /* Estilo para la tabla del popup */
+        .custom-popup .table {
+            font-size: 14px;
+        }
+        
+        .custom-popup .table th {
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .custom-popup .table td {
+            vertical-align: middle;
+            padding: 8px 12px;
+        }
+        
+        /* Mejorar los filtros */
+        .custom-popup .form-select-sm {
+            font-size: 13px;
+            padding: 4px 8px;
         }
         
         /* Botón de selección estético */
